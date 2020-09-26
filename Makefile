@@ -1,0 +1,3 @@
+gitaddall:
+	git add src/*
+
