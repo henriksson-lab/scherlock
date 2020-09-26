@@ -14,7 +14,7 @@ import java.util.zip.GZIPInputStream;
 
 /**
  *
- * TODO email maria
+ * Split GTF file into suitable features
  * 
  * @author Johan Henriksson
  *
@@ -25,7 +25,7 @@ public class SplitGtf {
 	public TreeMap<String, ArrayList<Range>> mapGenes=new TreeMap<String, ArrayList<Range>>();
 	public TreeMap<String, ArrayList<Range>> mapTranscript=new TreeMap<String, ArrayList<Range>>();
 
-	public ArrayList<CountRange> features=new ArrayList<CountRange>();
+	public ArrayList<Feature> features=new ArrayList<Feature>();
 	
 	
 	public ArrayList<Range> getGeneArray(String gene){
@@ -51,7 +51,7 @@ public class SplitGtf {
 	/**
 	 * Split GTF file into countable features
 	 */
-	public ArrayList<CountRange> splitGTF(File fGTF, File fOutdir) throws IOException {
+	public ArrayList<Feature> splitGTF(File fGTF, File fOutdir) throws IOException {
 		System.out.println("Reading features from "+fGTF);
 
 		//Read all the relevant features and associate with transcripts/genes
@@ -157,7 +157,7 @@ public class SplitGtf {
 				int n=0;
 				for(Range r:newta) {
 					String fname=gname+"_"+n;
-					CountRange cr=new CountRange(gname, fname, source, r.from, r.to);
+					Feature cr=new Feature(gname, fname, source, r.from, r.to);
 					features.add(cr);
 					n++;
 				}
@@ -166,8 +166,8 @@ public class SplitGtf {
 
 		//Sort the features. This helps counting later on
 		System.out.println("Position-sort features");
-		features.sort(new Comparator<CountRange>() {
-			public int compare(CountRange a, CountRange b) {
+		features.sort(new Comparator<Feature>() {
+			public int compare(Feature a, Feature b) {
 				int sc = a.source.compareTo(b.source);
 				if(sc==0) {
 					return Integer.compare(a.from, b.from);
@@ -179,7 +179,7 @@ public class SplitGtf {
 
 		//Store the features for visualization
 		PrintWriter pwFeatures=new PrintWriter(new File(fOutdir,"features.bed"));
-		for(CountRange r:features) {
+		for(Feature r:features) {
 			pwFeatures.println(r.source+"\t"+r.from+"\t"+r.to+"\t"+r.featureName);
 			
 		}
@@ -220,13 +220,6 @@ public class SplitGtf {
 		return m;
 	}
 	
-
-	
-	
-	////////////////////////////////////////
-	////////////////////////////////////////
-	////////////////////////////////////////
-	////////////////////////////////////////
 	
 	/**
 	 * Read list of zip file e.g. barcode list

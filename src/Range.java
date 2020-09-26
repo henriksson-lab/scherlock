@@ -1,4 +1,9 @@
-
+/**
+ * A range object, representing an exon or similar
+ * 
+ * @author Johan Henriksson
+ *
+ */
 public class Range {
 	String source;
 	int from, to; //inclusive

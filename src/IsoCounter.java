@@ -2,6 +2,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+
+/**
+ * Isoform counting, main class
+ * 
+ * @author Johan Henriksson
+ *
+ */
 public class IsoCounter {
 
 	/**
@@ -51,7 +58,7 @@ public class IsoCounter {
 			//outdir.mkdirs();
 			//ystem.out.println("To: "+outdir);
 			
-			ArrayList<CountRange> features=new SplitGtf().splitGTF(fGTF, f10x);
+			ArrayList<Feature> features=new SplitGtf().splitGTF(fGTF, f10x);
 			
 			System.out.println("Performing the counting: "+fBAM);
 			CountBAM cb=new CountBAM(features, listBarcodes);

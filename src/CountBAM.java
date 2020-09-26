@@ -2,7 +2,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +41,7 @@ public class CountBAM {
 	private HashMap<String, Integer> mapBarcodeIndex=new HashMap<String, Integer>();
 
 	private ArrayList<String> listBarcodes;
-	private ArrayList<CountRange> listFeatures;
+	private ArrayList<Feature> listFeatures;
 	
 	private int dups=0;
 	private int kept=0;
@@ -75,7 +74,7 @@ public class CountBAM {
 	/**
 	 * Constructor
 	 */
-	public CountBAM(ArrayList<CountRange> listFeatures, ArrayList<String> listBarcodes) {
+	public CountBAM(ArrayList<Feature> listFeatures, ArrayList<String> listBarcodes) {
 		this.listBarcodes=listBarcodes;
 		this.listFeatures=listFeatures;
 		
@@ -112,18 +111,17 @@ public class CountBAM {
 		final SamReader reader = SamReaderFactory.makeDefault().open(fBAM);
 		
 		int readRec=0;
+		int searchFeatureFrom=0;
 
 		SAMRecord previousRecord=null;
 		String bcCellPreviousU=null;
 		String bcCellPreviousC=null;
-		
-		int searchFeatureFrom=0;
-		
+				
 		for (final SAMRecord samRecord : reader) {
 			readRec++;
 			if(readRec%1000000 == 0){
 				int prcDone=(int)(100.0*searchFeatureFrom/(double)listFeatures.size());
-				System.out.println("Now done "+readRec+", kept "+kept +", starting feature search from "+searchFeatureFrom+"   Done: "+prcDone+"%");
+				System.out.println("Progress: "+prcDone+"%\t  Kept/Read"+kept+"/"+readRec);
 			}
 
 			if(previousRecord!=null) {
@@ -146,7 +144,7 @@ public class CountBAM {
 							int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
 							
 							//A read may have been split into multiple blocks. 
-							//Count these separately. Naive assumption that these are split over introns... correct?
+							//Count these separately. Naive assumption that these are split over introns... is this correct?
 							List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
 							for(int curAB=0;curAB<listBlocks.size();curAB++) {
 								AlignmentBlock ab=listBlocks.get(curAB);
@@ -157,12 +155,12 @@ public class CountBAM {
 								
 								//Look up overlapping feature
 								for(int fi=searchFeatureFrom;fi<listFeatures.size();fi++) {
-									CountRange feature=listFeatures.get(fi);
+									Feature feature=listFeatures.get(fi);
 									int compSource=feature.source.compareTo(blockSource);  // could pre-split the chromosome to avoid these checks
 									if(compSource==0) {
 										//Currently checking features on the same chromosome. Most common case.
 										
-										//Now check if there is an overlap
+										//Now continue to check if there is an overlap position-wise
 										if(feature.to<blockFrom) {
 											//Feature is before block. We have not reached the region yet.
 											
@@ -180,9 +178,7 @@ public class CountBAM {
 											//Now we are past the feature. Can stop looking
 											break;
 										} else {
-											//This feature overlaps
-											
-											//Count
+											//This feature overlaps, so count it
 											count(fi,barcodeIndex);
 											/*
 											System.out.println("---overlap!");
@@ -192,45 +188,24 @@ public class CountBAM {
 											System.out.println("---");
 											System.out.println(blockSource+"\t"+blockFrom+"\t"+blockTo+"\t"+"theread");
 											System.out.println(feature.source+"\t"+feature.from+"\t"+feature.to+"\t"+feature.featureName);
-
-											
 											System.exit(0);*/
 											
 											//Here we do *not* Continue;, as there might be more overlapping features 
-											
 										}
-										
-										
-										
-										
 									} else if(compSource<0) {
 										//Not yet comparing the same chromosome. Keep scanning along the features until we get there. Uncommon case
 									} else {
 										//Now we are looking at the next chromosome, so past the block for certain. Can stop looking
 										break;
 									}
-										
-										
-									//}
-									
-									
 								}
-								
 							}
-							
-							
-
-
 						}
 					}
 				}
-
-
 			} else {
 				previousRecord=samRecord;
 			}
-
-
 		}
 		System.out.println("Kept: "+kept);
 		System.out.println("Duplicates: "+dups);
@@ -253,7 +228,7 @@ public class CountBAM {
 
 		//Write the feature names
 		PrintWriter pwFeatures=new PrintWriter(new GZIPOutputStream(new FileOutputStream(new File(fCountDir,"features.tsv.gz"))));
-		for(CountRange f:listFeatures) {
+		for(Feature f:listFeatures) {
 			pwFeatures.println(f.featureName+"\t"+f.featureName+"\tisoform");
 		}
 		pwFeatures.close();

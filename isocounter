@@ -1,2 +1,2 @@
-java -cp htsjdk-2.23.0-3-g657b0a6-SNAPSHOT.jar:out IsoCounter #@
+java -cp htsjdk-2.23.0-3-g657b0a6-SNAPSHOT.jar:out IsoCounter "$@"
 
