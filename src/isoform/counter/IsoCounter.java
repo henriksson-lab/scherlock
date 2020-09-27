@@ -1,3 +1,4 @@
+package isoform.counter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,7 +52,7 @@ public class IsoCounter {
 			File fBarcodes=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
 			File fBAM=new File(f10x, "possorted_genome_bam.bam");
 			
-			ArrayList<String> listBarcodes=SplitGtf.readZipList(fBarcodes);
+			ArrayList<String> listBarcodes=SplitGtf.readBarcodeZipList(fBarcodes);
 		
 			
 			//File outdir=new File("./out");

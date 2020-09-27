@@ -6,6 +6,8 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="htsjdk-2.23.0-3-g657b0a6-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/colt.jar"/>
+	<classpathentry kind="lib" path="lib/concurrent.jar"/>
+	<classpathentry kind="lib" path="lib/htsjdk-2.23.0-3-g657b0a6-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

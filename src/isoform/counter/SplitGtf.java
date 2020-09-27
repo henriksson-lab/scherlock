@@ -1,3 +1,4 @@
+package isoform.counter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -224,9 +225,9 @@ public class SplitGtf {
 	/**
 	 * Read list of zip file e.g. barcode list
 	 */
-	public static ArrayList<String> readZipList(File fFeatures) throws IOException{
+	public static ArrayList<String> readBarcodeZipList(File fBarcodes) throws IOException{
 		ArrayList<String> list=new ArrayList<String>();
-		BufferedReader brFeatures=new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fFeatures))));
+		BufferedReader brFeatures=new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fBarcodes))));
 		String line;
 		while((line=brFeatures.readLine())!=null) {
 			list.add(line);

@@ -1,0 +1,40 @@
+
+#Designed for speed; we don't use 0-terminated strings. and we really don't expect anything outside latin-1
+string :=
+	short::num_character
+	[byte::characters]  	
+
+file :=
+	"CELLPILE"
+	byte::version
+	int::size_of_one_chunk
+	int::num_barcodes [string::barcode]
+	int::num_sequences [seq_info]
+	[pileup_chunk]
+
+seq_info :=
+	string::name_of_sequence
+	int::num_chunks
+	[long::fileposition_region]		#where to seek to, to read the chunk. If 0 then the chunk is empty, don't bother
+
+
+### Any parser will likely read all above into memory once and for all.
+### Below are things that a reader will pick up on demand
+
+pileup_chunk :=
+	int::num_cells
+	[onecell_pile_chunk]
+
+onecell_pile_chunk :=
+	int::cellid
+	short::num_regions
+	[region]
+	
+region :=
+	int::from int::to			## or rather short::length?
+	
+	
+Assume a file with 800M reads. The expected output file size is at least 800e6*2*4/1e6 = 6.4GB, not counting file names. 10GB more likely
+
+
+

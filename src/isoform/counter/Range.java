@@ -1,3 +1,4 @@
+package isoform.counter;
 /**
  * A range object, representing an exon or similar
  * 
