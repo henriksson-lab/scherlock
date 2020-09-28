@@ -12,6 +12,8 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 
+import isoform.util.Range;
+
 
 /**
  *
@@ -20,7 +22,7 @@ import java.util.zip.GZIPInputStream;
  * @author Johan Henriksson
  *
  */
-public class SplitGtf {
+public class GtfToFeature {
 
 	public TreeMap<String,String> mapTranscriptGene=new TreeMap<String, String>();
 	public TreeMap<String, ArrayList<Range>> mapGenes=new TreeMap<String, ArrayList<Range>>();
@@ -73,7 +75,7 @@ public class SplitGtf {
 				
 				TreeMap<String,String> attr=parseAttr(stok.nextToken());
 
-				Range r=new Range(seq, sFrom, sTo);
+				Range r=new Range(seq, sFrom, sTo, featureType);
 
 				if(featureType.contentEquals("gene")) {
 					//Nothing to be done
@@ -147,7 +149,7 @@ public class SplitGtf {
 						//This part is covered; can skip entirely
 					} else {
 						//Need to add a chopped up version
-						Range newr=new Range(r.source, lastTo+1, r.to);
+						Range newr=new Range(r.source, lastTo+1, r.to, "");
 						newta.add(newr);
 						lastTo=r.to;					
 					}

@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -17,29 +19,25 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 
 /**
- * Generate a .cellpile from a BAM-file
+ * Interface for CellPile files. Able to generate from BAM-files
  * 
- * 
- * Consider swapping to a buffered implementation at least for the read interface
+ * Consider swapping to a buffered implementation for the read interface (need to verify if this improves speed)
  * 
  * @author Johan Henriksson
  *
  */
-public class CellpileFile {
+public class CellPileFile {
 	
 	private RandomAccessFile raf;
 	private int chunkSize=10000; //10kb
-
 
 	private TreeMap<String, long[]> mapChunkStarts=new TreeMap<String, long[]>();
 	private HashMap<String, Integer> mapBarcodeIndex=new HashMap<String, Integer>();
 	private ArrayList<String> listBarcodes;
 	
-	private int dups=0;
-	private int kept=0;
 	
-	public ArrayList<String> getListBarcodes(){
-		return new ArrayList<String>(listBarcodes);
+	public List<String> getListBarcodes(){
+		return Collections.unmodifiableList(listBarcodes);
 	}
 
 	/**
@@ -67,7 +65,7 @@ public class CellpileFile {
 	/**
 	 * Constructor - cannot be called from the outside
 	 */
-	private CellpileFile() {
+	private CellPileFile() {
 	}
 	
 
@@ -96,13 +94,13 @@ public class CellpileFile {
 	/**
 	 * Take a BAM-file, write a cellpile file corresponding to it
 	 */
-	public static CellpileFile writeFile(
+	public static CellPileFile writeFile(
 			File fCellpile, 
 			File fChromSizes,
 			File fBAM,
 			ArrayList<String> listBarcodes) throws IOException {
 		
-		CellpileFile p=new CellpileFile();
+		CellPileFile p=new CellPileFile();
 		p.readChromosomeSizes(fChromSizes);
 		p.raf=new RandomAccessFile(fCellpile, "rw");
 		p.listBarcodes=listBarcodes;
@@ -225,12 +223,16 @@ public class CellpileFile {
 	}
 	
 	
+
 	/**
 	 * Perform the counting from a BAM file. Can be called multiple times
 	 */
 	public void countReads(File fBAM) throws IOException {
 		final SamReader reader = SamReaderFactory.makeDefault().open(fBAM);
-		
+
+		int dups=0;
+		int kept=0;
+
 		//Set initial chunk position to nowhere
 		currentSeq="";
 		currentChunk=0;
@@ -324,13 +326,6 @@ public class CellpileFile {
 		}
 	}
 	
-	/**
-	 * Finalizer. Ensures somewhat fast closing of the file - although this is better done explicitly!
-	 */
-	protected void finalize() throws Throwable {
-		close();
-	}
-
 	
 	
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -341,8 +336,8 @@ public class CellpileFile {
 	/**
 	 * Open a file for reading
 	 */
-	public static CellpileFile open(File fCellpile) throws IOException {
-		CellpileFile p=new CellpileFile();
+	public static CellPileFile open(File fCellpile) throws IOException {
+		CellPileFile p=new CellPileFile();
 		p.raf=new RandomAccessFile(fCellpile, "r");
 		p.readHeader();
 		return p;
@@ -497,6 +492,12 @@ public class CellpileFile {
 		return outTracks;
 	}
 	
-	
+
+	/**
+	 * Get a list of sequences represented
+	 */
+	public Collection<String> getSequences(){
+		return Collections.unmodifiableSet(mapChunkStarts.keySet());
+	}
 	
 }

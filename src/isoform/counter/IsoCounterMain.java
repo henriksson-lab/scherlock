@@ -10,7 +10,7 @@ import java.util.ArrayList;
  * @author Johan Henriksson
  *
  */
-public class IsoCounter {
+public class IsoCounterMain {
 
 	/**
 	 * Main function
@@ -52,17 +52,17 @@ public class IsoCounter {
 			File fBarcodes=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
 			File fBAM=new File(f10x, "possorted_genome_bam.bam");
 			
-			ArrayList<String> listBarcodes=SplitGtf.readBarcodeZipList(fBarcodes);
+			ArrayList<String> listBarcodes=GtfToFeature.readBarcodeZipList(fBarcodes);
 		
 			
 			//File outdir=new File("./out");
 			//outdir.mkdirs();
 			//ystem.out.println("To: "+outdir);
 			
-			ArrayList<Feature> features=new SplitGtf().splitGTF(fGTF, f10x);
+			ArrayList<Feature> features=new GtfToFeature().splitGTF(fGTF, f10x);
 			
 			System.out.println("Performing the counting: "+fBAM);
-			CountBAM cb=new CountBAM(features, listBarcodes);
+			CountFeaturesBAM cb=new CountFeaturesBAM(features, listBarcodes);
 			cb.countReads(fBAM);
 			
 			System.out.println("Storing the counts");

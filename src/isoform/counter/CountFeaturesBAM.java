@@ -19,7 +19,7 @@ import htsjdk.samtools.SamReaderFactory;
  * @author Johan Henriksson
  *
  */
-public class CountBAM {
+public class CountFeaturesBAM {
 	//SAM format information:
 	// https://genome.sph.umich.edu/wiki/SAM
 	// https://www.biostars.org/p/96347/
@@ -75,7 +75,7 @@ public class CountBAM {
 	/**
 	 * Constructor
 	 */
-	public CountBAM(ArrayList<Feature> listFeatures, ArrayList<String> listBarcodes) {
+	public CountFeaturesBAM(ArrayList<Feature> listFeatures, ArrayList<String> listBarcodes) {
 		this.listBarcodes=listBarcodes;
 		this.listFeatures=listFeatures;
 		

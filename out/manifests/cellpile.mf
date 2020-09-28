@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: isoform.cellpile.CellPileMain
+Class-Path: lib/colt.jar lib/concurrent.jar lib/htsjdk-2.23.0-3-g657b0a6-SNAPSHOT.jar
+

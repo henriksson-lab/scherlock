@@ -3,11 +3,16 @@ package isoform.cellpile;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 
-import isoform.counter.SplitGtf;
+import isoform.counter.GtfToFeature;
 
-public class CellpileMain {
+/**
+ * Test functions
+ * 
+ * @author Johan Henriksson
+ *
+ */
+public class CellPileTest {
 	
 	public static void main(String[] args) throws IOException {
 		
@@ -18,15 +23,15 @@ public class CellpileMain {
 		File fChromSizes=new File("/home/mahogny/umeå/project/isoform/refgenome/hg38.chrom.sizes");
 		File fBC=new File("/beagle/big/henriksson/tonsil/filtered_feature_bc_matrix/barcodes.tsv.gz");
 		
-		ArrayList<String> listBarcodes=SplitGtf.readBarcodeZipList(fBC);
+		ArrayList<String> listBarcodes=GtfToFeature.readBarcodeZipList(fBC);
 		
-		CellpileFile cp=CellpileFile.writeFile(fCellpile, fChromSizes, fBAM, listBarcodes);
+		CellPileFile cp=CellPileFile.writeFile(fCellpile, fChromSizes, fBAM, listBarcodes);
 		cp.close();
 		
 		System.out.println("File written! ------ ");
 		
 		
-		cp=CellpileFile.open(fCellpile);
+		cp=CellPileFile.open(fCellpile);
 		
 		int[][] clusters=cp.convertBarcodeNamesToIDs(
 				new String[][] {
