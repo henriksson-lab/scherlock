@@ -190,18 +190,27 @@ public class CellPileFile {
 
 		if(!mapCellRegions.isEmpty()) {
 			//Store pointer to where this chunk starts in the file
-			mapChunkStarts.get(currentSeq)[currentChunk]=raf.getFilePointer();
+			long[] ptrs=mapChunkStarts.get(currentSeq);
+			if(ptrs!=null) {
+				if(currentChunk<ptrs.length) {
+					ptrs[currentChunk]=raf.getFilePointer();
 
-			//Store the chunk
-			raf.writeInt(mapCellRegions.size());
-			for(int bc:mapCellRegions.keySet()) {
-				raf.writeInt(bc);
-				IntArrayList ia=mapCellRegions.get(bc);
-				int[] list=ia.elements(); //Note, no copying, and wrong size
-				int len=ia.size();
-				for(int i=0;i<len;i++) {
-					raf.writeInt(list[i]);
+					//Store the chunk
+					raf.writeInt(mapCellRegions.size());
+					for(int bc:mapCellRegions.keySet()) {
+						raf.writeInt(bc);
+						IntArrayList ia=mapCellRegions.get(bc);
+						int[] list=ia.elements(); //Note, no copying, and wrong size
+						int len=ia.size();
+						for(int i=0;i<len;i++) {
+							raf.writeInt(list[i]);
+						}
+					}
+				} else {
+					System.out.println("Warning, chunk out of bounds and ignored: "+currentSeq+":"+currentChunk);
 				}
+			} else {
+				System.out.println("Warning, missing sequence ignored: "+currentSeq);
 			}
 		}
 	}
