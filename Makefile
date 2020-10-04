@@ -1,6 +1,7 @@
 compile:
 	mkdir -p out
 	mkdir -p build
+	mkdir -p bin
 	javac src/*/*/*.java -cp .:lib/colt.jar:lib/concurrent.jar:lib/htsjdk-2.23.0-3-g657b0a6-SNAPSHOT.jar:lib/py4j0.10.9.1.jar -d out
 	cd out; jar cmf manifests/count.mf ../build/isocount.jar *
 	cd out; jar cmf manifests/cellpile.mf ../build/cellpile.jar *

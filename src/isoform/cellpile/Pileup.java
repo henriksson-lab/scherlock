@@ -29,7 +29,7 @@ public class Pileup {
 	public double trackWidth=700;
 	public double transcriptHeight=30;
 	public double textHeight=20;
-	public double featureHeight=20;
+	public double featureHeight=15;
 	public double labelsWidth=200;
 	
 	public int numVertGuides=16;
@@ -148,8 +148,9 @@ public class Pileup {
 				//System.out.println(transcript);
 				//Should draw a straight line...
 
-				double featureY=totalTrackHeight + curt*transcriptHeight + (transcriptHeight-featureHeight)/2;
-
+				double lineY=totalTrackHeight + (curt+0.5)*transcriptHeight; //featureY + transcriptHeight/2;
+				double featureY=lineY - featureHeight/2;
+						
 				//// Plot the line also suggesting the direction
 				int minFrom=0;
 				int maxTo=0;
@@ -159,7 +160,6 @@ public class Pileup {
 				}
 				double minTransFrom=transformPos(minFrom);
 				double maxTransTo=transformPos(maxTo);
-				double lineY=featureY + transcriptHeight/2;
 				sb.append("<line"
 						+ " x1=\""+minTransFrom+
 						"\" y1=\""+lineY+
@@ -198,10 +198,11 @@ public class Pileup {
 					double rFrom=transformPos(r.from);
 					double rTo=transformPos(r.to);
 
-
 					String exonColor="rgb(0,0,0)";
-					if(r.featureType.equals(Range.FEATURE_5UTR) || r.featureType.equals(Range.FEATURE_3UTR))
+					if(r.featureType.equals(Range.FEATURE_3UTR))
 						exonColor="rgb(0,255,0)";
+					if(r.featureType.equals(Range.FEATURE_5UTR))
+						exonColor="rgb(0,0,255)";
 					
 					String exonStyle="\"fill:"+exonColor+";stroke-width:3;stroke:none\"";
 					
@@ -217,7 +218,7 @@ public class Pileup {
 				
 			//Add text: Transcript ID
 			double textXFrom=5;
-			double textY=totalTrackHeight + (curt*transcriptHeight) + featureHeight - (textHeight-featureHeight)/2;
+			double textY=lineY + textHeight/2;
 			sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+textHeight+"px\" >"+transcript+"</text>");
 				
 
