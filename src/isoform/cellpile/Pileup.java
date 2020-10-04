@@ -20,6 +20,7 @@ public class Pileup {
 	public int to; 
 	public int numdiv;
 	public int[][] cellGroups;
+	public int[] cellGroupCellCount;
 	public int[][] tracks;
 	public String[] clusterNames;
 	
@@ -91,7 +92,7 @@ public class Pileup {
 		
 		//Figure out the space needed for tracks
 		int numTrack=tracks.length;
-		int trackMaxCount=Math.max(1,getMaxCountForTracks());
+		double trackMaxCount=Math.max(1,getMaxCountForTracks());
 
 		//Figure out which genes to show - linear search, not optimal
 		TreeSet<String> overlappingGenes=new TreeSet<String>();
@@ -134,7 +135,7 @@ public class Pileup {
 		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
 			double baseX=labelsWidth;
 			double baseY=(double)trackHeight*(curTrack+1);
-			double scaleY=-(double)trackHeight/trackMaxCount;
+			double scaleY=-(double)trackHeight/(trackMaxCount*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
 			double scaleX=(double)trackWidth/numdiv;
 			trackToSVG(sb, tracks[curTrack], clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
 		}
@@ -237,15 +238,30 @@ public class Pileup {
 		return sb.toString();
 	}
 	
+	
+	public double maxForTrack[];
+	
 	/**
 	 * Find the maximum count on any track
+	 * 
+	 * After normalization by 1/cellGroupCellCount[iTrack]   -- has to be undone later
+	 * 
 	 */
-	private int getMaxCountForTracks() {
-		int max=0;
-		for(int[] track:tracks) {
+	private double getMaxCountForTracks() {
+		double max=0;
+		maxForTrack=new double[tracks.length];
+		for(int iTrack=0;iTrack<tracks.length;iTrack++) {
+			int[] track=tracks[iTrack];
+			
+			//Calculate normalized maximum for this track
+			int maxThisTrack=0;
 			for(int x:track) {
-				max=Math.max(max, x);
+				maxThisTrack=Math.max(maxThisTrack, x);
 			}
+			maxForTrack[iTrack]=maxThisTrack;///(double)(Math.max(1,cellGroupCellCount[iTrack]));    //should normalize on total counts!
+			System.out.println("count:    "+cellGroupCellCount[iTrack]);
+			
+			max=Math.max(maxForTrack[iTrack], max);
 		}
 		return max;
 	}
@@ -261,6 +277,8 @@ public class Pileup {
 			for(int j=0;j<t1.length;j++) {
 				t1[j]+=t2[j];
 			}
+			
+			cellGroupCellCount[i] += p.cellGroupCellCount[i];
 		}
 	}
 
