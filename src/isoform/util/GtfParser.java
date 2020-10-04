@@ -1,13 +1,17 @@
 package isoform.util;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.zip.GZIPInputStream;
 
 /**
  *
@@ -18,13 +22,17 @@ import java.util.TreeSet;
  */
 public class GtfParser {
 
+	public TreeMap<String, Range> mapGeneRange=new TreeMap<String, Range>();
+	public TreeMap<String, ArrayList<Range>> mapTranscriptRanges=new TreeMap<String, ArrayList<Range>>();
 
-	private TreeMap<String, Range> mapGeneRange=new TreeMap<String, Range>();
-	private TreeMap<String, ArrayList<Range>> mapTranscriptRanges=new TreeMap<String, ArrayList<Range>>();
+	public TreeMap<String,String> mapTranscriptGene=new TreeMap<String, String>();
+	public TreeMap<String,Set<String>> mapGeneTranscripts=new TreeMap<String, Set<String>>();
 
-	private TreeMap<String,String> mapTranscriptGene=new TreeMap<String, String>();
-	private TreeMap<String,Set<String>> mapGeneTranscripts=new TreeMap<String, Set<String>>();
-
+	public TreeMap<String,String> mapSymbolGene=new TreeMap<String, String>();
+	
+	
+	int numRange=0;
+	
 	/**
 	 * Get list of transcripts for a gene.
 	 * raw array for easy R/python interfacing
@@ -75,6 +83,15 @@ public class GtfParser {
 	}
 
 
+	/**
+	 * Get the range of a gene. Gene can be symbol or ID
+	 */
+	public Range getRangeForGene(String gene) {
+		if(mapSymbolGene.containsKey(gene))
+			gene=mapSymbolGene.get(gene);
+		return mapGeneRange.get(gene);
+	}
+
 	
 	
 	/**
@@ -93,11 +110,18 @@ public class GtfParser {
 	/**
 	 * Parse out overall locations of all the genes
 	 */
-	public void parse(File fGTF) throws IOException {
+	public GtfParser(File fGTF) throws IOException {
 		System.out.println("Reading features from "+fGTF);
 
+		Reader reader;
+		if(fGTF.getName().endsWith(".gz")) {
+			reader=new InputStreamReader(new GZIPInputStream(new FileInputStream(fGTF)));
+		} else {
+			reader=new FileReader(fGTF);
+		}
+		
 		//Read all the relevant features and associate with transcripts/genes
-		BufferedReader br=new BufferedReader(new FileReader(fGTF));
+		BufferedReader br=new BufferedReader(reader);
 		String line;
 		while((line=br.readLine())!=null) {
 			if(!line.startsWith("#")) {
@@ -116,27 +140,63 @@ public class GtfParser {
 
 				Range r=new Range(seq, sFrom, sTo, featureType);
 
+				//System.out.println(attr);
+				
 				//Top level features
 				String id=attr.get("ID");
-				String parent=attr.get("parent");
-				if(id.startsWith("gene:")) {
-					String attrGene=removeTag(id,"gene:");
-					mapGeneRange.put(attrGene,r);
+				String parent=attr.get("Parent");
+				if(id!=null) {
+					if(id.startsWith("gene:")) {
+						String attrGene=removeTag(id,"gene:");
+						mapGeneRange.put(attrGene,r);
+						if(!mapGeneTranscripts.containsKey(attrGene))
+							mapGeneTranscripts.put(attrGene, new TreeSet<String>());
+						
+						String attrSymbol=attr.get("Name");
+						if(attrSymbol!=null) {
+							mapSymbolGene.put(attrSymbol, attrGene);
+						}
+						
+					}
+
+					if(id.startsWith("transcript:") && parent!=null && parent.startsWith("gene:")) {
+						//TODO, filter
+						String attrGene=removeTag(parent,"gene:");
+						String attrTranscript=removeTag(id,"transcript:");
+						linkGeneTranscript(attrGene, attrTranscript);
+/*
+						ArrayList<Range> ga=getTranscriptArray(attrTranscript);
+						ga.add(r);
+						numRange++;*/
+					}
 				}
 				
-				//Exons, UTRs, etc
-				if(id.startsWith("transcript:") && parent.startsWith("gene:")) {
-					String attrGene=removeTag(parent,"gene:");
-					String attrTranscript=removeTag(id,"transcript:");
-					linkGeneTranscript(attrGene, attrTranscript);
-
-					ArrayList<Range> ga=getTranscriptArray(attrTranscript);
-					ga.add(r);
+				if(parent!=null) {
+					//Exons, UTRs, etc
+					if(parent.startsWith("transcript:")) {
+						
+						//Exons, UTRs, etc
+						
+						
+						//TODO, filter
+						String attrTranscript=removeTag(parent,"transcript:");
+						
+						ArrayList<Range> ga=getTranscriptArray(attrTranscript);
+						ga.add(r);
+						numRange++;
+					}
+					
 				}
+				
+				
+				
 			}
 		}
 		br.close();		
 		
+		System.out.println("Stored ranges "+numRange);
+		System.out.println("#genes "+mapGeneTranscripts.size());
+		System.out.println("#transcript "+mapTranscriptGene.size());
 		//Some genes might have no transcripts? check later, possibly special code in renderer
 		
 	}

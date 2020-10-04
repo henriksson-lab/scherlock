@@ -12,16 +12,16 @@ import isoform.counter.GtfToFeature;
  * @author Johan Henriksson
  *
  */
-public class CellPileTest {
+public class CellPileTestWrite {
 	
 	public static void main(String[] args) throws IOException {
 		
 		
 		
 		File fCellpile=new File("/home/mahogny/temp/cellpile");
-		File fBAM=new File("/beagle/big/henriksson/tonsil/possorted_genome_bam.bam");
-		File fChromSizes=new File("/home/mahogny/umeå/project/isoform/refgenome/hg38.chrom.sizes");
-		File fBC=new File("/beagle/big/henriksson/tonsil/filtered_feature_bc_matrix/barcodes.tsv.gz");
+		File fBAM=new File("/big/henriksson/tonsil/possorted_genome_bam.bam");
+		File fChromSizes=new File("/data/henlab/ref_genome/human/sizes.genome");
+		File fBC=new File("/big/henriksson/tonsil/filtered_feature_bc_matrix/barcodes.tsv.gz");
 		
 		ArrayList<String> listBarcodes=GtfToFeature.readBarcodeZipList(fBC);
 		
@@ -30,7 +30,7 @@ public class CellPileTest {
 		
 		System.out.println("File written! ------ ");
 		
-		
+		/*
 		cp=CellPileFile.open(fCellpile);
 		
 		int[][] clusters=cp.convertBarcodeNamesToIDs(
@@ -38,17 +38,21 @@ public class CellPileTest {
 						cp.getListBarcodes().toArray(new String[0])
 				});
 		
-		int[][] tracks=cp.buildPileup(
+		Pileup pileup=cp.buildPileup(
 				"1", 1, 100000, 
 				100, 
 				clusters);
 		
-		for(int[] track:tracks) {
+		System.out.println("");
+		System.out.println(pileup.toSVG());
+		*/
+		/*
+		for(int[] track:pileup.tracks) {
 			for(int i:track)
 				System.out.print(i+" ");
 			
 			System.out.println();
-		}
+		}*/
 		
 		
 	}

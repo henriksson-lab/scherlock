@@ -36,7 +36,7 @@ public class CellPileMain {
 			CellPileFile cp=CellPileFile.open(fCellpile);
 
 			System.out.println("Number of barcodes included: "+cp.getListBarcodes().size());
-			System.out.println("Number of sequences included: "+cp.getSequences().size());
+			System.out.println("Number of sequences included: "+cp.getListSequences().size());
 			
 		} else {
 			

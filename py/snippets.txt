@@ -1,0 +1,62 @@
+from py4j.java_collections import SetConverter, MapConverter, ListConverter
+from py4j.java_gateway import JavaGateway
+gateway = JavaGateway()
+mypythonlist=['string1', 'string2']
+object_class = gateway.jvm.java.lang.String
+MyJavaArray = gateway.new_array(object_class, len(mypythonlist))
+for i in range(len(mypythonlist)):
+    my_array[i]=mypythonlist[i]
+gateway.entry_point.MyJavaMethod(MyJavaArray)
+
+
+
+
+
+
+
+
+
+
+###################### Getting nice plots in python ######################
+%matplotlib inline
+# produce vector inline graphics
+from IPython.display import set_matplotlib_formats
+set_matplotlib_formats('pdf', 'svg')
+import matplotlib.pyplot as plt
+
+
+
+
+https://pypi.org/project/drawSvg/
+
+
+
+# Draw an irregular polygon
+d.append(draw.Lines(-80, -45,
+                    70, -49,
+                    95, 49,
+                    -90, 40,
+                    close=False,
+            fill='#eeee00',
+            stroke='black'))
+            
+##################### quick svg display ###################################
+
+from IPython.core.display import SVG
+SVG(filename='logo.svg')
+SVG(data='<svg>...')
+            
+            
+###################### Nice plots in RStudio ###############################
+#browseURL("table1.html")  
+
+http://search.r-project.org/library/rstudioapi/html/viewer.html
+http://search.r-project.org/library/base/html/tempfile.html
+tf <- tempfile(fileext = ".svg")  #or need it be html?
+#save content
+
+
+library(magick)
+print(image_read_svg('/home/mahogny/Dropbox/share/yongtao/2012-01-01 yongtao projects/clusteringNew.svg', width = 350))
+
+

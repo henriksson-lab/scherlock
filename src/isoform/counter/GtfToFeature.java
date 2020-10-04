@@ -79,6 +79,7 @@ public class GtfToFeature {
 
 				if(featureType.contentEquals("gene")) {
 					//Nothing to be done
+					//Note: could capture pseudogenes and remove these from the list later
 				} else if(featureType.contentEquals("mRNA") || featureType.contentEquals("lnc_RNA")) {
 					String attrTranscript=removeTag(attr.get("ID"),"transcript:");
 					String attrGene=removeTag(attr.get("Parent"),"gene:");
