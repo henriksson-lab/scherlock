@@ -10,6 +10,7 @@ public class Range {
 	public String featureType;
 	public int from, to; //inclusive
 	
+	public String getSource() {return source;}
 	public int getFrom() {return from;}
 	public int getTo() {return to;}
 	
@@ -39,4 +40,8 @@ public class Range {
 		return this.source.equals(seq) && overlapsPos(from, to);
 	}
 
+	
+	public boolean isUTR() {
+		return featureType.equals(FEATURE_3UTR) || featureType.equals(FEATURE_5UTR);
+	}
 }

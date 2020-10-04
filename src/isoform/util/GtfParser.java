@@ -106,7 +106,14 @@ public class GtfParser {
 		return a;
 	}
 	
-	
+
+	/**
+	 * Parser with no entries
+	 */
+	public GtfParser() {
+		
+	}
+
 	/**
 	 * Parse out overall locations of all the genes
 	 */
@@ -199,7 +206,25 @@ public class GtfParser {
 		System.out.println("#transcript "+mapTranscriptGene.size());
 		//Some genes might have no transcripts? check later, possibly special code in renderer
 		
+		//fixUTRoverlap();
 	}
+	
+	/*
+	private void fixUTRoverlap() {
+		for(ArrayList<Range> trans:mapTranscriptRanges.values()) {
+			if(!trans.isEmpty()) {
+				
+				if(trans.get(0).featureType.equals(Range.FEATURE_5UTR)) {
+					
+					
+				}
+				
+				
+			}
+		}
+	}*/
+
+	
 	
 	
 	/**

@@ -1,5 +1,7 @@
 package isoform.cellpile;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.TreeSet;
 
 import isoform.util.GtfParser;
@@ -23,17 +25,17 @@ public class Pileup {
 	
 	
 	//Rendering settings
-	public double oneTrackH=100;
-	public double oneTrackW=800;
-	public double oneTranscriptH=30;
+	public double trackHeight=100;
+	public double trackWidth=700;
+	public double transcriptHeight=30;
 	public double textHeight=20;
 	public double featureHeight=20;
-	public double tracksBeginX=200;
+	public double labelsWidth=200;
 	
 	public int numVertGuides=16;
 	
 	private double transformPos(int x) {
-		return tracksBeginX + (double)oneTrackW*(x-from)/(to-from);
+		return labelsWidth + (double)trackWidth*(x-from)/(to-from);
 	}
 	
 	private void trackToSVG(
@@ -100,12 +102,21 @@ public class Pileup {
 		//System.out.println("#transcript "+numTranscripts);
 
 		//Write SVG header, with size
-		double totalTrackWidth=tracksBeginX+oneTrackW;
-		int totalTrackHeight=(int)(oneTrackH*numTrack);
-		double totalHeightAll=(totalTrackHeight + numTranscripts*oneTranscriptH);
+		double totalTrackWidth=labelsWidth+trackWidth;
+		int totalTrackHeight=(int)(trackHeight*numTrack);
+		double totalHeightAll=(totalTrackHeight + numTranscripts*transcriptHeight);
 		sb.append("<svg height=\""+totalHeightAll+"\" width=\""+(totalTrackWidth)+"\" "
 				+ "style=\"background-color:none\">");  //seems to ignore bg
 		
+		//Mask for the track viewport
+		sb.append(
+				"<defs><mask id=\"trackmask\">" + 
+				"<rect x=\""+labelsWidth+"\" y=\"0\" width=\"100%\" height=\"100%\" fill=\"white\"/>" + 
+				"</mask></defs>");
+		
+		
+		
+		//Set background color
 		sb.append("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>");
 		
 		
@@ -113,41 +124,90 @@ public class Pileup {
 		//String colorVertGuides="lightgray";
 		//Write vertical guide lines
 		for(int i=0;i<numVertGuides;i++) {
-			double x=tracksBeginX + i*oneTrackW/numVertGuides;
+			double x=labelsWidth + i*trackWidth/numVertGuides;
 			sb.append("<line x1=\""+x+"\" y1=\"0\" x2=\""+x+"\" y2=\"100%\" stroke=\""+colorVertGuides+"\"/>");
 		}
 		
 		
 		//Write all tracks
 		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
-			double baseX=tracksBeginX;
-			double baseY=(double)oneTrackH*(curTrack+1);
-			double scaleY=-(double)oneTrackH/trackMaxCount;
-			double scaleX=(double)oneTrackW/numdiv;
+			double baseX=labelsWidth;
+			double baseY=(double)trackHeight*(curTrack+1);
+			double scaleY=-(double)trackHeight/trackMaxCount;
+			double scaleX=(double)trackWidth/numdiv;
 			trackToSVG(sb, tracks[curTrack], clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
 		}
 		
-		
+		String colorFeatureLine="rgb(0,0,0)";
+
 		//Write GTF annotation
-		String exonStyle="\"fill:rgb(0,0,0);stroke-width:3;stroke:none\"";
 		String textStyle="font: italic sans-serif; fill: red;";
 		int curt=0;
 		for(String gene:overlappingGenes) {
 			for(String transcript:gtf.mapGeneTranscripts.get(gene)) {
 				//System.out.println(transcript);
 				//Should draw a straight line...
-				
+
+				double featureY=totalTrackHeight + curt*transcriptHeight + (transcriptHeight-featureHeight)/2;
+
+				//// Plot the line also suggesting the direction
+				int minFrom=0;
+				int maxTo=0;
 				for(Range r:gtf.mapTranscriptRanges.get(transcript)) {
+					minFrom=Math.min(minFrom,r.from);
+					maxTo=Math.max(maxTo,r.to);
+				}
+				double minTransFrom=transformPos(minFrom);
+				double maxTransTo=transformPos(maxTo);
+				double lineY=featureY + transcriptHeight/2;
+				sb.append("<line"
+						+ " x1=\""+minTransFrom+
+						"\" y1=\""+lineY+
+						"\" x2=\""+maxTransTo+
+						"\" y2=\""+lineY+
+						"\" stroke=\""+
+						colorFeatureLine+"\" mask=\"url(#trackmask)\"/>");
+
+				//Plot the fishbones
+				
+				//// Prepare plotting: sort UTRs last as they overlap exons
+				ArrayList<Range> listFeatures=new ArrayList<Range>(gtf.mapTranscriptRanges.get(transcript));
+				listFeatures.sort(new Comparator<Range>() {
+					public int compare(Range a, Range b) {
+						boolean aUTR=a.isUTR();
+						boolean bUTR=b.isUTR();
+						if(aUTR) {
+							if(bUTR) {
+								return Integer.compare(a.from, b.from);
+							} else {
+								return 1;
+							}
+						} else {
+							if(bUTR) {
+								return -1;
+							} else {
+								return Integer.compare(a.from, b.from);
+							}
+						}
+					}
+				});
+				
+				//// Plot all the features
+				for(Range r:listFeatures) {
 					//Transform coordinates
 					double rFrom=transformPos(r.from);
 					double rTo=transformPos(r.to);
-					double y=totalTrackHeight + curt*oneTranscriptH + (oneTranscriptH-featureHeight)/2;
 
+
+					String exonColor="rgb(0,0,0)";
+					if(r.featureType.equals(Range.FEATURE_5UTR) || r.featureType.equals(Range.FEATURE_3UTR))
+						exonColor="rgb(0,255,0)";
 					
+					String exonStyle="\"fill:"+exonColor+";stroke-width:3;stroke:none\"";
 					
-					sb.append("<rect x=\""+rFrom+"\" y=\""+y+"\" "
+					sb.append("<rect x=\""+rFrom+"\" y=\""+featureY+"\" "
 							+ "width=\""+(rTo-rFrom)+"\" "
-							+ "height=\""+featureHeight+"\" style="+exonStyle+" />");
+							+ "height=\""+featureHeight+"\" style="+exonStyle+" mask=\"url(#trackmask)\"/>");
 					
 					
 					//TODO style should depend on exon, utr
@@ -157,7 +217,7 @@ public class Pileup {
 				
 			//Add text: Transcript ID
 			double textXFrom=5;
-			double textY=totalTrackHeight + (curt*oneTranscriptH) + featureHeight - (textHeight-featureHeight)/2;
+			double textY=totalTrackHeight + (curt*transcriptHeight) + featureHeight - (textHeight-featureHeight)/2;
 			sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+textHeight+"px\" >"+transcript+"</text>");
 				
 
