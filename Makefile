@@ -14,6 +14,26 @@ gitaddall:
 	git add src/*.java
 
 
+
+############ For building the python binding
+
+getpytools:
+	python3 -m pip install --upgrade setuptools wheel
+
+pypkg:
+	python3 setup.py sdist bdist_wheel
+
+testpypkg:
+	python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps cellpile
+
+uploadpy:
+	#https://packaging.python.org/tutorials/packaging-projects/
+	#python3 -m pip install --upgrade twine
+	python3 -m twine upload --repository testpypi dist/*
+
+topypi:
+	twine upload dist/*
+
 #-Xmx6G
 
 #~/miniconda3/share/py4j/py4j0.10.9.1.jar

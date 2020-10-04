@@ -256,12 +256,14 @@ public class CellPileFile {
 			if(readRecords%1000000 == 0){
 				//Calculate progress
 				int passedChunks=0;
-				for(String seq:mapChunkStarts.keySet())
-					if(!seq.equals(currentSeq))
-						passedChunks+=mapChunkStarts.get(seq).length;
+				for(String seq:mapChunkStarts.keySet()) {
+					if(seq.equals(currentSeq))
+						break;
+					passedChunks+=mapChunkStarts.get(seq).length;
+				}
 				passedChunks+=currentChunk;
 				int prc=100*passedChunks/totalChunks;
-				System.out.println(""+prc+"%\tKept/Read: "+keptRecords+"/"+readRecords);
+				System.out.println(""+prc+"%\tKept/Read: "+keptRecords+"/"+readRecords+"\tOn sequence: +"+currentSeq);
 			}
 				
 			//Get UMI and BC for this read
@@ -518,7 +520,7 @@ public class CellPileFile {
 
 							//We may be able to quit early if lucky
 							if(posLeft<=windowTo) {
-								System.out.println("---cbi "+cellID+"   "+toTrack+"   "+curRegion+"\t"+posLeft+"\t"+posRight);
+								//System.out.println("---cbi "+cellID+"   "+toTrack+"   "+curRegion+"\t"+posLeft+"\t"+posRight);
 								//Transform to pileup coordinates
 								posLeft=(int)((posLeft-windowFrom)/dx);
 								posRight=(int)((posRight-windowFrom)/dx);

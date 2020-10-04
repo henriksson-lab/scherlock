@@ -2,6 +2,7 @@ import subprocess
 import atexit
 import sys
 import time
+import pathlib
 from py4j.java_gateway import JavaGateway
 from py4j.java_gateway import GatewayParameters
 from py4j.java_collections import SetConverter, MapConverter, ListConverter
@@ -11,6 +12,7 @@ from IPython.core.display import SVG
 
 ### This could be an alternative pipeline. does not rely on sockets which can be a pain
 #http://jpype.sourceforge.net/doc/user-guide/userguide.html
+
 
 
 ###########################################
@@ -25,6 +27,9 @@ class CellPile:
 	def __init__(self):
 		"""Open a file and return a handle"""
 		#self.fname=fname
+		
+		#Figure out where the jar-file is
+		jardir=str(pathlib.Path(__file__).parent.absolute())
 
 		##If there is no JVM running already, ensure there is
 		if CellPile._gateway is None:
@@ -32,7 +37,7 @@ class CellPile:
 			atexit.register(cellpile_cleanup)
 		
 			#Start the JVM - could pass a port here!
-			CellPile._pid = subprocess.Popen(["java","-jar","pycellpile.jar",str(self.port)])
+			CellPile._pid = subprocess.Popen(["java","-jar",jardir+"/pycellpile.jar",str(self.port)])
 			time.sleep(2)
 			
 			#Connect to the JVM
@@ -74,9 +79,14 @@ class CellPile:
 		self.gtf = CellPile._gateway.jvm.isoform.util.GtfParser(fname)
 
 
+
+	def getBarcodes(self, index):
+		"""Get the barcodes in one pileup file"""
+		return self.cp.getBarcodes(index)
+
 	def _toStringArray(self,pa):
 		"""Turn python array into java array"""
-		str_array = sc._jvm._gateway.new_array(sc._jvm.java.lang.String, len(pa))
+		str_array = CellPile._gateway.new_array(CellPile._gateway.jvm.java.lang.String,len(pa))
 		for i in range(0,len(pa)):
 			str_array[i] = pa[i]   #Can be 50k elements easily. Any faster method?
 		return str_array

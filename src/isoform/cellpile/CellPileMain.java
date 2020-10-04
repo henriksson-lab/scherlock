@@ -25,10 +25,12 @@ public class CellPileMain {
 			
 			ArrayList<String> listBarcodes=GtfToFeature.readBarcodeZipList(fBC);
 			
+			System.out.println("Building cellpile from: "+fBAM);
+			System.out.println("To: "+fCellpile);
 			CellPileFile cp=CellPileFile.writeFile(fCellpile, fChromSizes, fBAM, listBarcodes);
 			cp.close();
 			
-			System.out.println("File written! ------ ");			
+			System.out.println("Done writing cellpile");			
 			
 		} else if(cmd.equals("inspect") && args.length==2) {
 			

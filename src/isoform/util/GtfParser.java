@@ -205,27 +205,7 @@ public class GtfParser {
 		System.out.println("#genes "+mapGeneTranscripts.size());
 		System.out.println("#transcript "+mapTranscriptGene.size());
 		//Some genes might have no transcripts? check later, possibly special code in renderer
-		
-		//fixUTRoverlap();
 	}
-	
-	/*
-	private void fixUTRoverlap() {
-		for(ArrayList<Range> trans:mapTranscriptRanges.values()) {
-			if(!trans.isEmpty()) {
-				
-				if(trans.get(0).featureType.equals(Range.FEATURE_5UTR)) {
-					
-					
-				}
-				
-				
-			}
-		}
-	}*/
-
-	
-	
 	
 	/**
 	 * Remove tag: in tag:FOO

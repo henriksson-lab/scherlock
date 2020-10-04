@@ -54,13 +54,20 @@ public class Pileup {
 		//Move to the first point
 		sb.append(""+baseX+","+baseY+" ");
 		
+		boolean needToAddLast=false;
 		int lastCount=-1;
 		for(int i=0;i<track.length;i++) {
 			int curCount=track[i];
 			if(curCount!=lastCount) {
+				if(needToAddLast)
+					sb.append(""+(baseX+(i-1)*scaleX)+","+(baseY+lastCount*scaleY)+" ");
+				
 				//Only add a new point if different from the last. Speeds up rendering
 				sb.append(""+(baseX+i*scaleX)+","+(baseY+curCount*scaleY)+" ");
 				lastCount=curCount;
+				needToAddLast=false;
+			} else {
+				needToAddLast=true;
 			}
 		}
 		//All the way to the right side
@@ -73,11 +80,8 @@ public class Pileup {
 		
 		String textStyle="font: italic sans-serif; fill: red;";
 		double textXFrom=5;
-		double textY=baseX;
-		//+ (curt*oneTranscriptH) + featureHeight - (textHeight-featureHeight)/2;
+		double textY=baseY;
 		sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+textHeight+"px\" >"+trackName+"</text>");
-
-		
 	}
 	
 	
@@ -111,14 +115,11 @@ public class Pileup {
 		//Mask for the track viewport
 		sb.append(
 				"<defs><mask id=\"trackmask\">" + 
-				"<rect x=\""+labelsWidth+"\" y=\"0\" width=\"100%\" height=\"100%\" fill=\"white\"/>" + 
+				"<rect x=\""+labelsWidth+"\" y=\"0\" width=\""+totalTrackWidth+"\" height=\""+totalHeightAll+"\" fill=\"white\"/>" + 
 				"</mask></defs>");
-		
-		
 		
 		//Set background color
 		sb.append("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>");
-		
 		
 		String colorVertGuides="rgb(200,200,200)";
 		//String colorVertGuides="lightgray";
@@ -148,25 +149,28 @@ public class Pileup {
 				//System.out.println(transcript);
 				//Should draw a straight line...
 
-				double lineY=totalTrackHeight + (curt+0.5)*transcriptHeight; //featureY + transcriptHeight/2;
+				double lineY=totalTrackHeight + (curt+0.5)*transcriptHeight;
 				double featureY=lineY - featureHeight/2;
 						
 				//// Plot the line also suggesting the direction
-				int minFrom=0;
+				int minFrom=Integer.MAX_VALUE;
 				int maxTo=0;
 				for(Range r:gtf.mapTranscriptRanges.get(transcript)) {
 					minFrom=Math.min(minFrom,r.from);
 					maxTo=Math.max(maxTo,r.to);
 				}
-				double minTransFrom=transformPos(minFrom);
-				double maxTransTo=transformPos(maxTo);
+//				double minTransFrom=transformPos(minFrom);
+	//			double maxTransTo=transformPos(maxTo);
+				double minTransFrom=Math.max(labelsWidth,transformPos(minFrom));
+				double maxTransTo=Math.min(totalTrackWidth,transformPos(maxTo));
+
 				sb.append("<line"
 						+ " x1=\""+minTransFrom+
 						"\" y1=\""+lineY+
 						"\" x2=\""+maxTransTo+
 						"\" y2=\""+lineY+
 						"\" stroke=\""+
-						colorFeatureLine+"\" mask=\"url(#trackmask)\"/>");
+						colorFeatureLine+"\" stroke-width=\"2px\"/>");  //mask=\"url(#trackmask)\"
 
 				//Plot the fishbones
 				
@@ -208,7 +212,7 @@ public class Pileup {
 					
 					sb.append("<rect x=\""+rFrom+"\" y=\""+featureY+"\" "
 							+ "width=\""+(rTo-rFrom)+"\" "
-							+ "height=\""+featureHeight+"\" style="+exonStyle+" mask=\"url(#trackmask)\"/>");
+							+ "height=\""+featureHeight+"\" style="+exonStyle+"/>");   //   mask=\"url(#trackmask)\"
 					
 					
 					//TODO style should depend on exon, utr

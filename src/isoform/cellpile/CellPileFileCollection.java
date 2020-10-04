@@ -29,14 +29,23 @@ public class CellPileFileCollection {
 	}
 
 	/**
+	 * Get the barcodes of one pileup
+	 */
+	public List<String> getBarcodes(int i){
+		return listFile.get(i).getListBarcodes();
+	}
+	
+	
+	/**
 	 * Convert barcodes to IDs for a given fileID
 	 */
-	private int[] convertBarcodeNamesToIDs(int forFile, String[] bclistS, String[] pilename, String thisPile){
+	private int[] convertBarcodeNamesToIDs(int forFile, String[] cellBC, String[] cellFile, String[] cellCluster, String thisCluster){
 		CellPileFile f=listFile.get(forFile);
-		IntArrayList list2=new IntArrayList(bclistS.length);
-		for(int j=0;j<bclistS.length;j++) {
-			if(pilename[j].equals(thisPile)) {
-				list2.add(f.mapBarcodeIndex.get(bclistS[j]));
+		String thisFileName=listPileName.get(forFile);
+		IntArrayList list2=new IntArrayList(cellBC.length);
+		for(int j=0;j<cellBC.length;j++) {
+			if(cellFile[j].equals(thisFileName) && cellCluster[j].equals(thisCluster)) {
+				list2.add(f.mapBarcodeIndex.get(cellBC[j]));
 			}
 		}
 		list2.trimToSize();
@@ -70,21 +79,23 @@ public class CellPileFileCollection {
 		}
 		
 		Pileup totalp=null;
-		for(int i=0;i<listFile.size();i++) {
+		for(int iFile=0;iFile<listFile.size();iFile++) {
 			
 			//Generate barcode mappings for this file, which is a subset of all BCs given
 			int[][] listBCs=new int[numClusters][];
-			for(int j=0;j<numClusters;j++) {
-				listBCs[j] = convertBarcodeNamesToIDs(j, cellBC, cellFile, listPileName.get(j));
+			for(int iCluster=0;iCluster<numClusters;iCluster++) {
+				listBCs[iCluster] = convertBarcodeNamesToIDs(iFile, cellBC, cellFile, cellCluster, listClusterNames[iCluster]);
+				System.out.println("got # cells: "+listBCs[iCluster].length);
 			}
+			System.out.println("------------------");
 			
 			//Perform the pilup for this file
-			Pileup p=listFile.get(i).buildPileup(
+			Pileup p=listFile.get(iFile).buildPileup(
 					windowSeq, windowFrom, windowTo, 
 					numdiv,
 					listBCs, listClusterNames);
 			
-			if(i==0)
+			if(iFile==0)
 				totalp=p;
 			else
 				totalp.addPileup(p);
@@ -119,6 +130,10 @@ public class CellPileFileCollection {
 		return buildPileup(windowSeq, windowFrom, windowTo, numdiv, cellBC, cellFile, cellCluster);
 	}
 	
+	
+	/**
+	 * Return a string, repeated
+	 */
 	private static String[] getRepString(String el, int n) {
 		String[] list=new String[n];
 		for(int i=0;i<n;i++)
