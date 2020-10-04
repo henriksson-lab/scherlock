@@ -110,6 +110,18 @@ class CellPile:
 		if cellFile is None:
 			cellFile = [""] * len(cellBC)
 		
+		#Convenience conversions, especially for scanpy
+		if hasattr(cellFile, 'tolist'):
+			#if isinstance(cellFile, pandas.core.series.Series):
+			cellFile = cellFile.tolist()
+		if hasattr(cellBC, 'tolist'):
+			#if isinstance(cellBC, pandas.core.series.Series):
+			cellBC = cellBC.tolist()
+		if hasattr(cellCluster, 'tolist'):
+			#if isinstance(cellFile, pandas.core.series.Series):
+			cellCluster = cellCluster.tolist()
+			
+		
 		return Pileup(self.cp.buildPileup(seq, sfrom, sto, numdiv, 
 										self._toStringArray(cellBC), 
 										self._toStringArray(cellFile), 
