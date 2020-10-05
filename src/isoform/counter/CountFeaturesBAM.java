@@ -109,6 +109,8 @@ public class CountFeaturesBAM {
 		//Statistics of how many records we kept
 		int readRecords=0;
 		int keptRecords=0;
+		String currentSource=null;
+		int currentPos=0;
 		
 		//Instead of keeping features in a treemap, which is O(log n) to look up,
 		//we can exploit that the input file is sorted. By keeping a pointer to the
@@ -125,7 +127,7 @@ public class CountFeaturesBAM {
 			readRecords++;
 			if(readRecords%1000000 == 0){
 				int prcDone=(int)(100.0*searchFeatureListFrom/(double)listFeatures.size());
-				System.out.println("Progress: "+prcDone+"%\t  Kept/Read: "+keptRecords+"/"+readRecords);
+				System.out.println("Progress: "+prcDone+"%\t  Kept/Read: "+keptRecords+"/"+readRecords+"\tCurrently@: "+currentSource+"\t"+currentPos);
 			}
 
 			//Get UMI and BC for this read
@@ -157,7 +159,12 @@ public class CountFeaturesBAM {
 							int blockFrom=ab.getReferenceStart();
 							int blockTo=ab.getReferenceStart()+ab.getLength();
 							
-							//Look up overlapping feature
+							//For display
+							currentSource=blockSource;
+							currentPos=blockFrom;
+							
+							//Look up overlapping features. Continue searching from where we were last time.
+							//This assumes that the FASTQ has been position sorted!
 							for(int fi=searchFeatureListFrom;fi<listFeatures.size();fi++) {
 								Feature feature=listFeatures.get(fi);
 								int compSource=feature.source.compareTo(blockSource);  // could pre-split the chromosome to avoid these checks

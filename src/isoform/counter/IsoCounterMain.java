@@ -28,13 +28,28 @@ public class IsoCounterMain {
 
 		
 	//		File f10x=new File("/beagle/big/debojyoti/HUMAN_SARS_229E_OC43/lib1/outs");
-		if(args.length==3) {
-			File fGTF=new File(args[0]);
-			File f10x=new File(args[1]);
+		if(args.length==4 && args[0].equals("build")) {
+			File fGTF=new File(args[1]);
 			File fOut=new File(args[2]);
-
+			
 			if(!fGTF.exists()) {
 				System.out.println("GTF-file does not exist");
+				System.exit(1);
+			}
+
+			System.out.println("Reading "+fGTF);
+			FeatureFile ff=FeatureFile.read(fGTF);
+			ff.write(fOut);
+			System.out.println("Stored in "+fOut);
+			
+		} else if(args.length==4 && args[0].equals("count")) {
+
+			File fFeature=new File(args[1]);
+			File f10x=new File(args[2]);
+			File fOut=new File(args[3]);
+
+			if(!fFeature.exists()) {
+				System.out.println("Feature-file does not exist");
 				System.exit(1);
 			}
 
@@ -51,30 +66,35 @@ public class IsoCounterMain {
 			//scp rackham.uppmax.uu.se:/home/mahogny/mystore/dataset/tonsil_sc/aligned/SRR11816791/outs/possorted_genome_bam.bam
 			File fBarcodes=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
 			File fBAM=new File(f10x, "possorted_genome_bam.bam");
-			
+
+			System.out.println("Reading barcodes: "+fBarcodes);
 			ArrayList<String> listBarcodes=GtfToFeature.readBarcodeZipList(fBarcodes);
-		
-			
-			//File outdir=new File("./out");
-			//outdir.mkdirs();
-			//ystem.out.println("To: "+outdir);
-			
-			ArrayList<Feature> features=new GtfToFeature().splitGTF(fGTF, f10x);
+
+			System.out.println("Reading features: "+fFeature);
+			FeatureFile ff=FeatureFile.read(fFeature);
 			
 			System.out.println("Performing the counting: "+fBAM);
-			CountFeaturesBAM cb=new CountFeaturesBAM(features, listBarcodes);
+			CountFeaturesBAM cb=new CountFeaturesBAM(ff.features, listBarcodes);
 			cb.countReads(fBAM);
 			
-			System.out.println("Storing the counts");
-			//File fCountDir=new File("/home/mahogny/umeå/project/isoform/newcount");
+			System.out.println("Storing the counts: "+fOut);
 			cb.writeMatrix(fOut);
 			
 		} else {
-			System.out.println("USAGE: isocounter GTFFILE MATRIXDIR OUTDIR");
+			System.out.println("==================================================");
+			System.out.println("USAGE: isocounter build GTFFILE FEATUREFILE.ff");
 			System.out.println("Where ");
 			System.out.println("   GTFFILE is a something like Homo_sapiens.GRCh38.101.chr.gff3");
+			System.out.println("   FEATUREFILE is where the features will be stored");
+			System.out.println();
+			System.out.println();
+			System.out.println("==================================================");
+			System.out.println("USAGE: isocounter count FEATUREFILE.ff MATRIXDIR OUTDIR");
+			System.out.println("Where ");
+			System.out.println("   FEATUREFILE is a list of features to count");
 			System.out.println("   MATRIXDIR is the 10x matrix out-directory");
 			System.out.println("   OUTDIR is where compressed new matrices will be stored, and what the features are (.bed)");
+			System.out.println();
 			System.exit(1);
 		}
 	

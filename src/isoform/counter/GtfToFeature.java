@@ -54,7 +54,7 @@ public class GtfToFeature {
 	/**
 	 * Split GTF file into countable features
 	 */
-	public ArrayList<Feature> splitGTF(File fGTF, File fOutdir) throws IOException {
+	public ArrayList<Feature> splitGTF(File fGTF) throws IOException {
 		System.out.println("Reading features from "+fGTF);
 
 		//Read all the relevant features and associate with transcripts/genes
@@ -181,17 +181,7 @@ public class GtfToFeature {
 			}
 		});
 
-		//Store the features for visualization
-		PrintWriter pwFeatures=new PrintWriter(new File(fOutdir,"features.bed"));
-		for(Feature r:features) {
-			pwFeatures.println(r.source+"\t"+r.from+"\t"+r.to+"\t"+r.featureName);
-			
-		}
-		pwFeatures.close();
-
-		
 		return features;
-		
 	}
 	
 	

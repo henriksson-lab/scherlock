@@ -35,23 +35,41 @@ public class CellPileFileCollection {
 		return listFile.get(i).getListBarcodes();
 	}
 	
+	/**
+	 * Get the names of piles
+	 */
+	public List<String> getPileNames(){
+		return listPileName;
+	}
+	
 	
 	/**
 	 * Convert barcodes to IDs for a given fileID
 	 */
-	private int[] convertBarcodeNamesToIDs(int forFile, String[] cellBC, String[] cellFile, String[] cellCluster, String thisCluster){
-		CellPileFile f=listFile.get(forFile);
-		String thisFileName=listPileName.get(forFile);
+	private int[] convertBarcodeNamesToIDs(
+			int forPile, 
+			String[] cellBC, String[] cellPile, String[] cellCluster, 
+			String forCluster){
+		CellPileFile pile=listFile.get(forPile);
+		String thisPileName=listPileName.get(forPile);
+		
+		
 		IntArrayList list2=new IntArrayList(cellBC.length);
 		for(int j=0;j<cellBC.length;j++) {
-			if(cellFile[j].equals(thisFileName) && cellCluster[j].equals(thisCluster)) {
-				list2.add(f.mapBarcodeIndex.get(cellBC[j]));
+			if(cellPile[j].equals(thisPileName) && cellCluster[j].equals(forCluster)) {
+				list2.add(pile.mapBarcodeIndex.get(cellBC[j]));
 			}
 		}
 		list2.trimToSize();
 		return list2.elements();
 	}
 	
+	
+	public static void print(String[] ss) {
+		for(String s:ss)
+			System.out.print(s+" ");
+		System.out.println();
+	}
 	
 	/**
 	 * Build a pileup that sums up all pileups
@@ -60,6 +78,13 @@ public class CellPileFileCollection {
 			String windowSeq, int windowFrom, int windowTo, 
 			int numdiv,
 			String[] cellBC, String[] cellFile, String[] cellCluster) throws IOException {
+		
+		System.out.println("--- got BC");
+		print(cellBC);
+		System.out.println("--- got file");
+		print(cellFile);
+		System.out.println("--- got cluster");
+		print(cellCluster);
 		
 		//Figure out what cluster names there are
 		TreeSet<String> allClusterNames=new TreeSet<String>();

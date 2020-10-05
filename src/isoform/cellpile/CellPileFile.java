@@ -494,6 +494,7 @@ public class CellPileFile {
 		int[][] outTracks=new int[cellGroups.length][numdiv];
 
 		//Iterate through all the chunks
+		int counted=0;
 		int chunkFrom=windowFrom/chunkSize;
 		int chunkTo=windowTo/chunkSize+1;
 		for(int curChunk=chunkFrom;curChunk<=chunkTo;curChunk++) {
@@ -535,6 +536,7 @@ public class CellPileFile {
 								
 								for(int j=posLeft;j<=posRight;j++) {
 									thisTrack[j]++;
+									counted++;
 								}
 							} else {
 								//Get this to work after basic edition working - dangerous!
@@ -546,6 +548,7 @@ public class CellPileFile {
 				}
 			}
 		}
+		System.out.println("Counted: "+counted);
 		
 		pileup.tracks=outTracks;
 		return pileup;

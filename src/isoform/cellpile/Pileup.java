@@ -135,7 +135,7 @@ public class Pileup {
 		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
 			double baseX=labelsWidth;
 			double baseY=(double)trackHeight*(curTrack+1);
-			double scaleY=-(double)trackHeight/(trackMaxCount*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
+			double scaleY=-(double)trackHeight/(trackMaxCount);//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
 			double scaleX=(double)trackWidth/numdiv;
 			trackToSVG(sb, tracks[curTrack], clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
 		}
