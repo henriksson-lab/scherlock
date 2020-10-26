@@ -227,7 +227,6 @@ public class GtfParser {
 		StringTokenizer stok=new StringTokenizer(s,";");
 		while(stok.hasMoreTokens()) {
 			String tok=stok.nextToken();
-			
 			int ind=tok.indexOf("=");
 			String key=tok.substring(0,ind);
 			String value=tok.substring(ind+1);

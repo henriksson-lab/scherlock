@@ -110,8 +110,10 @@ public class Pileup {
 		double totalTrackWidth=labelsWidth+trackWidth;
 		int totalTrackHeight=(int)(trackHeight*numTrack);
 		double totalHeightAll=(totalTrackHeight + numTranscripts*transcriptHeight);
-		sb.append("<svg height=\""+totalHeightAll+"\" width=\""+(totalTrackWidth)+"\" "
+		sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\""
+				+ totalHeightAll+"\" width=\""+(totalTrackWidth)+"\" "
 				+ "style=\"background-color:none\">");  //seems to ignore bg
+		
 		
 		//Mask for the track viewport
 		sb.append(
