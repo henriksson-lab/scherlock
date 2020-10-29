@@ -86,14 +86,16 @@ public class Pileup {
 	}
 	
 	
-	public String toSVG(GtfParser gtf) {
+	public String toSVG(GtfParser gtf) {  // TODO: Add bed file as argument here
 		StringBuilder sb=new StringBuilder();
 
 		
 		//Figure out the space needed for tracks
 		int numTrack=tracks.length;
 		double trackMaxCount=Math.max(1,getMaxCountForTracks());
+		// TODO: Modify here to make space for bed file lines
 
+		
 		//Figure out which genes to show - linear search, not optimal
 		TreeSet<String> overlappingGenes=new TreeSet<String>();
 		int numTranscripts=0;
@@ -233,6 +235,9 @@ public class Pileup {
 			}
 		}
 
+		// TODO add loop here to write bed file tracks
+		
+		
 		
 		
 		
