@@ -445,6 +445,14 @@ public class CellPileFile {
 	}
 	
 	
+	private static int clamp(int x, int min, int max) {
+		if(x<min)
+			x=min;
+		if(x>max)
+			x=max;
+		return(x);
+	}
+	
 	/**
 	 * Build pileups for each given cell group
 	 * @param windowSeq     Sequence to look up
@@ -493,10 +501,14 @@ public class CellPileFile {
 		//Allocate the pileup tracks
 		int[][] outTracks=new int[cellGroups.length][numdiv];
 
-		//Iterate through all the chunks
-		int counted=0;
+		//Figure out chunks to read
 		int chunkFrom=windowFrom/chunkSize;
 		int chunkTo=windowTo/chunkSize+1;
+		chunkFrom = clamp(chunkFrom, 0, mapChunkStarts.get(windowSeq).length-1);
+		chunkTo = clamp(chunkTo, 0, mapChunkStarts.get(windowSeq).length-1);
+		
+		//Iterate through all the chunks
+		int counted=0;
 		for(int curChunk=chunkFrom;curChunk<=chunkTo;curChunk++) {
 			long chunkPos=mapChunkStarts.get(windowSeq)[curChunk];
 			if(chunkPos!=0) {
