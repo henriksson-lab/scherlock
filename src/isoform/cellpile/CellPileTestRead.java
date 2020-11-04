@@ -38,7 +38,8 @@ public class CellPileTestRead {
 
 		long time=System.currentTimeMillis();
 		//File fGTF=new File("/home/mahogny/umeå/project/isoform/refgenome/Homo_sapiens.GRCh38.101.chr.gff3");
-		File fGTF=new File("/home/mahogny/umeå/project/isoform/refgenome/Homo_sapiens.GRCh38.101.chr.gff3.gz");
+//		File fGTF=new File("/home/mahogny/umeå/project/isoform/refgenome/Homo_sapiens.GRCh38.101.chr.gff3.gz");
+		File fGTF=new File("/home/mahogny/all.gtf.gz");
 		
 		System.out.println("parse gtf");
 		GtfParser gtf=new GtfParser(fGTF);

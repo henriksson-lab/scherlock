@@ -132,6 +132,7 @@ public class GtfParser {
 		String line;
 		while((line=br.readLine())!=null) {
 			if(!line.startsWith("#")) {
+				
 				StringTokenizer stok=new StringTokenizer(line,"\t");
 				
 				String seq=stok.nextToken();
@@ -149,12 +150,37 @@ public class GtfParser {
 
 				//System.out.println(attr);
 				
-				//Top level features
+
+				String attrGene=null;
+				String attrTranscript=null;
+				
+				/// GFF3
 				String id=attr.get("ID");
 				String parent=attr.get("Parent");
 				if(id!=null) {
-					if(id.startsWith("gene:")) {
-						String attrGene=removeTag(id,"gene:");
+					if(id.startsWith("gene:"))
+						attrGene=removeTag(id,"gene");
+					if(id.startsWith("transcript:")) 
+						attrTranscript=removeTag(id,"transcript");
+				}
+				if(parent!=null) {
+					if(parent.startsWith("gene:")) 
+						attrGene=removeTag(parent,"gene");
+					if(parent.startsWith("transcript:"))
+						attrTranscript=removeTag(parent,"transcript");
+				}
+
+				/// GTF
+				if(attr.get("gene_id")!=null)
+					attrGene=attr.get("gene_id");
+				if(attr.get("transcript_id")!=null)
+					attrTranscript=attr.get("transcript_id");
+
+				
+				/*
+				if(id!=null) {
+					if(id.startsWith("gene")) {
+						String attrGene=removeTag(id,"gene");
 						mapGeneRange.put(attrGene,r);
 						if(!mapGeneTranscripts.containsKey(attrGene))
 							mapGeneTranscripts.put(attrGene, new TreeSet<String>());
@@ -166,37 +192,54 @@ public class GtfParser {
 						
 					}
 
-					if(id.startsWith("transcript:") && parent!=null && parent.startsWith("gene:")) {
+					if(id.startsWith("transcript") && parent!=null && parent.startsWith("gene")) {
 						//TODO, filter
-						String attrGene=removeTag(parent,"gene:");
-						String attrTranscript=removeTag(id,"transcript:");
+						String attrGene=removeTag(parent,"gene");
+						String attrTranscript=removeTag(id,"transcript");
 						linkGeneTranscript(attrGene, attrTranscript);
-/*
-						ArrayList<Range> ga=getTranscriptArray(attrTranscript);
-						ga.add(r);
-						numRange++;*/
+
 					}
-				}
-				
-				if(parent!=null) {
+				} else if(parent!=null) {   //////////// this "else" might cause future problems
 					//Exons, UTRs, etc
-					if(parent.startsWith("transcript:")) {
+					if(parent.startsWith("transcript")) {
 						
 						//Exons, UTRs, etc
 						
-						
 						//TODO, filter
-						String attrTranscript=removeTag(parent,"transcript:");
-						
+						String attrTranscript=removeTag(parent,"transcript");
 						ArrayList<Range> ga=getTranscriptArray(attrTranscript);
 						ga.add(r);
 						numRange++;
 					}
+				} else {*/
+						
+				////////////////// Attempt GTF
+				//String attrGene=attr.get("gene_id");
+				//String attrTranscript=attr.get("transcript_id");
+	
+				if(featureType.equals("transcript")) {
+					//Transcript
+					linkGeneTranscript(attrGene, attrTranscript);
+				} else if(attrTranscript!=null) {
+					//Exons, UTRs, etc
+					ArrayList<Range> ga=getTranscriptArray(attrTranscript);
+					ga.add(r);
+					numRange++;
+				} else if(attrGene!=null && featureType.equals("gene")){
 					
+					mapGeneRange.put(attrGene,r);
+					if(!mapGeneTranscripts.containsKey(attrGene))
+						mapGeneTranscripts.put(attrGene, new TreeSet<String>());
+					
+					String attrSymbol=attr.get("Name"); //GFF3
+					if(attrSymbol==null) {
+						attrSymbol=attr.get("gene_name"); //GTF
+					}
+					if(attrSymbol!=null) {
+						mapSymbolGene.put(attrSymbol, attrGene);
+					}
 				}
-				
-				
-				
+		
 			}
 		}
 		br.close();		
@@ -227,11 +270,23 @@ public class GtfParser {
 		StringTokenizer stok=new StringTokenizer(s,";");
 		while(stok.hasMoreTokens()) {
 			String tok=stok.nextToken();
-			
+			tok=tok.trim();
 			int ind=tok.indexOf("=");
-			String key=tok.substring(0,ind);
-			String value=tok.substring(ind+1);
-			m.put(key, value);
+			if(ind==-1) {
+				ind=tok.indexOf(" ");
+				if(ind==-1)
+					throw new RuntimeException("Unknown format of attributes; example: "+s);
+				String key=tok.substring(0,ind);
+				String value=tok.substring(ind+1);
+				if(value.startsWith("\""))
+					value=value.substring(1,value.length()-1);
+				m.put(key, value);
+			} else {
+				String key=tok.substring(0,ind);
+				key=key.substring(0,key.length()-1);
+				String value=tok.substring(ind+1);
+				m.put(key, value);
+			}
 		}
 		return m;
 	}
