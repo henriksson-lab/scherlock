@@ -35,11 +35,18 @@ public class Pileup {
 	
 	public int numVertGuides=16;
 	
-	private double transformPos(int x) {
+	/**
+	 * Transform position on chromosome to screen/SVG coordinate
+	 */
+	private double transformPosX(int x) {
 		return labelsWidth + (double)trackWidth*(x-from)/(to-from);
 	}
 	
-	private void trackToSVG(
+	
+	/**
+	 * Render one pileup track
+	 */
+	private void renderOneTrackToSVG(
 			StringBuilder sb,
 			int[] track,
 			String trackName,
@@ -86,15 +93,16 @@ public class Pileup {
 	}
 	
 	
+	/**
+	 * Render all of the pileup
+	 */
 	public String toSVG(GtfParser gtf) {
 		StringBuilder sb=new StringBuilder();
-
 		
 		//Figure out the space needed for tracks
 		int numTrack=tracks.length;
-		double trackMaxCount=Math.max(1,getMaxCountForTracks());
 
-		//Figure out which genes to show - linear search, not optimal
+		//Figure out which genes and transcripts to show - linear search, not optimal
 		TreeSet<String> overlappingGenes=new TreeSet<String>();
 		int numTranscripts=0;
 		for(String gene:gtf.mapGeneRange.keySet()) {
@@ -122,35 +130,32 @@ public class Pileup {
 		//Set background color
 		sb.append("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>");
 		
-		String colorVertGuides="rgb(200,200,200)";
-		//String colorVertGuides="lightgray";
-		//Write vertical guide lines
-		for(int i=0;i<numVertGuides;i++) {
-			double x=labelsWidth + i*trackWidth/numVertGuides;
-			sb.append("<line x1=\""+x+"\" y1=\"0\" x2=\""+x+"\" y2=\"100%\" stroke=\""+colorVertGuides+"\"/>");
-		}
+		renderVerticalGuideLines(sb);
+		renderAllTracksToSVG(sb);
+		renderGTF(sb, gtf, overlappingGenes, totalTrackWidth, totalTrackHeight);
 		
 		
-		//Write all tracks
-		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
-			double baseX=labelsWidth;
-			double baseY=(double)trackHeight*(curTrack+1);
-			double scaleY=-(double)trackHeight/(trackMaxCount);//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
-			double scaleX=(double)trackWidth/numdiv;
-			trackToSVG(sb, tracks[curTrack], clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
-		}
-		
+		sb.append("</svg>");
+		return sb.toString();
+	}
+	
+	
+	
+	private void renderGTF(
+			StringBuilder sb, 
+			GtfParser gtf, TreeSet<String> overlappingGenes, 
+			double totalTrackWidth, double totalTrackHeight) {
 		String colorFeatureLine="rgb(0,0,0)";
 
 		//Write GTF annotation
 		String textStyle="font: italic sans-serif; fill: red;";
-		int curt=0;
+		int curTrack=0;
 		for(String gene:overlappingGenes) {
 			for(String transcript:gtf.mapGeneTranscripts.get(gene)) {
 				//System.out.println(transcript);
 				//Should draw a straight line...
 
-				double lineY=totalTrackHeight + (curt+0.5)*transcriptHeight;
+				double lineY=totalTrackHeight + (curTrack+0.5)*transcriptHeight;
 				double featureY=lineY - featureHeight/2;
 						
 				//// Plot the line also suggesting the direction
@@ -162,8 +167,8 @@ public class Pileup {
 				}
 //				double minTransFrom=transformPos(minFrom);
 	//			double maxTransTo=transformPos(maxTo);
-				double minTransFrom=Math.max(labelsWidth,transformPos(minFrom));
-				double maxTransTo=Math.min(totalTrackWidth,transformPos(maxTo));
+				double minTransFrom=Math.max(labelsWidth,transformPosX(minFrom));
+				double maxTransTo=Math.min(totalTrackWidth,transformPosX(maxTo));
 
 				sb.append("<line"
 						+ " x1=\""+minTransFrom+
@@ -200,8 +205,8 @@ public class Pileup {
 				//// Plot all the features
 				for(Range r:listFeatures) {
 					//Transform coordinates
-					double rFrom=transformPos(r.from);
-					double rTo=transformPos(r.to);
+					double rFrom=transformPosX(r.from);
+					double rTo=transformPosX(r.to);
 
 					String exonColor="rgb(0,0,0)";
 					if(r.featureType.equals(Range.FEATURE_3UTR))
@@ -225,21 +230,66 @@ public class Pileup {
 			double textXFrom=5;
 			double textY=lineY + textHeight/2;
 			sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+textHeight+"px\" >"+transcript+"</text>");
-				
 
-			curt++;
+			curTrack++;
 			}
 		}
-
-		
-		
-		
-		sb.append("</svg>");
-		return sb.toString();
 	}
+
 	
+	/**
+	 * Render the vertical guide lines
+	 */
+	private void renderVerticalGuideLines(StringBuilder sb) {
+		String colorVertGuides="rgb(200,200,200)";
+		//String colorVertGuides="lightgray";
+		//Write vertical guide lines
+		for(int i=0;i<numVertGuides;i++) {
+			double x=labelsWidth + i*trackWidth/numVertGuides;
+			sb.append("<line x1=\""+x+"\" y1=\"0\" x2=\""+x+"\" y2=\"100%\" stroke=\""+colorVertGuides+"\"/>");
+		}
+	}
+
+	/**
+	 * Render all tracks. The main challenge is to scale them properly
+	 */
+	private void renderAllTracksToSVG(StringBuilder sb) {
+		
+		//Figure out track rescaling vs number of cells in each vs max peak height
+		double[] scaleFactor=new double[tracks.length];
+		double[] scaleFactorWithHeight=new double[tracks.length];
+		double[] maxHeight=new double[tracks.length];
+		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
+			System.out.println("cell count: "+cellGroupCellCount[curTrack]);
+			maxHeight[curTrack]=Math.max(1, PileMathUtil.maxForList(tracks[curTrack]));
+			scaleFactor[curTrack] = 1.0/Math.max(1,cellGroupCellCount[curTrack]);
+			scaleFactorWithHeight[curTrack] = Math.max(1,cellGroupCellCount[curTrack])/maxHeight[curTrack];
+			//scaleFactor[curTrack] /= Math.max(1.0,maxHeight[curTrack]);//Math.max(1,cellGroupCellCount[curTrack]);
+		}
+		PileMathUtil.scaleMaxValue(scaleFactor, PileMathUtil.maxForList(scaleFactorWithHeight));   //maybe min?
+		/*
+		//Figure out track rescaling vs max peak height, taking #cell rescaling into account
+		double[] scaleByCellsAndMaximum=new double[tracks.length];
+		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
+			scaleByCellsAndMaximum[curTrack]=scaleByCells[curTrack]/Math.max(1.0,maxForList(tracks[curTrack]));
+		}
+		scaleMaxValueToOne(scaleByCellsAndMaximum);*/
+		
+		//Write all pileup tracks
+		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
+			double baseX=labelsWidth;
+			double baseY=(double)trackHeight*(curTrack+1);
+			double scaleY=-(double)trackHeight*scaleFactor[curTrack]/Math.max(1,cellGroupCellCount[curTrack]);///cellGroupCellCount[curTrack];//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
+			double scaleX=(double)trackWidth/numdiv;
+			renderOneTrackToSVG(sb, tracks[curTrack], clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
+		}
+	}
+
 	
-	public double maxForTrack[];
+
+
+
+//	public double maxForTrack[];
 	
 	/**
 	 * Find the maximum count on any track
@@ -247,6 +297,7 @@ public class Pileup {
 	 * After normalization by 1/cellGroupCellCount[iTrack]   -- has to be undone later
 	 * 
 	 */
+	/*
 	private double getMaxCountForTracks() {
 		double max=0;
 		maxForTrack=new double[tracks.length];
@@ -254,17 +305,14 @@ public class Pileup {
 			int[] track=tracks[iTrack];
 			
 			//Calculate normalized maximum for this track
-			int maxThisTrack=0;
-			for(int x:track) {
-				maxThisTrack=Math.max(maxThisTrack, x);
-			}
-			maxForTrack[iTrack]=maxThisTrack;///(double)(Math.max(1,cellGroupCellCount[iTrack]));    //should normalize on total counts!
+			maxForTrack[iTrack]=maxForList(track);
+			///(double)(Math.max(1,cellGroupCellCount[iTrack]));    //should normalize on total counts!
 			System.out.println("count:    "+cellGroupCellCount[iTrack]);
 			
 			max=Math.max(maxForTrack[iTrack], max);
 		}
 		return max;
-	}
+	}*/
 	
 	
 	/**

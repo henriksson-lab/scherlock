@@ -159,15 +159,15 @@ public class GtfParser {
 				String parent=attr.get("Parent");
 				if(id!=null) {
 					if(id.startsWith("gene:"))
-						attrGene=removeTag(id,"gene");
+						attrGene=removeTag(id,"gene:");
 					if(id.startsWith("transcript:")) 
 						attrTranscript=removeTag(id,"transcript");
 				}
 				if(parent!=null) {
 					if(parent.startsWith("gene:")) 
-						attrGene=removeTag(parent,"gene");
+						attrGene=removeTag(parent,"gene:");
 					if(parent.startsWith("transcript:"))
-						attrTranscript=removeTag(parent,"transcript");
+						attrTranscript=removeTag(parent,"transcript:");
 				}
 
 				/// GTF
@@ -217,16 +217,15 @@ public class GtfParser {
 				//String attrGene=attr.get("gene_id");
 				//String attrTranscript=attr.get("transcript_id");
 	
-				if(featureType.equals("transcript")) {
+				
+				/////////////////// Read out the gene structures
+				if(featureType.equals("transcript") || featureType.equals("mRNA")) {
+					//System.out.println("--- "+attrGene+"\t"+attrTranscript);
 					//Transcript
 					linkGeneTranscript(attrGene, attrTranscript);
-				} else if(attrTranscript!=null) {
-					//Exons, UTRs, etc
-					ArrayList<Range> ga=getTranscriptArray(attrTranscript);
-					ga.add(r);
-					numRange++;
-				} else if(attrGene!=null && featureType.equals("gene")){
+				} else if(featureType.equals("gene") && attrGene!=null){
 					
+					//Allocate map gene -> transcript
 					mapGeneRange.put(attrGene,r);
 					if(!mapGeneTranscripts.containsKey(attrGene))
 						mapGeneTranscripts.put(attrGene, new TreeSet<String>());
@@ -238,6 +237,11 @@ public class GtfParser {
 					if(attrSymbol!=null) {
 						mapSymbolGene.put(attrSymbol, attrGene);
 					}
+				} else if(attrTranscript!=null) {
+					//Exons, UTRs, etc
+					ArrayList<Range> ga=getTranscriptArray(attrTranscript);
+					ga.add(r);
+					numRange++;
 				}
 		
 			}
@@ -273,22 +277,33 @@ public class GtfParser {
 			tok=tok.trim();
 			int ind=tok.indexOf("=");
 			if(ind==-1) {
+				//KEY value
 				ind=tok.indexOf(" ");
 				if(ind==-1)
 					throw new RuntimeException("Unknown format of attributes; example: "+s);
 				String key=tok.substring(0,ind);
 				String value=tok.substring(ind+1);
-				if(value.startsWith("\""))
-					value=value.substring(1,value.length()-1);
+				value=parseOutCitation(value);
 				m.put(key, value);
 			} else {
+				//KEY=value
 				String key=tok.substring(0,ind);
-				key=key.substring(0,key.length()-1);
+				//key=key.substring(0,key.length()-1);
 				String value=tok.substring(ind+1);
+				//value=value.substring(0,value.length()-1);
 				m.put(key, value);
 			}
 		}
 		return m;
+	}
+	
+	/**
+	 * Remove citation signs around "foo" if detected
+	 */
+	private static String parseOutCitation(String value) {
+		if(value.startsWith("\""))
+			value=value.substring(1,value.length()-1);
+		return value;
 	}
 
 }
