@@ -279,7 +279,7 @@ public class Pileup {
 		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
 			double baseX=labelsWidth;
 			double baseY=(double)trackHeight*(curTrack+1);
-			double scaleY=-(double)trackHeight*scaleFactor[curTrack]/Math.max(1,cellGroupCellCount[curTrack]);///cellGroupCellCount[curTrack];//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
+			double scaleY=-(double)trackHeight*0.9*scaleFactor[curTrack]/Math.max(1,cellGroupCellCount[curTrack]);///cellGroupCellCount[curTrack];//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
 			double scaleX=(double)trackWidth/numdiv;
 			renderOneTrackToSVG(sb, tracks[curTrack], clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
 		}
