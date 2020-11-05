@@ -145,7 +145,7 @@ public class TrackRenderer {
 	 */
 	public void setShowLog(boolean b) {
 		for(Track t:tracks) {
-			if(t instanceof TrackGTF) {
+			if(t instanceof TrackPileup) {
 				((TrackPileup)t).showLog=b;
 			}
 		}
