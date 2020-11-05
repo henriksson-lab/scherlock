@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import cern.colt.list.IntArrayList;
+import isoform.trackRenderer.Track;
 
 /**
  * A meta interface to work with several piles in parallel. This allows 

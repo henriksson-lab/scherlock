@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import isoform.trackRenderer.TrackGTF;
+import isoform.trackRenderer.TrackPileup;
+import isoform.trackRenderer.TrackRenderer;
 import isoform.util.GtfParser;
 
 /**
@@ -46,8 +49,11 @@ public class CellPileTestRead {
 		System.out.println("dt: "+(System.currentTimeMillis()-time));
 		
 		System.out.println("--------");
-		pileup.addTrack(new TrackGTF(gtf));
-		String svg=pileup.toSVG(false);
+		TrackPileup trackPileup=new TrackPileup(pileup, false);
+		
+		TrackRenderer renderer=new TrackRenderer(trackPileup);
+		renderer.addTrack(new TrackGTF(gtf));
+		String svg=renderer.toSVG();
 		//System.out.println(svg);
 		System.out.println("--------");
 		PrintWriter pw=new PrintWriter(new File("/home/mahogny/temp.svg"));

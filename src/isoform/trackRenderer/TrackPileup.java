@@ -1,15 +1,34 @@
-package isoform.cellpile;
+package isoform.trackRenderer;
 
+import isoform.cellpile.Pileup;
+import isoform.util.PileMathUtil;
+
+/**
+ * Renderer: Pileup track
+ * 
+ * @author Johan Henriksson
+ *
+ */
 public class TrackPileup extends Track {
 
-	@Override
-	protected double getHeight(Pileup pileup) {
-		int numPileTrack=pileup.tracks.length;
-		return (int)(pileup.trackHeight*numPileTrack);
+	public Pileup pileup;
+	public boolean showLog;
+	
+	
+	
+	public TrackPileup(Pileup pileup, boolean showLog) {
+		this.pileup = pileup;
+		this.showLog = showLog;
 	}
 
 	@Override
-	protected void render(Pileup pileup, StringBuilder sb, int offsetY) {
+	protected double getHeight(TrackRenderer renderer) {
+		int numPileTrack=pileup.tracks.length;
+		return (int)(renderer.trackHeight*numPileTrack);
+	}
+
+	@Override
+	protected void render(TrackRenderer renderer, StringBuilder sb, int offsetY) {
 		
 		//Rescale tracks
 		double[][] tracksScaled=new double[pileup.tracks.length][];
@@ -24,7 +43,7 @@ public class TrackPileup extends Track {
 			}
 			
 			//Apply pseudo-log if requested
-			if(pileup.doLog) {
+			if(showLog) {
 				for(int i=0;i<thisTrack.length;i++) {
 					thisTrackScaled[i] = Math.log10(1+thisTrackScaled[i]);
 				}
@@ -35,11 +54,11 @@ public class TrackPileup extends Track {
 
 		//Write all pileup tracks
 		for(int curTrack=0;curTrack<pileup.tracks.length;curTrack++) {
-			double baseX=pileup.labelsWidth;
-			double baseY=(double)pileup.trackHeight*(curTrack+1);
-			double scaleY=-(double)pileup.trackHeight*0.9/maxMaxHeight;//scaleFactor[curTrack]/Math.max(1,cellGroupCellCount[curTrack]);///cellGroupCellCount[curTrack];//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
-			double scaleX=(double)pileup.trackWidth/pileup.numdiv;
-			renderOnePileup(pileup, sb, tracksScaled[curTrack], pileup.clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
+			double baseX=renderer.labelsWidth;
+			double baseY=(double)renderer.trackHeight*(curTrack+1);
+			double scaleY=-(double)renderer.trackHeight*0.9/maxMaxHeight;//scaleFactor[curTrack]/Math.max(1,cellGroupCellCount[curTrack]);///cellGroupCellCount[curTrack];//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
+			double scaleX=(double)renderer.trackWidth/pileup.numdiv;
+			renderOnePileup(renderer, sb, tracksScaled[curTrack], pileup.clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
 		}
 	}
 
@@ -51,7 +70,7 @@ public class TrackPileup extends Track {
 	 * Render one pileup track
 	 */
 	private void renderOnePileup(
-			Pileup pileup,
+			TrackRenderer renderer,
 			StringBuilder sb,
 			double[] track,
 			String trackName,
@@ -94,7 +113,10 @@ public class TrackPileup extends Track {
 		String textStyle="font: italic sans-serif; fill: red;";
 		double textXFrom=5;
 		double textY=baseY;
-		sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+pileup.textHeight+"px\" >"+trackName+"</text>");
+		sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+renderer.textHeight+"px\" >"+trackName+"</text>");
+	}
+
+	protected void allocateSize(TrackRenderer renderer) {
 	}
 	
 	

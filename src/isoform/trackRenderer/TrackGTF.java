@@ -1,4 +1,4 @@
-package isoform.cellpile;
+package isoform.trackRenderer;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -8,30 +8,31 @@ import isoform.util.GtfParser;
 import isoform.util.Range;
 
 /**
- * Track that shows a GTF file
+ * Renderer: GTF-track
  * 
  * @author Johan Henriksson
  *
  */
 public class TrackGTF extends Track {
 
-	GtfParser gtf;
+	public GtfParser gtf;
 	
+	//Allocation: which genes to show?
+	private int numTranscripts;
+	private TreeSet<String> overlappingGenes;
 
-
+	
 	public TrackGTF(GtfParser gtf) {
 		this.gtf = gtf;
 	}
 
 	
 	
-	int numTranscripts;
-	TreeSet<String> overlappingGenes;
 
 	/**
 	 * Figure out which genes and transcripts to show
 	 */
-	public void allocateSize(Pileup pileup) {
+	public void allocateSize(TrackRenderer pileup) {
 		numTranscripts=0;
 				
 		//linear search, not optimal
@@ -45,23 +46,7 @@ public class TrackGTF extends Track {
 		}
 	}
 
-	public void render(Pileup pileup, StringBuilder sb, int offsetY) {
-		// TODO Auto-generated method stub
-	
-		
-		
-/*
-		private void renderGTF(
-				Pileup pileup, 
-				StringBuilder sb, 
-				GtfParser gtf, TreeSet<String> overlappingGenes, 
-				double totalTrackWidth, double totalTrackHeight) {
-			*/
-			
-//	renderGTF(sb, gtf, overlappingGenes, totalTrackWidth, totalTrackHeight);
-	
-
-	
+	public void render(TrackRenderer pileup, StringBuilder sb, int offsetY) {
 		String colorFeatureLine="rgb(0,0,0)";
 
 		//Write GTF annotation
@@ -85,7 +70,7 @@ public class TrackGTF extends Track {
 //				double minTransFrom=transformPos(minFrom);
 	//			double maxTransTo=transformPos(maxTo);
 				double minTransFrom=Math.max(pileup.labelsWidth,pileup.transformPosX(minFrom));
-				double maxTransTo=Math.min(pileup.totalWidth,pileup.transformPosX(maxTo));
+				double maxTransTo=Math.min(pileup.getWidth(),pileup.transformPosX(maxTo));
 
 				sb.append("<line"
 						+ " x1=\""+minTransFrom+
@@ -154,8 +139,8 @@ public class TrackGTF extends Track {
 	}
 
 	@Override
-	protected double getHeight(Pileup pileup) {
-		return numTranscripts*pileup.transcriptHeight;
+	protected double getHeight(TrackRenderer renderer) {
+		return numTranscripts*renderer.transcriptHeight;
 	}
 	
 	
