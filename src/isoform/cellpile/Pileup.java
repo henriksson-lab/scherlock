@@ -48,7 +48,7 @@ public class Pileup {
 	 */
 	private void renderOneTrackToSVG(
 			StringBuilder sb,
-			int[] track,
+			double[] track,
 			String trackName,
 			double baseX,
 			double baseY,
@@ -63,9 +63,9 @@ public class Pileup {
 		sb.append(""+baseX+","+baseY+" ");
 		
 		boolean needToAddLast=false;
-		int lastCount=-1;
+		double lastCount=-1;
 		for(int i=0;i<track.length;i++) {
-			int curCount=track[i];
+			double curCount=track[i];
 			if(curCount!=lastCount) {
 				if(needToAddLast)
 					sb.append(""+(baseX+(i-1)*scaleX)+","+(baseY+lastCount*scaleY)+" ");
@@ -96,7 +96,7 @@ public class Pileup {
 	/**
 	 * Render all of the pileup
 	 */
-	public String toSVG(GtfParser gtf) {
+	public String toSVG(GtfParser gtf, boolean doLog) {
 		StringBuilder sb=new StringBuilder();
 		
 		//Figure out the space needed for tracks
@@ -131,7 +131,7 @@ public class Pileup {
 		sb.append("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>");
 		
 		renderVerticalGuideLines(sb);
-		renderAllTracksToSVG(sb);
+		renderAllTracksToSVG(sb, doLog);
 		renderGTF(sb, gtf, overlappingGenes, totalTrackWidth, totalTrackHeight);
 		
 		
@@ -252,10 +252,36 @@ public class Pileup {
 
 	/**
 	 * Render all tracks. The main challenge is to scale them properly
+	 * @param doLog 
 	 */
-	private void renderAllTracksToSVG(StringBuilder sb) {
+	private void renderAllTracksToSVG(StringBuilder sb, boolean doLog) {
 		
+		//Rescale tracks
+		double[][] tracksScaled=new double[tracks.length][];
+		double[] maxHeight=new double[tracks.length];
+		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
+			//Rescale tracks vs #cells in track
+			int[] thisTrack=tracks[curTrack];
+			double[] thisTrackScaled=tracksScaled[curTrack]=new double[thisTrack.length];
+			double cnt=Math.max(1,cellGroupCellCount[curTrack]);
+			for(int i=0;i<thisTrack.length;i++) {
+				thisTrackScaled[i] = thisTrack[i]*cnt;
+			}
+			
+			//Apply pseudo-log if requested
+			if(doLog) {
+				for(int i=0;i<thisTrack.length;i++) {
+					thisTrackScaled[i] = Math.log10(1+thisTrackScaled[i]);
+				}
+			}
+			maxHeight[curTrack]=PileMathUtil.maxForList(tracksScaled[curTrack]);
+		}		
+		double maxMaxHeight=Math.max(0.0000001, PileMathUtil.maxForList(maxHeight));
+
+//		PileMathUtil.scaleMaxValue(scaleFactor, PileMathUtil.maxForList(scaleFactorWithHeight));   //maybe min?
+
 		//Figure out track rescaling vs number of cells in each vs max peak height
+		/*
 		double[] scaleFactor=new double[tracks.length];
 		double[] scaleFactorWithHeight=new double[tracks.length];
 		double[] maxHeight=new double[tracks.length];
@@ -267,6 +293,7 @@ public class Pileup {
 			//scaleFactor[curTrack] /= Math.max(1.0,maxHeight[curTrack]);//Math.max(1,cellGroupCellCount[curTrack]);
 		}
 		PileMathUtil.scaleMaxValue(scaleFactor, PileMathUtil.maxForList(scaleFactorWithHeight));   //maybe min?
+		*/
 		/*
 		//Figure out track rescaling vs max peak height, taking #cell rescaling into account
 		double[] scaleByCellsAndMaximum=new double[tracks.length];
@@ -279,9 +306,9 @@ public class Pileup {
 		for(int curTrack=0;curTrack<tracks.length;curTrack++) {
 			double baseX=labelsWidth;
 			double baseY=(double)trackHeight*(curTrack+1);
-			double scaleY=-(double)trackHeight*0.9*scaleFactor[curTrack]/Math.max(1,cellGroupCellCount[curTrack]);///cellGroupCellCount[curTrack];//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
+			double scaleY=-(double)trackHeight*0.9/maxMaxHeight;//scaleFactor[curTrack]/Math.max(1,cellGroupCellCount[curTrack]);///cellGroupCellCount[curTrack];//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
 			double scaleX=(double)trackWidth/numdiv;
-			renderOneTrackToSVG(sb, tracks[curTrack], clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
+			renderOneTrackToSVG(sb, tracksScaled[curTrack], clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
 		}
 	}
 

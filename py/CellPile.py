@@ -167,12 +167,12 @@ class Pileup:
 	
 	
 	
-	def plot(self, save=None, trackWidth=800, labelsWidth=200):
+	def plot(self, save=None, trackWidth=800, labelsWidth=200, showLog=False):
 		"""Produce the plot, optionally save to file"""
 		self.pileup.trackWidth=trackWidth
 		self.pileup.labelsWidth=labelsWidth
 	
-		svg=self.pileup.toSVG(self.gtf)
+		svg=self.pileup.toSVG(self.gtf, showLog)
 		if save is not None:
 			with open(save, "w") as text_file:
 				text_file.write(svg)
