@@ -39,7 +39,15 @@ public class TrackRenderer {
 		this.to=track.pileup.to;
 	}
 
-
+	/**
+	 * Create a renderer, without a pileup track
+	 */
+	public TrackRenderer(String seq, int from, int to) {
+		this.seq=seq;
+		this.from=from;
+		this.to=to;
+	}
+	
 	/**
 	 * Add one track to render
 	 */
@@ -129,6 +137,17 @@ public class TrackRenderer {
 		for(int i=0;i<numVertGuides;i++) {
 			double x=labelsWidth + i*trackWidth/numVertGuides;
 			sb.append("<line x1=\""+x+"\" y1=\"0\" x2=\""+x+"\" y2=\"100%\" stroke=\""+colorVertGuides+"\"/>");
+		}
+	}
+	
+	/**
+	 * Set all pileups to display log on/off
+	 */
+	public void setShowLog(boolean b) {
+		for(Track t:tracks) {
+			if(t instanceof TrackGTF) {
+				((TrackPileup)t).showLog=b;
+			}
 		}
 	}
 

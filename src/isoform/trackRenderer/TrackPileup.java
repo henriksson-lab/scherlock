@@ -1,7 +1,7 @@
 package isoform.trackRenderer;
 
 import isoform.cellpile.Pileup;
-import isoform.util.PileMathUtil;
+import isoform.util.PileUtil;
 
 /**
  * Renderer: Pileup track
@@ -19,6 +19,7 @@ public class TrackPileup extends Track {
 	public TrackPileup(Pileup pileup, boolean showLog) {
 		this.pileup = pileup;
 		this.showLog = showLog;
+		this.trackName = "pileup";
 	}
 
 	@Override
@@ -48,9 +49,9 @@ public class TrackPileup extends Track {
 					thisTrackScaled[i] = Math.log10(1+thisTrackScaled[i]);
 				}
 			}
-			maxHeight[curTrack]=PileMathUtil.maxForList(tracksScaled[curTrack]);
+			maxHeight[curTrack]=PileUtil.maxForList(tracksScaled[curTrack]);
 		}		
-		double maxMaxHeight=Math.max(0.0000001, PileMathUtil.maxForList(maxHeight));
+		double maxMaxHeight=Math.max(0.0000001, PileUtil.maxForList(maxHeight));
 
 		//Write all pileup tracks
 		for(int curTrack=0;curTrack<pileup.tracks.length;curTrack++) {

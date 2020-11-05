@@ -57,14 +57,14 @@ class CellPile:
 			print("WARNING: No pile name given. You most likely want to use this if you work with multiple piles")
 		f = CellPile._gateway.jvm.java.io.File(fname)
 		onepile = CellPile._gateway.jvm.isoform.cellpile.CellPileFile.open(f)
-		self.cp.addFile(onepile,pileName)
+		self.cp.addCellPile(onepile,pileName)
 		
 
-	#def getBarcodes(self):
-	#	return self.cp.getListBarcodes()
+	def addGTF(self, fname, trackName="gtf"):
+		"""Load a GTF file to display features"""
+		fname = CellPile._gateway.jvm.java.io.File(fname)
+		self.cp.addTrackGTF(trackName, fname)
 
-	#def getSequences(self):
-	#	return self.cp.getListSequences()
 
 	def getView(self, gene):
 		"""Return the view that will cover the span of a gene"""
@@ -73,10 +73,6 @@ class CellPile:
 			raise Exception('Gene does not exist in GTF')
 		return (grange.getSource(), grange.getFrom(), grange.getTo())
 
-	def loadGTF(self, fname):
-		"""Load a GTF file to display features"""
-		fname = CellPile._gateway.jvm.java.io.File(fname)
-		self.gtf = CellPile._gateway.jvm.isoform.util.GtfParser(fname)
 
 
 
@@ -99,8 +95,9 @@ class CellPile:
 
 		#If no cells given then everything into one group
 		if cellBC is None:
-			#return Pileup(self.cp.buildPileup("1",1,1000,1000), self.gtf)
-			return Pileup(self.cp.buildPileup(seq, sfrom, sto, numdiv), self.gtf)
+			pileup=self.cp.buildPileup(seq, sfrom, sto, numdiv)
+			renderer=self.cp.render(seq, sfrom, sto, pileup)
+			return Pileup(renderer)
 	
 		#If no cell cluster given, put everything in one group
 		if cellCluster is None:
@@ -122,10 +119,17 @@ class CellPile:
 			cellCluster = cellCluster.tolist()
 			
 		
-		return Pileup(self.cp.buildPileup(seq, sfrom, sto, numdiv, 
-										self._toStringArray(cellBC), 
-										self._toStringArray(cellFile), 
-										self._toStringArray(cellCluster)), self.gtf)
+		pileup=self.cp.buildPileup(seq, sfrom, sto, numdiv, 
+			self._toStringArray(cellBC), 
+			self._toStringArray(cellFile), 
+			self._toStringArray(cellCluster))
+		
+		renderer=self.cp.render(seq, sfrom, sto, pileup)
+		
+		return Pileup(renderer)
+		
+		
+		
 
 ###########################################
 ## post-process cleanup. working so-so
@@ -158,21 +162,30 @@ def cellpile_cleanup():
 				################################################### The problem appears to be copies of CellPile._gateway ... maybe
 	
 
+
+############################################################################################
+############################################################################################
+############################################################################################
+############################################################################################
+############################################################################################
+############################################################################################
+
+
+
+
 ########################################
 ## Wrapper around a pileup
 class Pileup:
-	def __init__(self,pileup,gtf):
-		self.pileup=pileup
-		self.gtf=gtf
-	
-	
+	def __init__(self,renderer):
+		self.renderer=renderer
 	
 	def plot(self, save=None, trackWidth=800, labelsWidth=200, showLog=False):
 		"""Produce the plot, optionally save to file"""
-		self.pileup.trackWidth=trackWidth
-		self.pileup.labelsWidth=labelsWidth
+		self.renderer.trackWidth=trackWidth
+		self.renderer.labelsWidth=labelsWidth  #does not work?
 	
-		svg=self.pileup.toSVG(self.gtf, showLog)
+		self.renderer.setShowLog(showLog)
+		svg=self.renderer.toSVG()
 		if save is not None:
 			with open(save, "w") as text_file:
 				text_file.write(svg)

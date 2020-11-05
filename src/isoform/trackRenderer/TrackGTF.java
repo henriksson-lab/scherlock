@@ -24,6 +24,7 @@ public class TrackGTF extends Track {
 	
 	public TrackGTF(GtfParser gtf) {
 		this.gtf = gtf;
+		this.trackName = "gtf";
 	}
 
 	
