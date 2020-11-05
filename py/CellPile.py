@@ -44,10 +44,7 @@ class CellPile:
 			CellPile._gateway = JavaGateway(gateway_parameters=GatewayParameters(port=self.port))
 		
 		#Prepare metapile
-		self.cp = CellPile._gateway.jvm.isoform.cellpile.CellPileFileCollection()
-		
-		#Create an empty GTF
-		self.gtf = CellPile._gateway.jvm.isoform.util.GtfParser()
+		self.cp = CellPile._gateway.jvm.isoform.cellpile.CellPileManager()
 
 
 
