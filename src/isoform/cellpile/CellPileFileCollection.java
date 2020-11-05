@@ -16,23 +16,33 @@ import cern.colt.list.IntArrayList;
  */
 public class CellPileFileCollection {
 
-	public ArrayList<CellPileFile> listFile=new ArrayList<CellPileFile>();
+	
+	//// List of piles
+	public ArrayList<CellPileFile> listPileFile=new ArrayList<CellPileFile>();
 	public ArrayList<String> listPileName=new ArrayList<String>();
 	
+	
+	
+	//// List of tracks
+	public ArrayList<Track> listTracks=new ArrayList<Track>();
+	
+	
+	
+	
 	public void addFile(CellPileFile pile, String name) {
-		listFile.add(pile);
+		listPileFile.add(pile);
 		listPileName.add(name);
 	}
 	
 	public int getNumFiles() {
-		return listFile.size();
+		return listPileFile.size();
 	}
 
 	/**
 	 * Get the barcodes of one pileup
 	 */
 	public List<String> getBarcodes(int i){
-		return listFile.get(i).getListBarcodes();
+		return listPileFile.get(i).getListBarcodes();
 	}
 	
 	/**
@@ -50,7 +60,7 @@ public class CellPileFileCollection {
 			int forPile, 
 			String[] cellBC, String[] cellPile, String[] cellCluster, 
 			String forCluster){
-		CellPileFile pile=listFile.get(forPile);
+		CellPileFile pile=listPileFile.get(forPile);
 		String thisPileName=listPileName.get(forPile);
 		
 		
@@ -104,7 +114,7 @@ public class CellPileFileCollection {
 		}
 		
 		Pileup totalp=null;
-		for(int iFile=0;iFile<listFile.size();iFile++) {
+		for(int iFile=0;iFile<listPileFile.size();iFile++) {
 			
 			//Generate barcode mappings for this file, which is a subset of all BCs given
 			int[][] listBCs=new int[numClusters][];
@@ -115,7 +125,7 @@ public class CellPileFileCollection {
 			System.out.println("------------------");
 			
 			//Perform the pilup for this file
-			Pileup p=listFile.get(iFile).buildPileup(
+			Pileup p=listPileFile.get(iFile).buildPileup(
 					windowSeq, windowFrom, windowTo, 
 					numdiv,
 					listBCs, listClusterNames);
@@ -138,8 +148,8 @@ public class CellPileFileCollection {
 		
 		ArrayList<String> arrAllBC=new ArrayList<String>();
 		ArrayList<String> arrAllFile=new ArrayList<String>();
-		for(int i=0;i<listFile.size();i++) {
-			CellPileFile cp=listFile.get(i);
+		for(int i=0;i<listPileFile.size();i++) {
+			CellPileFile cp=listPileFile.get(i);
 			String pname=listPileName.get(i);
 			
 			List<String> list=cp.getListBarcodes();

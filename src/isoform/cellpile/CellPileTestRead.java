@@ -46,7 +46,8 @@ public class CellPileTestRead {
 		System.out.println("dt: "+(System.currentTimeMillis()-time));
 		
 		System.out.println("--------");
-		String svg=pileup.toSVG(gtf, false);
+		pileup.addTrack(new TrackGTF(gtf));
+		String svg=pileup.toSVG(false);
 		//System.out.println(svg);
 		System.out.println("--------");
 		PrintWriter pw=new PrintWriter(new File("/home/mahogny/temp.svg"));

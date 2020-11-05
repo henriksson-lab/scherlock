@@ -472,13 +472,13 @@ public class CellPileFile {
 		pileup.from=windowFrom;
 		pileup.to=windowTo;
 		pileup.numdiv=numdiv;
-		pileup.cellGroups=cellGroups;
+		pileup.cellCluster=cellGroups;
 		pileup.clusterNames=clusterNames;
 
 		//Set the cell counts
-		pileup.cellGroupCellCount=new int[clusterNames.length];
+		pileup.clusterCellCount=new int[clusterNames.length];
 		for(int i=0;i<cellGroups.length;i++)
-			pileup.cellGroupCellCount[i] = cellGroups[i].length;
+			pileup.clusterCellCount[i] = cellGroups[i].length;
 			
 		//Pileup grid spacing
 		double dx=(windowTo-windowFrom+1)/(double)(numdiv-1);

@@ -9,21 +9,12 @@ import java.util.ArrayList;
  * @author Johan Henriksson
  *
  */
-public class Pileup {
+public class TrackRenderer {
 	public String seq;
 	public int from;
 	public int to; 
 	
 	public int numdiv;  //How many subdivisions the pileup was calculated at, from from-to
-	
-	//The cluster info
-	public int[][] cellCluster;
-	public int[] clusterCellCount;
-	public String[] clusterNames;
-	
-	//Pileups for each cluster
-	public int[][] tracks;
-	
 	
 	//Rendering settings
 	public double trackHeight=100;
@@ -109,7 +100,7 @@ public class Pileup {
 	/**
 	 * Add the counts from another pileup. Assumes exactly the same settings etc or a crash will occur
 	 */
-	public void addPileup(Pileup p) {
+	public void addPileup(TrackRenderer p) {
 		for(int i=0;i<tracks.length;i++) {
 			int[] t1=tracks[i];
 			int[] t2=p.tracks[i];
