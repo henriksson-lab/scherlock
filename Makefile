@@ -10,6 +10,9 @@ compile:
 	cp -r lib build/
 	cp py/* build/  #to help testing
 
+loc:
+	wc  -l src/*/*/*java
+
 gitaddall:
 	git add src/*.java
 

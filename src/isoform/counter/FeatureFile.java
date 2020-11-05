@@ -2,13 +2,20 @@ package isoform.counter;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+
+/**
+ * 
+ * File to keep track of regions in which to count reads
+ * 
+ * @author Johan Henriksson
+ *
+ */
 public class FeatureFile {
 	
 	

@@ -1,7 +1,7 @@
 package isoform.counter;
 
 /**
- * A feature to be counted
+ * A feature to be counted (genomic genome range)
  * 
  * @author Johan Henriksson
  *

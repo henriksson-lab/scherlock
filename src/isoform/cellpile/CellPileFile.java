@@ -17,6 +17,7 @@ import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import isoform.util.PileUtil;
 
 /**
  * Interface for CellPile files. Able to generate from BAM-files
@@ -163,7 +164,6 @@ public class CellPileFile {
 		}
 		regs.add(from);
 		regs.add(to);
-//		System.out.println("store "+bcid+"   "+listBarcodes.get(bcid)+"   "+from+"    "+to);
 	}
 	
 
@@ -179,15 +179,12 @@ public class CellPileFile {
 				if(currentChunk<ptrs.length) {
 					//Store pointer to where this chunk starts in the file
 					ptrs[currentChunk]=raf.getFilePointer();
-//					System.out.println("file pointer "+raf.getFilePointer());
 
 					//Store the chunk
 					int numCells=mapCellRegions.size();
-//					System.out.println("Storing # cells "+numCells);
 					raf.writeInt(numCells);
 					for(int cellBarcode:mapCellRegions.keySet()) {
 						raf.writeInt(cellBarcode);
-						//System.out.println("---cbi "+cellBarcode);
 						IntArrayList ia=mapCellRegions.get(cellBarcode);
 						int[] list=ia.elements(); //Note, this is not a copy of the array, and it is the wrong size
 						int numRegion2=ia.size();
@@ -413,8 +410,6 @@ public class CellPileFile {
 			long[] chunkpos=new long[numChunk];
 			for(int curc=0;curc<chunkpos.length;curc++) {
 				chunkpos[curc]=raf.readLong();
-	//			if(chunkpos[curc]!=0)
-//					System.out.println("got a chunk");
 			}
 			mapChunkStarts.put(nameOfChunk, chunkpos);
 		}
@@ -444,14 +439,6 @@ public class CellPileFile {
 		return list2;
 	}
 	
-	
-	private static int clamp(int x, int min, int max) {
-		if(x<min)
-			x=min;
-		if(x>max)
-			x=max;
-		return(x);
-	}
 	
 	/**
 	 * Build pileups for each given cell group
@@ -487,7 +474,6 @@ public class CellPileFile {
 		if(numdiv<2)
 			throw new RuntimeException("Too few subdivisions");
 		if(mapChunkStarts.get(windowSeq)==null) {
-			//System.out.println(mapChunkStarts.keySet());
 			throw new RuntimeException("Sequence does not exist: "+windowSeq);
 			
 		}
@@ -504,8 +490,8 @@ public class CellPileFile {
 		//Figure out chunks to read
 		int chunkFrom=windowFrom/chunkSize;
 		int chunkTo=windowTo/chunkSize+1;
-		chunkFrom = clamp(chunkFrom, 0, mapChunkStarts.get(windowSeq).length-1);
-		chunkTo = clamp(chunkTo, 0, mapChunkStarts.get(windowSeq).length-1);
+		chunkFrom = PileUtil.clamp(chunkFrom, 0, mapChunkStarts.get(windowSeq).length-1);
+		chunkTo = PileUtil.clamp(chunkTo, 0, mapChunkStarts.get(windowSeq).length-1);
 		
 		//Iterate through all the chunks
 		int counted=0;
@@ -513,19 +499,15 @@ public class CellPileFile {
 			long chunkPos=mapChunkStarts.get(windowSeq)[curChunk];
 			if(chunkPos!=0) {
 				raf.seek(chunkPos);
-//				System.out.println("go to fp "+chunkPos);
 				
 				//Loop through all cells represented in this chunk
 				int numCells=raf.readInt();
-	//			System.out.println("check chunk "+curChunk+"  "+numCells);
 				nextcell: for(int curCell=0;curCell<numCells;curCell++) {
 					//Filter cells, or select the right track
-					int cellID=raf.readInt();                                    ///////////// value totally in the blue
+					int cellID=raf.readInt();   
 					Integer toTrack=mapBarcodeTrack.get(cellID);
 					if(toTrack!=null) {
-//						System.out.println("---cbi "+cellID+"   "+toTrack);
 						//Check how many regions
-			//			System.out.println("cell "+cellID);
 						int[] thisTrack=outTracks[toTrack];
 						int numRegions=raf.readShort();
 						
@@ -537,7 +519,6 @@ public class CellPileFile {
 
 							//We may be able to quit early if lucky
 							if(posLeft<=windowTo) {
-								//System.out.println("---cbi "+cellID+"   "+toTrack+"   "+curRegion+"\t"+posLeft+"\t"+posRight);
 								//Transform to pileup coordinates
 								posLeft=(int)((posLeft-windowFrom)/dx);
 								posRight=(int)((posRight-windowFrom)/dx);
