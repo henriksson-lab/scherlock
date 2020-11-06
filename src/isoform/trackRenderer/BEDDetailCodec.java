@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package isoform.cellpile;
+package isoform.trackRenderer;
 
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
