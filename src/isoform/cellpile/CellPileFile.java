@@ -313,8 +313,6 @@ public class CellPileFile {
 				} else {
 					//System.out.println("Incomplete BAM record");
 				}
-			} else {
-//				System.out.println("Skipping cell: "+bcCellCurrentCellBarcode);
 			}
 		}
 		

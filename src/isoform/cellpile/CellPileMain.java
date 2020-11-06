@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import isoform.counter.GtfToFeature;
+import isoform.util.PileUtil;
 
 public class CellPileMain {
 	
@@ -23,7 +23,7 @@ public class CellPileMain {
 			File fBAM=new File(f10x,"possorted_genome_bam.bam");//new File(args[2]);
 			File fBC=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
 			
-			ArrayList<String> listBarcodes=GtfToFeature.readBarcodeZipList(fBC);
+			ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBC);
 			
 			System.out.println("Building cellpile from: "+fBAM);
 			System.out.println("To: "+fCellpile);

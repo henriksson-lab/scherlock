@@ -21,13 +21,18 @@ public class FeatureFile {
 	
 	public ArrayList<Feature> features=new ArrayList<Feature>();
 
+	/**
+	 * Generate a file from a GTF
+	 */
 	public static FeatureFile splitGTF(File fGTF) throws IOException {
 		FeatureFile ff=new FeatureFile();
-		ff.features=new GtfToFeature().splitGTF(fGTF);
+		ff.features=GtfToFeature.splitGTF(fGTF);
 		return ff;
 	}
 	
-	
+	/**
+	 * Read a feature file
+	 */
 	public static FeatureFile read(File fFeature) throws IOException {
 		FeatureFile ff=new FeatureFile();
 		BufferedReader br=new BufferedReader(new FileReader(fFeature));

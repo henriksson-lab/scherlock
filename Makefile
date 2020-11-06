@@ -40,3 +40,10 @@ topypi:
 #-Xmx6G
 
 #~/miniconda3/share/py4j/py4j0.10.9.1.jar
+
+
+test_isocount_build:
+	java -jar build/isocount.jar build /home/mahogny/Dropbox/applyPI/umeå/project/isoform/refgenome/Homo_sapiens.GRCh38.101.chr.gff3.gz test/featurefile_test.ff
+
+test_isocount_count:
+	java -jar build/isocount.jar count test/featurefile_test.ff test/SRR11827037_out test/out.SRR11827037_out

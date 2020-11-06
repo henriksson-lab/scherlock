@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import isoform.counter.GtfToFeature;
+import isoform.util.PileUtil;
 
 /**
  * Test functions
@@ -23,7 +23,7 @@ public class CellPileTestWrite {
 		File fChromSizes=new File("/data/henlab/ref_genome/human/sizes.genome");
 		File fBC=new File("/big/henriksson/tonsil/filtered_feature_bc_matrix/barcodes.tsv.gz");
 		
-		ArrayList<String> listBarcodes=GtfToFeature.readBarcodeZipList(fBC);
+		ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBC);
 		
 		CellPileFile cp=CellPileFile.writeFile(fCellpile, fChromSizes, fBAM, listBarcodes);
 		cp.close();

@@ -140,7 +140,7 @@ public class CountFeaturesBAM {
 				if(bcCellCurrentUMI!=null && bcCellCurrentCellBarcode!=null) {
 					//Check if duplicate read
 					if(bcCellCurrentUMI.equals(bcCellPreviousU) && bcCellCurrentCellBarcode.equals(bcCellPreviousC)) {
-						//Do nothing, just ignore
+						//Do nothing, just ignore - this is a duplicate read
 					} else {
 						//Remember for later
 						bcCellPreviousU=bcCellCurrentUMI;
@@ -155,10 +155,12 @@ public class CountFeaturesBAM {
 						for(int curAB=0;curAB<listBlocks.size();curAB++) {
 							AlignmentBlock ab=listBlocks.get(curAB);
 							
+							
 							String blockSource=samRecord.getContig();
 							int blockFrom=ab.getReferenceStart();
 							int blockTo=ab.getReferenceStart()+ab.getLength();
-							
+
+
 							//For display
 							currentSource=blockSource;
 							currentPos=blockFrom;
@@ -167,9 +169,13 @@ public class CountFeaturesBAM {
 							//This assumes that the FASTQ has been position sorted!
 							for(int fi=searchFeatureListFrom;fi<listFeatures.size();fi++) {
 								Feature feature=listFeatures.get(fi);
-								int compSource=feature.source.compareTo(blockSource);  // could pre-split the chromosome to avoid these checks
-								if(compSource==0) {
+								int comparisonSource=feature.source.compareTo(blockSource);  // could pre-split the chromosome to avoid these checks
+								if(comparisonSource==0) {
 									//Currently checking features on the same chromosome. Most common case.
+									
+									System.out.println("AB!\t"+blockSource+"\t"+blockFrom+"\t"+blockTo+"\t"+curAB);
+									System.out.println("Feature:\t"+feature.from+"\t"+feature.to);
+									System.out.println();
 									
 									//Now continue to check if there is an overlap position-wise
 									if(feature.to<blockFrom) {
@@ -183,9 +189,11 @@ public class CountFeaturesBAM {
 											compressedCountTable[searchFeatureListFrom]=compressFeature(countTable[searchFeatureListFrom]);
 											countTable[searchFeatureListFrom]=null;
 										}
+										//System.out.println("Compressing feature "+searchFeatureListFrom);
 										
 										continue;
 									} else if(feature.from>blockTo) {
+										//System.out.println("Past feature");
 										//Now we are past the feature. Can stop looking
 										break;
 									} else {
@@ -204,7 +212,7 @@ public class CountFeaturesBAM {
 										
 										//Here we do *not* Continue;, as there might be more overlapping features 
 									}
-								} else if(compSource<0) {
+								} else if(comparisonSource<0) {
 									//Not yet comparing the same chromosome. Keep scanning along the features until we get there. Uncommon case
 								} else {
 									//Now we are looking at the next chromosome, so past the block for certain. Can stop looking
@@ -212,6 +220,7 @@ public class CountFeaturesBAM {
 								}
 							}
 						}
+						break;  ///// only one read
 					}
 				}
 			}

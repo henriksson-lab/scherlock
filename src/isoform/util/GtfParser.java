@@ -118,8 +118,6 @@ public class GtfParser {
 	 * Parse out overall locations of all the genes
 	 */
 	public GtfParser(File fGTF) throws IOException {
-		System.out.println("Reading features from "+fGTF);
-
 		Reader reader;
 		if(fGTF.getName().endsWith(".gz")) {
 			reader=new InputStreamReader(new GZIPInputStream(new FileInputStream(fGTF)));
@@ -248,7 +246,7 @@ public class GtfParser {
 		}
 		br.close();		
 		
-		System.out.println("Stored ranges "+numRange);
+		System.out.println("#ranges "+numRange);
 		System.out.println("#genes "+mapGeneTranscripts.size());
 		System.out.println("#transcript "+mapTranscriptGene.size());
 		//Some genes might have no transcripts? check later, possibly special code in renderer

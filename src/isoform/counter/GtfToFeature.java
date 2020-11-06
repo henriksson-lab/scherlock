@@ -1,16 +1,11 @@
 package isoform.counter;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.zip.GZIPInputStream;
 
+import isoform.util.GtfParser;
 import isoform.util.Range;
 
 
@@ -22,105 +17,39 @@ import isoform.util.Range;
  *
  */
 public class GtfToFeature {
-
-	public TreeMap<String,String> mapTranscriptGene=new TreeMap<String, String>();
-	public TreeMap<String, ArrayList<Range>> mapGenes=new TreeMap<String, ArrayList<Range>>();
-	public TreeMap<String, ArrayList<Range>> mapTranscript=new TreeMap<String, ArrayList<Range>>();
-
-	public ArrayList<Feature> features=new ArrayList<Feature>();
-	
-	
-	public ArrayList<Range> getGeneArray(String gene){
-		ArrayList<Range> a=mapGenes.get(gene);
-		if(a==null) {
-			a=new ArrayList<Range>();
-			mapGenes.put(gene, a);
-		}
-		return a;
-	}
-
-	
-	public ArrayList<Range> getTranscriptArray(String gene){
-		ArrayList<Range> a=mapTranscript.get(gene);
-		if(a==null) {
-			a=new ArrayList<Range>();
-			mapTranscript.put(gene, a);
-		}
-		return a;
-	}
-
 	
 	/**
 	 * Split GTF file into countable features
 	 */
-	public ArrayList<Feature> splitGTF(File fGTF) throws IOException {
-		System.out.println("Reading features from "+fGTF);
+	public static ArrayList<Feature> splitGTF(File fGTF) throws IOException {
+		ArrayList<Feature> features=new ArrayList<Feature>();
+		TreeMap<String, ArrayList<Range>> mapGenesFeatures=new TreeMap<String, ArrayList<Range>>();
 
-		//Read all the relevant features and associate with transcripts/genes
-		BufferedReader br=new BufferedReader(new FileReader(fGTF));
-		String line;
-		while((line=br.readLine())!=null) {
-			if(!line.startsWith("#")) {
-				StringTokenizer stok=new StringTokenizer(line,"\t");
-				
-				String seq=stok.nextToken();
-				stok.nextToken();
-				String featureType=stok.nextToken();
-				int sFrom=Integer.parseInt(stok.nextToken());
-				int sTo=Integer.parseInt(stok.nextToken());
-				stok.nextToken();
-				stok.nextToken();//strand
-				stok.nextToken();
-				
-				TreeMap<String,String> attr=parseAttr(stok.nextToken());
-
-				Range r=new Range(seq, sFrom, sTo, featureType);
-
-				if(featureType.contentEquals("gene")) {
-					//Nothing to be done
-					//Note: could capture pseudogenes and remove these from the list later
-				} else if(featureType.contentEquals("mRNA") || featureType.contentEquals("lnc_RNA")) {
-					String attrTranscript=removeTag(attr.get("ID"),"transcript:");
-					String attrGene=removeTag(attr.get("Parent"),"gene:");
-					mapTranscriptGene.put(attrTranscript, attrGene);
-				} else if(featureType.contentEquals("exon") || 
-						featureType.contentEquals("three_prime_UTR") || 
-						featureType.contentEquals("five_prime_UTR")) {
-					//System.out.println(featureType);
-					String attrParent=removeTag(attr.get("Parent"),"transcript:");
-					ArrayList<Range> ga=getTranscriptArray(attrParent);
-					ga.add(r);
-				} /*else if(featureType.contentEquals("lnc_RNA")) {
-					//System.out.println(featureType);
-					String attrParent=removeTag(attr.get("Parent"),"gene:");
-					ArrayList<Range> ga=getGeneArray(attrParent);
-					ga.add(r);
-				}*/else if(featureType.contentEquals("ncRNA_gene")) {
-					String attrTranscript=removeTag(attr.get("ID"),"gene:");
-					ArrayList<Range> ga=getGeneArray(attrTranscript);
-					ga.add(r);
-				}
-				
-			}
-		}
-		br.close();
-
-		//Put transcript features into corresponding genes
-		System.out.println("# transcript "+mapTranscriptGene.size());
+		GtfParser gtf=new GtfParser(fGTF);
+		
+		//Collapse transcript features into corresponding genes
 		System.out.println("Merge transcripts");
-		for(String tname:mapTranscriptGene.keySet()) {
-			ArrayList<Range> ga=getGeneArray(mapTranscriptGene.get(tname));
-			ArrayList<Range> ta=getTranscriptArray(tname);
-			ga.addAll(ta);
+		for(String tname:gtf.mapTranscriptGene.keySet()) {
+			//Allocate gene array
+			String gene=gtf.mapTranscriptGene.get(tname);
+			ArrayList<Range> ga=mapGenesFeatures.get(gene);
+			if(ga==null) {
+				ga=new ArrayList<Range>();
+				mapGenesFeatures.put(gene, ga);
+			}
+			
+			//Transfer features from the transcript
+			ga.addAll(gtf.mapTranscriptRanges.get(tname));
 		}
 		
+		
 		//Split features suitably, to handle casette exons etc
-		System.out.println(mapGenes.size());
-		System.out.println("Chop up regions");
-		for(String gname:new ArrayList<String>(mapGenes.keySet())) {
+		System.out.println(gtf.mapGeneRange.size());
+		System.out.println("Chopping up regions");
+		for(String gname:new ArrayList<String>(mapGenesFeatures.keySet())) {
 			
 			//Sort the regions of a gene. Ordered first by from-pos, then to-pos
-			ArrayList<Range> ta=getGeneArray(gname);
+			ArrayList<Range> ta=mapGenesFeatures.get(gname);
 			ta.sort(new Comparator<Range>() {
 				public int compare(Range ra, Range rb) {
 					
@@ -182,53 +111,6 @@ public class GtfToFeature {
 
 		return features;
 	}
-	
-	
-	/**
-	 * Remove tag: in tag:FOO
-	 */
-	public String removeTag(String s, String tag) {
-		if(s.startsWith(tag)) {
-			return s.substring(tag.length());
-		} else {
-			throw new RuntimeException("Wrong tag; "+tag +" vs " +s);
-		}
-		
-	}
-
-	/**
-	 * Parse an attribute string into a map
-	 */
-	public TreeMap<String,String> parseAttr(String s){
-		TreeMap<String,String> m=new TreeMap<String, String>();
-		StringTokenizer stok=new StringTokenizer(s,";");
-		while(stok.hasMoreTokens()) {
-			String tok=stok.nextToken();
-			
-			int ind=tok.indexOf("=");
-			String key=tok.substring(0,ind);
-			String value=tok.substring(ind+1);
-			m.put(key, value);
-		}
-		return m;
-	}
-	
-	
-	/**
-	 * Read list of zip file e.g. barcode list
-	 */
-	public static ArrayList<String> readBarcodeZipList(File fBarcodes) throws IOException{
-		ArrayList<String> list=new ArrayList<String>();
-		BufferedReader brFeatures=new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fBarcodes))));
-		String line;
-		while((line=brFeatures.readLine())!=null) {
-			list.add(line);
-		}
-		brFeatures.close();
-		return list;
-	}
-	
-	
 	
 	
 	

@@ -1,5 +1,13 @@
 package isoform.util;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.zip.GZIPInputStream;
+
 /**
  * Various utility functions
  * 
@@ -48,12 +56,31 @@ public class PileUtil {
 		return list;
 	}
 
+	/**
+	 * Clamp a value to a range
+	 */
 	public static int clamp(int x, int min, int max) {
 		if(x<min)
-			x=min;
-		if(x>max)
-			x=max;
-		return(x);
+			return(min);
+		else if(x>max)
+			return(max);
+		else
+			return(x);
 	}
 
+	
+	/**
+	 * Read list of zip file e.g. barcode list
+	 */
+	public static ArrayList<String> readBarcodeZipList(File fBarcodes) throws IOException {
+		ArrayList<String> list=new ArrayList<String>();
+		BufferedReader brFeatures=new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(fBarcodes))));
+		String line;
+		while((line=brFeatures.readLine())!=null) {
+			list.add(line);
+		}
+		brFeatures.close();
+		return list;
+	}
+	
 }
