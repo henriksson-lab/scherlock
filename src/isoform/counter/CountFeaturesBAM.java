@@ -34,17 +34,35 @@ public class CountFeaturesBAM {
 	//in total: 0xF04
 
 
+	/**
+	 * Dense count table. It will be compressed as we get through the sorted BAM-file and can rule out any addition to previous indices
+	 */
 	private int countTable[][];
 	
+	/**
+	 * Compressed count table. Entries added line-by-line from the dense count table
+	 */
 	private int compressedCountTable[][];
 	
-	
+	/**
+	 * Map cell barcode -> array index
+	 */
 	private HashMap<String, Integer> mapBarcodeIndex=new HashMap<String, Integer>();
 
 	private ArrayList<String> listBarcodes;
 	private ArrayList<Feature> listFeatures;
-	
 
+	/**
+	 * Compress feature at given index
+	 */
+	private void compressFeature(int i) {
+		compressedCountTable[i]=compressFeature(countTable[i]);
+		countTable[i]=null;
+	}
+
+	/**
+	 * Compress an array into [index value, index value ...  ]
+	 */
 	private int[] compressFeature(int[] counts) {
 		if(counts==null) {
 			return null;
@@ -100,11 +118,61 @@ public class CountFeaturesBAM {
 	}
 
 	
+	
+	
+	/**
+	 * Get the next feature index that is at least not past the given block
+	 */
+	public int nextFeatureBeforeOrOverlap(String blockSource, int blockFrom, int searchFeatureListFrom) {
+		//Move feature start search position to the next feature overlapping or at least not past the read
+		for(;;) {
+			//Stop if there are no more features to step through
+			if(searchFeatureListFrom>=listFeatures.size()-1)
+				break;
+
+			//Check if we can step to the next feature or if we should remain
+			Feature feature=listFeatures.get(searchFeatureListFrom+1);
+			//System.out.println("Feature:\t"+feature.from+"\t"+feature.to);
+			int comparisonSource=feature.source.compareTo(blockSource);  // could pre-split the chromosome to avoid these checks
+			if(comparisonSource==0) {
+				//Currently checking features on the same chromosome. Most common case.
+				if(feature.from < blockFrom) {
+					//Can still keep stepping
+					searchFeatureListFrom++;
+					continue;
+				} else {
+					//Cannot step further. We are done
+					break;
+				}
+			} else if(comparisonSource<0) {
+				//Not yet comparing the same chromosome. Keep scanning along the features until we get there. Uncommon case
+				searchFeatureListFrom++;
+			} else {
+				//Now we are looking at the next chromosome, so past the block for certain.
+				//This can happen if a read is mapped before any feature is defined on the chromosome.
+				break;
+			}
+		}
+		return searchFeatureListFrom;
+	}
+	
+	
+	
+	
+	
 	/**
 	 * Perform the counting from a BAM file. Can be called multiple times
 	 */
 	public void countReads(File fBAM) throws IOException {
+		//Assume there is at least one feature to count
+		if(listFeatures.isEmpty()) {
+			System.out.println("No features to count");
+			return;
+		}
+
+		//Open the BAM file and get to work
 		final SamReader reader = SamReaderFactory.makeDefault().open(fBAM);
+		
 		
 		//Statistics of how many records we kept
 		int readRecords=0;
@@ -146,8 +214,28 @@ public class CountFeaturesBAM {
 						bcCellPreviousU=bcCellCurrentUMI;
 						bcCellPreviousC=bcCellCurrentCellBarcode;
 
+						//Store position, for displaying progress
+						currentSource=samRecord.getContig();
+						currentPos=samRecord.getAlignmentStart();
+
 						//Which cell is this?
 						int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
+						
+						//Move the search feature forward
+						//System.out.println("Moving search initial position:");
+						int nextSearchFeatureListFrom=nextFeatureBeforeOrOverlap(
+								samRecord.getContig(), samRecord.getAlignmentStart(),
+								searchFeatureListFrom);
+						
+						//Since the input is position sorted, we can compress all features up until now
+						for(;searchFeatureListFrom<nextSearchFeatureListFrom;searchFeatureListFrom++) {
+							compressFeature(searchFeatureListFrom);
+						}
+						
+
+						/////////////////////////////////
+						///////////////// Count the blocks
+						/////////////////////////////////
 						
 						//A read may have been split into multiple blocks. 
 						//Count these separately. Naive assumption that these are split over introns... is this correct?
@@ -155,85 +243,54 @@ public class CountFeaturesBAM {
 						for(int curAB=0;curAB<listBlocks.size();curAB++) {
 							AlignmentBlock ab=listBlocks.get(curAB);
 							
-							
 							String blockSource=samRecord.getContig();
 							int blockFrom=ab.getReferenceStart();
 							int blockTo=ab.getReferenceStart()+ab.getLength();
 
-
-							//For display
-							currentSource=blockSource;
-							currentPos=blockFrom;
+							//Find new suitable place to start searching from
+							int fi=nextFeatureBeforeOrOverlap(samRecord.getContig(), ab.getReadStart(),searchFeatureListFrom);
 							
 							//Look up overlapping features. Continue searching from where we were last time.
 							//This assumes that the FASTQ has been position sorted!
-							for(int fi=searchFeatureListFrom;fi<listFeatures.size();fi++) {
+							//System.out.println("Fitting block");
+							blocksearch: for(;fi<listFeatures.size();fi++) {
 								Feature feature=listFeatures.get(fi);
 								int comparisonSource=feature.source.compareTo(blockSource);  // could pre-split the chromosome to avoid these checks
 								if(comparisonSource==0) {
 									//Currently checking features on the same chromosome. Most common case.
 									
-									System.out.println("AB!\t"+blockSource+"\t"+blockFrom+"\t"+blockTo+"\t"+curAB);
+									/*System.out.println("AB!\t"+blockSource+"\t"+blockFrom+"\t"+blockTo+"\t"+curAB+"\tumi "+bcCellCurrentUMI+"\tbc "+bcCellCurrentCellBarcode);
 									System.out.println("Feature:\t"+feature.from+"\t"+feature.to);
-									System.out.println();
+									System.out.println();*/
 									
 									//Now continue to check if there is an overlap position-wise
 									if(feature.to<blockFrom) {
-										//Feature is before block. We have not reached the region yet.
-										
-										//DANGER: are alignment blocks in left-to-right order? VERIFY!!!!!!!!!!!!!!!!! OTHERWISE SORT THEM FIRST!
-										
-										//Since the input is position sorted, if we reach this code then this feature will never
-										//be counted again. Thus, we can compress all features up until now
-										for(;searchFeatureListFrom<=fi;searchFeatureListFrom++) {
-											compressedCountTable[searchFeatureListFrom]=compressFeature(countTable[searchFeatureListFrom]);
-											countTable[searchFeatureListFrom]=null;
-										}
-										//System.out.println("Compressing feature "+searchFeatureListFrom);
-										
-										continue;
+										//Feature is before block. We have not reached the region yet. Continue the search
 									} else if(feature.from>blockTo) {
-										//System.out.println("Past feature");
-										//Now we are past the feature. Can stop looking
-										break;
+										//Now we are past the feature, but on the same chromosome. Can stop looking
+										break blocksearch;
 									} else {
-										//This feature overlaps, so count it
+										//This feature overlaps, so count it. But continue the loop as multiple features might overlap the block
 										count(fi,barcodeIndex);
 										keptRecords++;
-										/*
-										System.out.println("---overlap!");
-										System.out.println(blockSource+":"+blockFrom+"-"+blockTo);
-										System.out.println(feature.source+":"+feature.from+"-"+feature.to);
-										System.out.println(feature.gene);
-										System.out.println("---");
-										System.out.println(blockSource+"\t"+blockFrom+"\t"+blockTo+"\t"+"theread");
-										System.out.println(feature.source+"\t"+feature.from+"\t"+feature.to+"\t"+feature.featureName);
-										System.exit(0);*/
-										
-										//Here we do *not* Continue;, as there might be more overlapping features 
 									}
 								} else if(comparisonSource<0) {
 									//Not yet comparing the same chromosome. Keep scanning along the features until we get there. Uncommon case
 								} else {
 									//Now we are looking at the next chromosome, so past the block for certain. Can stop looking
-									break;
+									break blocksearch;
 								}
 							}
 						}
-						break;  ///// only one read
 					}
 				}
 			}
 		}
 
 		//Need to ensure the final/current block is compressed and chucked away as well
-		if(searchFeatureListFrom<compressedCountTable.length) {
-			compressedCountTable[searchFeatureListFrom]=compressFeature(countTable[searchFeatureListFrom]);
-			countTable[searchFeatureListFrom]=null;
-		} else {
-			System.out.println("Perverse searchFeatureListFrom. why?");
+		if(countTable[searchFeatureListFrom]!=null) {
+			compressFeature(searchFeatureListFrom);
 		}
-
 		
 		System.out.println("Kept/Read: "+keptRecords+"/"+readRecords);
 
@@ -283,19 +340,9 @@ public class CountFeaturesBAM {
 					int bcIndex=countsForFeature[i];
 					int count=countsForFeature[i+1];
 					pwMatrix.println(""+(fi+1)+" "+(bcIndex+1)+" "+count);
+					//Note that matrix market indices are 1-based
 				}
 			}
-			
-			//Below is for the dense matrix. But now it is compressed while computing
-			/*
-			int[] countsForF=countTable[fi];
-			for(int bi=0;bi<listBarcodes.size();bi++) {
-				int c=countsForF[bi];
-				if(c!=0) {
-					pwMatrix.println(""+(fi+1)+" "+(bi+1)+" "+c);				
-				}
-			}
-			*/
 		}
 		pwMatrix.close();
 	}
