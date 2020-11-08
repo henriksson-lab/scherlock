@@ -42,8 +42,6 @@ public class FeatureFile {
 			String gene=stok.nextToken();
 			String fname=stok.nextToken();
 			String source=stok.nextToken();
-			//String sfrom=stok.nextToken();
-			//String sto=stok.nextToken();
 			int from=Integer.parseInt(stok.nextToken());
 			int to=Integer.parseInt(stok.nextToken());
 			

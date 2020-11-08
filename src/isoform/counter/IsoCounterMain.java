@@ -19,7 +19,9 @@ public class IsoCounterMain {
 	 */
 	public static void main(String[] args) throws IOException {
 		
-		if(args[0].equals("build")) {
+		
+		
+		if(args.length > 0 && args[0].equals("build")) {
 			if(args.length==3) {
 				//////////////////////////////////////////////////////////////////
 				////////////////// Build a basic list of features that can be counted
@@ -41,7 +43,7 @@ public class IsoCounterMain {
 			} else {
 				System.out.println("Too few arguments");
 			}
-		} else if(args[0].equals("count")) {
+		} else if(args.length > 0 && args[0].equals("count")) {
 			if(args.length==4) {
 				//////////////////////////////////////////////////////////////////
 				////////////////// Perform counting
@@ -52,12 +54,12 @@ public class IsoCounterMain {
 				File fOut=new File(args[3]);
 
 				if(!fFeature.exists()) {
-					System.out.println("Feature-file does not exist");
+					System.out.println("Feature-file does not exist: "+fFeature);
 					System.exit(1);
 				}
 
 				if(!f10x.exists()) {
-					System.out.println("10x directory does not exist");
+					System.out.println("10x directory does not exist: "+f10x);
 					System.exit(1);
 				}
 

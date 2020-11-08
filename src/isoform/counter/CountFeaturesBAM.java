@@ -75,7 +75,7 @@ public class CountFeaturesBAM {
 			for(int densei=0;densei<counts.length;densei++) {
 				int c=counts[densei];
 				if(c!=0) {
-					compressed[sparsei]=densei+1; //MTX market starts from 1
+					compressed[sparsei]=densei;
 					sparsei++;
 					compressed[sparsei]=c;
 					sparsei++;
@@ -195,7 +195,7 @@ public class CountFeaturesBAM {
 			readRecords++;
 			if(readRecords%1000000 == 0){
 				int prcDone=(int)(100.0*searchFeatureListFrom/(double)listFeatures.size());
-				System.out.println("Progress: "+prcDone+"%\t  Kept/Read: "+keptRecords+"/"+readRecords+"\tCurrently@: "+currentSource+"\t"+currentPos);
+				System.out.println("Progress: "+prcDone+"%\t  Kept/Read: "+keptRecords+"/"+readRecords+"\tCurrently@read: "+currentSource+"\t"+currentPos);
 			}
 
 			//Get UMI and BC for this read
@@ -292,7 +292,7 @@ public class CountFeaturesBAM {
 			compressFeature(searchFeatureListFrom);
 		}
 		
-		System.out.println("Kept/Read: "+keptRecords+"/"+readRecords);
+		System.out.println("Kept/Read: "+keptRecords+"/"+readRecords+" --- "+(int)(100*keptRecords/(double)readRecords)+"%");
 
 		reader.close();
 	}
