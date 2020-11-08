@@ -84,15 +84,27 @@ public class GtfToFeature {
 					}
 				}
 
-				//Save it - list of region format
+				//Save it - list of region format ---  exon-like
 				String source=ta.get(0).source;
-				int n=0;
-				for(Range r:newta) {
-					String fname=gname+"_"+n;
+				for(int i=0;i<newta.size();i++) {
+					Range r=newta.get(i);
+					String fname=gname+"_"+i+"_e";
 					Feature cr=new Feature(gname, fname, source, r.from, r.to);
 					features.add(cr);
-					n++;
 				}
+				
+				//Save it - list of region format  --- intron-like
+				for(int i=0;i<newta.size()-1;i++) {
+					Range ra=newta.get(i);
+					Range rb=newta.get(i);
+					if(ra.to+1!=ra.from) {
+						String fname=gname+"_"+i+"_i";
+						Feature cr=new Feature(gname, fname, source, ra.to+1, rb.from-1);
+						features.add(cr);
+					}
+				}
+
+				
 			}
 		}		
 
