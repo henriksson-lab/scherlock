@@ -18,55 +18,27 @@ import htsjdk.tribble.bed.BEDFeature;
  */
 public class TrackBed extends Track {
 
+	String BgzippedBedFileName;
+	private int nLines;
+	private List<TrackLine> bedLineList;	
+	
 	public TrackBed(String BgzippedBedFileName) {
 		this.BgzippedBedFileName = BgzippedBedFileName;
 	}
 
-	
-	String BgzippedBedFileName;
-
-	
-	
-	//Allocation: which genes to show?
-	//	private int numTranscripts;  					rename --> nTracks 
-	//	private TreeSet<String> overlappingGenes;  		rename --> bedLineList 
-	private int nTracks;
-	private List<TrackLine> bedLineList;
-	
-	
-	
 	private static class TrackLine {
 		ArrayList<BEDFeature> featureList = new ArrayList<BEDFeature>();
 		String annotation;
 	}
-	
-	
-//	public static void  main(String[] args) throws Exception {
-//		
-////		String bedBgzipFileName = "merged_all.sorted.bed_details_compatible.bed.gz";
-////		
-////		// cd55 location
-////		Interval interval = new Interval("chr1", 207321376, 207360966);
-//		
-//		
-//	}
-
-
-	//
-//	public TrackBed(GtfParser gtf) {
-//		this.gtf = gtf;
-//		this.trackName = "gtf";
-//	}
-	
+		
 	// For bed file parsing //AB
-//	public GtfParser gtf;
 	public static Iterator<BEDFeature> bedParser(String BgzippedBedFileName, Interval interval) throws Exception{
 		final FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(BgzippedBedFileName, new BEDDetailCodec());
 		final Iterator<BEDFeature> readerIterator = 
 				reader.query(interval.getContig(), interval.getStart(), interval.getEnd());
-		System.out.println(interval.getContig());
-		System.out.println(interval.getStart());
-		System.out.println(interval.getEnd());
+//		System.out.println(interval.getContig());
+//		System.out.println(interval.getStart());
+//		System.out.println(interval.getEnd());
 		
 //		while (readerIterator.hasNext()) {
 //			BEDFeature bedFeature = readerIterator.next();
@@ -95,15 +67,9 @@ public class TrackBed extends Track {
 	 */
 	public void allocateSize(TrackRenderer renderer) {
 		
-		System.out.println("Entered allocateSize method");
 		// Had to add try catch to avoid syntax error (?) from unmatching/uncaught errors
 		// Is there nicer way to do this?  //AB
 		// Johan: No
-		
-		// Temp translation bc incompatible test data. To be removed after fixing test data. //AB
-//		final String chrom = "chr" + renderer.seq;
-//		System.out.println("chrom");
-//		Interval interval = new Interval(chrom, renderer.from, renderer.to);
 		
 		Interval interval = new Interval(renderer.seq, renderer.from, renderer.to);
 		
@@ -112,12 +78,10 @@ public class TrackBed extends Track {
 			// Make list of bed features/trackLines
 			bedLineList = new ArrayList<TrackLine>();
 			while (bedFileIterator.hasNext()) {
-				System.out.println("Hurra!");
 				BEDFeature bedFeature = bedFileIterator.next();
 
 				TrackLine trackLine	= new TrackLine();
-				trackLine.annotation = bedFeature.getName();  // We might want to change this to .getDescription() later,
-															  // 	unless we can get description as a hover pop-up			
+				trackLine.annotation = bedFeature.getName();
 				// If we want several features on the same track later, 
 				// we can do something nice here to add relevant ones together on the same line. 
 				// Hence a list of a single feature for now. Type wont change if we implement that change later. "Future-proof"
@@ -127,9 +91,7 @@ public class TrackBed extends Track {
 				
 				bedLineList.add(trackLine);
 			}	
-			nTracks = bedLineList.size();
-			System.out.println(nTracks);
-			System.out.println(bedLineList);
+			nLines = bedLineList.size();
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
@@ -144,10 +106,9 @@ public class TrackBed extends Track {
 	public void render(TrackRenderer renderer, StringBuilder sb, int offsetY) {
 
 		String textStyle="font: italic sans-serif; fill: red;";
-		int canvasWidthBp = renderer.to - renderer.from;
+		int canvasWidthBp = renderer.to - renderer.from;	
 		
-		
-		for (int ii = 0; ii<nTracks; ii++) {
+		for (int ii = 0; ii<nLines; ii++) {
 
 			TrackLine line = bedLineList.get(ii);
 			String annotation = line.annotation;	
@@ -181,9 +142,10 @@ public class TrackBed extends Track {
 		}
 	}
 
+	
 	@Override
 	protected double getHeight(TrackRenderer renderer) {
-		return nTracks*renderer.transcriptHeight;
+		return nLines*renderer.transcriptHeight;
 	}
 
 	
