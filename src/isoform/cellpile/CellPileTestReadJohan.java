@@ -16,7 +16,7 @@ import isoform.util.GtfParser;
  * @author Johan Henriksson
  *
  */
-public class CellPileTestRead {
+public class CellPileTestReadJohan {
 	
 	public static void main(String[] args) throws IOException {
 		
