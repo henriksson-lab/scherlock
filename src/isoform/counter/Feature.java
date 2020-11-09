@@ -11,11 +11,13 @@ public class Feature {
 	public String featureName;
 	
 	public String source;
+	public String type;
 	public int from, to; //inclusive
 	
-	public Feature(String gene, String fname, String source, int from, int to) {
+	public Feature(String gene, String fname, String type, String source, int from, int to) {
 		this.gene=gene;
 		this.featureName=fname;
+		this.type=type;
 		this.source = source;
 		this.from = from;
 		this.to = to;

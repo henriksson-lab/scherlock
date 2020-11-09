@@ -89,7 +89,7 @@ public class GtfToFeature {
 				for(int i=0;i<newta.size();i++) {
 					Range r=newta.get(i);
 					String fname=gname+"_"+i+"_e";
-					Feature cr=new Feature(gname, fname, source, r.from, r.to);
+					Feature cr=new Feature(gname, fname, "exon", source, r.from, r.to);
 					features.add(cr);
 				}
 				
@@ -99,7 +99,7 @@ public class GtfToFeature {
 					Range rb=newta.get(i);
 					if(ra.to+1!=ra.from) {
 						String fname=gname+"_"+i+"_i";
-						Feature cr=new Feature(gname, fname, source, ra.to+1, rb.from-1);
+						Feature cr=new Feature(gname, fname, "intron",source, ra.to+1, rb.from-1);
 						features.add(cr);
 					}
 				}
