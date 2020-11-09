@@ -48,12 +48,14 @@ public class TabixMaker {
 	
 	
 	public static void main(String[] args) throws Exception {
+		
+		System.out.println("main() starting...");
 
 		// Make bgzipped file. Block gzipped files allows indexing and accessing portions of the data.
 		// Thus, tabix wants this.
 //		// Didnt work when I used file ending .bgzip, but .gz does.
 //		String bedFileName = "C:\\Users\\anton\\java_projects\\isocounter\\data\\beds\\UP000005640_9606_lipid.bed";
-		String bedFileName = "C:\\Users\\anton\\java_projects\\isocounter\\data\\beds\\merged_all.sorted.bed_details_compatible.bed";
+		String bedFileName = "C:\\Users\\anton\\java_projects\\isocounter\\data\\beds\\merged_interesting.sorted.bed_details_compatible.chr_is_plain_number.bed";
 		String bedBgzipFileName = TabixMaker.bgzipBedFile(bedFileName);
 		
 		// Make tabix index for bed file
@@ -71,7 +73,7 @@ public class TabixMaker {
 		final FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(bedBgzipFileName, new BEDDetailCodec());
 
 		// cd55 location
-		Interval interval = new Interval("chr1", 207321376, 207360966);
+		Interval interval = new Interval("1", 207321376, 207360966);
 		
 		final Iterator<BEDFeature> readerIterator = 
 				reader.query(interval.getContig(), interval.getStart(), interval.getEnd());
@@ -82,16 +84,19 @@ public class TabixMaker {
 			System.out.println(bedFeature.getDescription());
 //			System.out.println(bedFeature.getExons());
 			System.out.println(bedFeature.getLink());
-//			System.out.println(bedFeature.getName());
+			System.out.println(bedFeature.getName());
 //			System.out.println(bedFeature.getScore());
 //			System.out.println(bedFeature.getStrand());
 //			System.out.println(bedFeature.getType());
-//			System.out.println(bedFeature.getStart());
-//			System.out.println(bedFeature.getEnd());
+			System.out.println(bedFeature.getStart());
+			System.out.println(bedFeature.getEnd());
 			System.out.println();
 		}
+		
+		System.out.println("main() done!");
 
 	}
+	
 
 }
 

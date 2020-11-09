@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import EDU.oswego.cs.dl.util.concurrent.FJTask.Seq;
 import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.FeatureReader;
@@ -63,6 +64,9 @@ public class TrackBed extends Track {
 		final FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(BgzippedBedFileName, new BEDDetailCodec());
 		final Iterator<BEDFeature> readerIterator = 
 				reader.query(interval.getContig(), interval.getStart(), interval.getEnd());
+		System.out.println(interval.getContig());
+		System.out.println(interval.getStart());
+		System.out.println(interval.getEnd());
 		
 //		while (readerIterator.hasNext()) {
 //			BEDFeature bedFeature = readerIterator.next();
@@ -91,17 +95,24 @@ public class TrackBed extends Track {
 	 */
 	public void allocateSize(TrackRenderer renderer) {
 		
+		System.out.println("Entered allocateSize method");
 		// Had to add try catch to avoid syntax error (?) from unmatching/uncaught errors
 		// Is there nicer way to do this?  //AB
 		// Johan: No
+		
+		// Temp translation bc incompatible test data. To be removed after fixing test data. //AB
+//		final String chrom = "chr" + renderer.seq;
+//		System.out.println("chrom");
+//		Interval interval = new Interval(chrom, renderer.from, renderer.to);
+		
 		Interval interval = new Interval(renderer.seq, renderer.from, renderer.to);
 		
-		try {
-			Iterator<BEDFeature> bedFileIterator;
-			bedFileIterator = TrackBed.bedParser(BgzippedBedFileName, interval);
+		try {  // This try/catch block is to prevent Java from complaining about uncaught errors
+			 Iterator<BEDFeature> bedFileIterator = TrackBed.bedParser(BgzippedBedFileName, interval);
 			// Make list of bed features/trackLines
 			bedLineList = new ArrayList<TrackLine>();
 			while (bedFileIterator.hasNext()) {
+				System.out.println("Hurra!");
 				BEDFeature bedFeature = bedFileIterator.next();
 
 				TrackLine trackLine	= new TrackLine();
@@ -130,140 +141,44 @@ public class TrackBed extends Track {
 
 	
 	
-	public void render(TrackRenderer pileup, StringBuilder sb, int offsetY) {
-//		String colorFeatureLine="rgb(0,0,0)";
+	public void render(TrackRenderer renderer, StringBuilder sb, int offsetY) {
 
-		//Write BED annotation
 		String textStyle="font: italic sans-serif; fill: red;";
+		int canvasWidthBp = renderer.to - renderer.from;
+		
 		
 		for (int ii = 0; ii<nTracks; ii++) {
 
-//			ArrayList<BEDFeature> lineList = bedLineList.get(ii).featureList;
 			TrackLine line = bedLineList.get(ii);
 			String annotation = line.annotation;	
 			BEDFeature feature = line.featureList.get(0);  // Could be a loop in future to go through several features sharing a track.
 
-			double rFrom = pileup.transformPosX(feature.getStart());
-			double rTo   = pileup.transformPosX(feature.getEnd());
-			
-//			//// Plot all the features
-//			for(Range r:listFeatures) {
-				//Transform coordinates
-//				double rFrom=pileup.transformPosX(r.from);
-//				double rTo=pileup.transformPosX(r.to);
+			// Rescale feature if too small to see.
+			int rFromRaw = feature.getStart();
+			int rToRaw   = feature.getEnd();
+			int minimum_feature_size = canvasWidthBp/1000;
+			if (rToRaw - rFromRaw < minimum_feature_size) {
+				rToRaw = rFromRaw + minimum_feature_size;  // Otherwise, feature will be almost invisible in plot
+			}
+			double rFrom = renderer.transformPosX(rFromRaw);
+			double rTo   = renderer.transformPosX(rToRaw);
 
-			double lineY=offsetY + (ii+0.5)*pileup.transcriptHeight;
-			double featureY=lineY - pileup.featureHeight/2;
+			// Set y positions
+			double lineY=offsetY + (ii+0.5)*renderer.transcriptHeight;
+			double featureY=lineY - renderer.featureHeight/2;
 			
-			String exonColor="rgb(0,0,0)";
-//				if(r.featureType.equals(Range.FEATURE_3UTR))
-//					exonColor="rgb(0,255,0)";
-//				if(r.featureType.equals(Range.FEATURE_5UTR))
-//					exonColor="rgb(0,0,255)";
-				
-			String exonStyle="\"fill:"+exonColor+";stroke-width:3;stroke:none\"";
-
+			// Add rectangle
+			String rectColor="rgb(0,0,0)";
+			String rectStyle="\"fill:"+rectColor+";stroke-width:3;stroke:none\"";
 			sb.append("<rect x=\""+rFrom+"\" y=\""+featureY+"\" "
 					+ "width=\""+(rTo-rFrom)+"\" "
-					+ "height=\""+pileup.featureHeight+"\" style="+exonStyle+"/>");   //   mask=\"url(#trackmask)\"
-				
-//			}
+					+ "height=\""+renderer.featureHeight+"\" style="+rectStyle+"/>");   //   mask=\"url(#trackmask)\"
 			
 			//Add text
 			double textXFrom=5;
-			double textY=lineY + pileup.textHeight/2;
-			sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+pileup.textHeight+"px\" >"+annotation+"</text>");
+			double textY=lineY + renderer.textHeight/2;
+			sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+renderer.textHeight+"px\" >"+annotation+"</text>");
 		}
-		
-//			for(String gene:overlappingGenes) {
-//				for(String transcript:gtf.mapGeneTranscripts.get(gene)) {
-//					//System.out.println(transcript);
-//					//Should draw a straight line...
-//
-//					double lineY=offsetY + (curTrack+0.5)*pileup.transcriptHeight;
-//					double featureY=lineY - pileup.featureHeight/2;
-//							
-//					//// Plot the line also suggesting the direction
-//					int minFrom=Integer.MAX_VALUE;
-//					int maxTo=0;
-//					for(Range r:gtf.mapTranscriptRanges.get(transcript)) {
-//						minFrom=Math.min(minFrom,r.from);
-//						maxTo=Math.max(maxTo,r.to);
-//					}
-////					double minTransFrom=transformPos(minFrom);
-//		//			double maxTransTo=transformPos(maxTo);
-//					double minTransFrom=Math.max(pileup.labelsWidth,pileup.transformPosX(minFrom));
-//					double maxTransTo=Math.min(pileup.getWidth(),pileup.transformPosX(maxTo));
-//
-//					sb.append("<line"
-//							+ " x1=\""+minTransFrom+
-//							"\" y1=\""+lineY+
-//							"\" x2=\""+maxTransTo+
-//							"\" y2=\""+lineY+
-//							"\" stroke=\""+
-//							colorFeatureLine+"\" stroke-width=\"2px\"/>");  //mask=\"url(#trackmask)\"
-//
-//					//Plot the fishbones
-//					
-//					//// Prepare plotting: sort UTRs last as they overlap exons
-//					ArrayList<Range> listFeatures=new ArrayList<Range>(gtf.mapTranscriptRanges.get(transcript));
-//					listFeatures.sort(new Comparator<Range>() {
-//						public int compare(Range a, Range b) {
-//							boolean aUTR=a.isUTR();
-//							boolean bUTR=b.isUTR();
-//							if(aUTR) {
-//								if(bUTR) {
-//									return Integer.compare(a.from, b.from);
-//								} else {
-//									return 1;
-//								}
-//							} else {
-//								if(bUTR) {
-//									return -1;
-//								} else {
-//									return Integer.compare(a.from, b.from);
-//								}
-//							}
-//						}
-//					});
-//					
-//					//// Plot all the features
-//					for(Range r:listFeatures) {
-//						//Transform coordinates
-//						double rFrom=pileup.transformPosX(r.from);
-//						double rTo=pileup.transformPosX(r.to);
-//
-//						String exonColor="rgb(0,0,0)";
-//						if(r.featureType.equals(Range.FEATURE_3UTR))
-//							exonColor="rgb(0,255,0)";
-//						if(r.featureType.equals(Range.FEATURE_5UTR))
-//							exonColor="rgb(0,0,255)";
-//						
-//						String exonStyle="\"fill:"+exonColor+";stroke-width:3;stroke:none\"";
-//						
-//						sb.append("<rect x=\""+rFrom+"\" y=\""+featureY+"\" "
-//								+ "width=\""+(rTo-rFrom)+"\" "
-//								+ "height=\""+pileup.featureHeight+"\" style="+exonStyle+"/>");   //   mask=\"url(#trackmask)\"
-//						
-//						
-//						//TO-DO style should depend on exon, utr
-//					}
-//
-//					//TO-DO: add a line, and direction
-//					
-//				//Add text: Transcript ID
-//				double textXFrom=5;
-//				double textY=lineY + pileup.textHeight/2;
-//				sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+pileup.textHeight+"px\" >"+transcript+"</text>");
-//
-//				curTrack++;
-//				}
-//			}
-//	
-			
-			
-		
-		
 	}
 
 	@Override

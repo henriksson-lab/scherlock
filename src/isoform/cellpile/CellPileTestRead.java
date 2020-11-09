@@ -53,7 +53,7 @@ public class CellPileTestRead {
 		
 		
 		// Render bed file
-		String bedFile = new String("C:\\Users\\anton\\java_projects\\isocounter\\data\\beds\\merged_all.sorted.bed_details_compatible.bed.gz");
+		String bedFile = new String("C:\\Users\\anton\\java_projects\\isocounter\\data\\beds\\merged_interesting.sorted.bed_details_compatible.chr_is_plain_number.bed.gz");
 		renderer.addTrack(new TrackBed(bedFile));
 		
 		
