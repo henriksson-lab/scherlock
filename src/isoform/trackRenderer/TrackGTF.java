@@ -131,7 +131,7 @@ public class TrackGTF extends Track {
 				
 			//Add text: Transcript ID
 			double textXFrom=5;
-			double textY=lineY + pileup.textHeight/2;
+			double textY=lineY + pileup.textHeight*0.3;  // 0.3 empirically looks better. 0.5 would make sense, but then text a bit low for some reason.
 			sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+pileup.textHeight+"px\" >"+transcript+"</text>");
 
 			curTrack++;

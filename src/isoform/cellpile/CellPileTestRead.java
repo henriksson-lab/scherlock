@@ -57,6 +57,10 @@ public class CellPileTestRead {
 		renderer.addTrack(new TrackBed(bedFile));
 		
 		
+		// Change font size
+		renderer.setTextHeight(15);
+		// default textHeight=20;
+		
 		String svg=renderer.toSVG();
 		//System.out.println(svg);
 		System.out.println("--------");

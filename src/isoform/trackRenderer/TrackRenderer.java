@@ -162,5 +162,10 @@ public class TrackRenderer {
 		}
 	}
 
+	public void setTextHeight(double newTextHeight) {
+		this.textHeight = newTextHeight;
+	}
 
+	
 }
+

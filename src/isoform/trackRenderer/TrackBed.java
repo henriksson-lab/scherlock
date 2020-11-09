@@ -137,7 +137,7 @@ public class TrackBed extends Track {
 			
 			//Add text
 			double textXFrom=5;
-			double textY=lineY + renderer.textHeight/2;
+			double textY=lineY + renderer.textHeight*0.3;  // 0.3 empirically looks better. 0.5 would make sense, but then text a bit low for some reason.
 			sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+renderer.textHeight+"px\" >"+annotation+"</text>");
 		}
 	}
