@@ -1,10 +1,11 @@
 package isoform.trackRenderer;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import EDU.oswego.cs.dl.util.concurrent.FJTask.Seq;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.FeatureReader;
@@ -18,24 +19,52 @@ import htsjdk.tribble.bed.BEDFeature;
  */
 public class TrackBed extends Track {
 
-	String BgzippedBedFileName;
+	private String fileName;
 	private int nLines;
-	private List<TrackLine> bedLineList;	
+	private List<TrackLine> bedLineList;
 	
-	public TrackBed(String BgzippedBedFileName) {
-		this.BgzippedBedFileName = BgzippedBedFileName;
+	public TrackBed(String fileName) {
+		this.fileName = fileName;
 	}
 
 	private static class TrackLine {
 		ArrayList<BEDFeature> featureList = new ArrayList<BEDFeature>();
 		String annotation;
 	}
+	
+	@Override
+	protected double getHeight(TrackRenderer renderer) {
+		return nLines*renderer.transcriptHeight;
+	}
+	
+	
+	// Bed file parsing
+	public static Iterator<BEDFeature> bedParser(String fileName, Interval interval) throws Exception {
+		String bgzipFileName;
 		
-	// For bed file parsing //AB
-	public static Iterator<BEDFeature> bedParser(String BgzippedBedFileName, Interval interval) throws Exception{
-		final FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(BgzippedBedFileName, new BEDDetailCodec());
+		// Attempt to block gzip and index input file if not already done
+		if (IOUtil.hasBlockCompressedExtension(fileName)) {
+//			System.out.println("file is block gzipped");
+			bgzipFileName = fileName;
+			File f = new File(fileName + ".tbi");
+			if (!f.exists() || f.isDirectory()) {
+//				System.out.println("file index missing. Attempting to make one");
+				TabixMaker.indexBedFile(bgzipFileName);
+			}
+			else {
+//				System.out.println("and has corresponding .tbi index file");
+			}
+		}
+		else {
+			System.out.println("input is not block gzipped. Attempting to block gzip and make .tbi index file");
+			bgzipFileName = TabixMaker.bgzipBedFile(fileName);
+			TabixMaker.indexBedFile(bgzipFileName);
+		}
+		
+		final FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(bgzipFileName, new BEDDetailCodec());
 		final Iterator<BEDFeature> readerIterator = 
 				reader.query(interval.getContig(), interval.getStart(), interval.getEnd());
+		
 //		System.out.println(interval.getContig());
 //		System.out.println(interval.getStart());
 //		System.out.println(interval.getEnd());
@@ -74,7 +103,7 @@ public class TrackBed extends Track {
 		Interval interval = new Interval(renderer.seq, renderer.from, renderer.to);
 		
 		try {  // This try/catch block is to prevent Java from complaining about uncaught errors
-			 Iterator<BEDFeature> bedFileIterator = TrackBed.bedParser(BgzippedBedFileName, interval);
+			 Iterator<BEDFeature> bedFileIterator = TrackBed.bedParser(fileName, interval);
 			// Make list of bed features/trackLines
 			bedLineList = new ArrayList<TrackLine>();
 			while (bedFileIterator.hasNext()) {
@@ -141,13 +170,4 @@ public class TrackBed extends Track {
 			sb.append("<text x=\""+textXFrom+"\" y=\""+textY+"\" style=\""+textStyle+"\"  font-size=\""+renderer.textHeight+"px\" >"+annotation+"</text>");
 		}
 	}
-
-	
-	@Override
-	protected double getHeight(TrackRenderer renderer) {
-		return nLines*renderer.transcriptHeight;
-	}
-
-	
-	
 }
