@@ -14,6 +14,7 @@ import isoform.trackRenderer.TrackPileup;
 import isoform.trackRenderer.TrackRenderer;
 import isoform.util.GtfParser;
 import isoform.util.PileUtil;
+import isoform.util.Range;
 
 /**
  * High-level interface to work with several piles in parallel
@@ -216,6 +217,24 @@ public class CellPileManager {
 		return renderer;
 	}
 	
+	
+
+	/**
+	 * Get the range of a gene. Gene can be symbol or ID
+	 */
+	public Range getRangeForGene(String gene) {
+		
+		
+		for(Track t:listTracks) {
+			if(t instanceof TrackGTF) {
+				Range r=((TrackGTF)t).gtf.getRangeForGene(gene);
+				if(r!=null)
+					return r;
+			}
+		}
+		return null;
+	}
+
 	
 	
 }

@@ -84,6 +84,9 @@ public class IsoCounterMain {
 				
 				System.out.println("Storing the counts: "+fOut);
 				cb.writeMatrix(fOut);			
+				ff.writeZip(new File(fOut,"features.ext.tsv.gz"));
+				
+				
 			} else {
 				System.out.println("Too few arguments");
 			}
