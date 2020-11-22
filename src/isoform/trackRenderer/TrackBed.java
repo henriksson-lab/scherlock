@@ -14,7 +14,7 @@ import htsjdk.tribble.bed.BEDFeature;
 /**
  * Renderer: BED file track
  * 
- * @author Anton Björk, based on Johan Henrikssons TrackGTF.java
+ * @author Anton BjÃ¶rk, based on Johan Henrikssons TrackGTF.java
  *
  */
 public class TrackBed extends Track {
