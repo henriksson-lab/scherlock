@@ -9,14 +9,15 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.FeatureReader;
-import htsjdk.tribble.TabixFeatureReader;
 import htsjdk.tribble.Tribble;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.tribble.index.tabix.TabixIndex;
 
-
-public class TabixMaker {
+// Note: A bit unclear if this really is a Tabix or if its a Tribble file format.
+// 		 However, user not supposed to have to touch this, so doesnt matter that much.
+public class TabixMaker {  
+	
 
 	public static String bgzipBedFile(String fileIn) throws Exception {
 
@@ -47,6 +48,7 @@ public class TabixMaker {
 	}
 	
 	
+	// Test Tabix/Tribble file making
 	public static void main(String[] args) throws Exception {
 		
 		System.out.println("main() starting...");
@@ -94,33 +96,6 @@ public class TabixMaker {
 		}
 		
 		System.out.println("main() done!");
-
 	}
-	
-
 }
 
-
-//cd55: "1",207321376,207360966
-
-
-
-//// iterate over the query intervals and validate the query results
-//try(final FeatureReader<BEDFeature> originalReader =
-//          AbstractFeatureReader.getFeatureReader(inputBed.getAbsolutePath(), new BEDCodec());
-//  final FeatureReader<BEDFeature> createdReader =
-//          AbstractFeatureReader.getFeatureReader(tmpBed.getAbsolutePath(), new BEDCodec()))
-//{
-//  for (final Interval interval: queryIntervals) {
-//      final Iterator<BEDFeature> originalIt = originalReader.query(interval.getContig(), interval.getStart(), interval.getEnd());
-//      final Iterator<BEDFeature> createdIt = createdReader.query(interval.getContig(), interval.getStart(), interval.getEnd());
-//      while(originalIt.hasNext()) {
-//          Assert.assertTrue(createdIt.hasNext(), "some features not returned from query");
-//          BEDFeature bedOrig = originalIt.next();
-//          BEDFeature bedTmp = createdIt.next();
-//          Assert.assertEquals(bedOrig.getContig(), bedTmp.getContig());
-//          Assert.assertEquals(bedOrig.getStart(), bedTmp.getStart());
-//          Assert.assertEquals(bedOrig.getEnd(), bedTmp.getEnd());
-//      }
-//  }
-//}
