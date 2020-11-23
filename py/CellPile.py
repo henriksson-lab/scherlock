@@ -65,7 +65,7 @@ class CellPile:
 
 	def getView(self, gene):
 		"""Return the view that will cover the span of a gene"""
-		grange = self.gtf.getRangeForGene(gene)
+		grange = self.cp.getRangeForGene(gene)
 		if grange is None:
 			raise Exception('Gene does not exist in GTF')
 		return (grange.getSource(), grange.getFrom(), grange.getTo())
