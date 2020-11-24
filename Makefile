@@ -16,6 +16,8 @@ loc:
 gitaddall:
 	git add src/*.java
 
+docs:
+	cd docs; make html
 
 
 ############ For building the python binding
