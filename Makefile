@@ -2,13 +2,14 @@ compile:
 	mkdir -p out
 	mkdir -p build
 	mkdir -p bin
+	mkdir -p py/scherlock/data
 	javac src/*/*/*.java -cp .:lib/colt.jar:lib/concurrent.jar:lib/htsjdk-2.23.0-3-g657b0a6-SNAPSHOT.jar:lib/py4j0.10.9.1.jar -d out
 	cd out; jar cmf manifests/count.mf ../build/isocount.jar *
 	cd out; jar cmf manifests/cellpile.mf ../build/cellpile.jar *
-	cd out; jar cmf manifests/python.mf ../build/pycellpile.jar *
+	cd out; jar cmf manifests/python.mf ../py/scherlock/data/pycellpile.jar *
 	rm -Rf build/lib
 	cp -r lib build/
-	cp py/* build/  #to help testing
+	cp lib/*.jar py/scherlock/data/
 
 loc:
 	wc  -l src/*/*/*java
@@ -26,9 +27,12 @@ getpytools:
 	#to build python packages
 	python3 -m pip install --upgrade setuptools wheel
 
-pypkg:
+pypkg:compile
 	#build the python package
 	cd py; python3 setup.py sdist bdist_wheel
+
+installpy: pypkg
+	cd py; python setup.py install
 
 testpypkg:
 	python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps cellpile
@@ -57,3 +61,4 @@ test_isocount_count:
 
 clean:
 	rm -Rf py/scherlock_pkg_USER.egg-info py/build py/dist
+	rm -Rf build/*

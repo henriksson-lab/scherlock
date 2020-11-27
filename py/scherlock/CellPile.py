@@ -3,6 +3,7 @@ import atexit
 import sys
 import time
 import pathlib
+import os
 from py4j.java_gateway import JavaGateway
 from py4j.java_gateway import GatewayParameters
 from py4j.java_collections import SetConverter, MapConverter, ListConverter
@@ -29,7 +30,11 @@ class CellPile:
 		#self.fname=fname
 		
 		#Figure out where the jar-file is
-		jardir=str(pathlib.Path(__file__).parent.absolute())
+		##jardir=str(pathlib.Path(__file__).parent.absolute())
+		jardir = os.path.join(os.path.dirname(__file__),'data')
+		jarfile = os.path.join(jardir,'pycellpile.jar')
+		print("---------jar-----------")
+		print(jarfile)
 
 		##If there is no JVM running already, ensure there is
 		if CellPile._gateway is None:
@@ -37,7 +42,8 @@ class CellPile:
 			atexit.register(cellpile_cleanup)
 		
 			#Start the JVM - could pass a port here!
-			CellPile._pid = subprocess.Popen(["java","-jar",jardir+"/pycellpile.jar",str(self.port)])
+			#CellPile._pid = subprocess.Popen(["java","-jar",jardir+"/pycellpile.jar",str(self.port)])
+			CellPile._pid = subprocess.Popen(["java","-jar",jarfile,str(self.port)])
 			time.sleep(2)
 			
 			#Connect to the JVM
