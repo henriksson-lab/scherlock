@@ -1,5 +1,11 @@
 from IPython.display import HTML, display
 from random import randint
+import plotly.express as px
+import matplotlib
+import matplotlib.cm
+
+
+
 
 
 def pretty_rank_gene_groups(adata, maxgenes=20):
@@ -152,9 +158,6 @@ def pretty_rank_gene_groups(adata, maxgenes=20):
 
 
 
-import plotly.express as px
-import matplotlib
-import matplotlib.cm
 
 def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3"):
 
