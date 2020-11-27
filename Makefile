@@ -23,10 +23,12 @@ docs:
 ############ For building the python binding
 
 getpytools:
+	#to build python packages
 	python3 -m pip install --upgrade setuptools wheel
 
 pypkg:
-	python3 setup.py sdist bdist_wheel
+	#build the python package
+	cd py; python3 setup.py sdist bdist_wheel
 
 testpypkg:
 	python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps cellpile
@@ -49,3 +51,9 @@ test_isocount_build:
 
 test_isocount_count:
 	java -jar build/isocount.jar count test/featurefile_test.ff test/SRR11827037_out test/out.SRR11827037_out
+
+
+
+
+clean:
+	rm -Rf py/scherlock_pkg_USER.egg-info py/build py/dist
