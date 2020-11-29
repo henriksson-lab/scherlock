@@ -3,6 +3,8 @@ from random import randint
 import plotly.express as px
 import matplotlib
 import matplotlib.cm
+import plotly.express as px
+import matplotlib
 
 
 
@@ -12,7 +14,7 @@ import matplotlib.cm
 ###################################################################
 ###################################################################
 
-# Pretty Differential expression table
+# Pretty Differential Expression table
 
 ###################################################################
 ###################################################################
@@ -22,7 +24,14 @@ import matplotlib.cm
 
 
 def tabulate_data_frame_in_html(df):
-    # Make an html table out of a pandas data frame
+    """Make an HTML table out of a pandas data frame, along with clever formatting.
+
+    Args:
+        df (dataframe): The dataframe to turn into HTML
+
+    Returns:
+        string: The table as HTML
+    """
 
     ## Format a table row
     def format_row(df, ii, m):
@@ -72,13 +81,14 @@ def tabulate_data_frame_in_html(df):
     
     
 def multipage_html_table(panel_dict):
-    """ 
-    Makes a multipanel (multipage) html table out of a dictionary
-    of dataframes
-    
-    panel_dict:     Dictionary. Keys are names of panels, 
+    """Makes a multipanel (multipage) HTML table out of a dictionary of dataframes
+
+    Args:
+        panel_dict (Dictionary): Keys are names of panels, 
                     and values are pandas dataframes with the data to be
                     displayed in panels
+    Returns:
+        string: The multipage HTML table
     """
     
     ## The buttons above the panel
@@ -192,8 +202,7 @@ def build_pretty_DE_table(adata, n_genes = 25,
                           rank_genes_groups_keys_to_include = ['names', 'logfoldchanges', 'pvals'],
                           gene_ID_column = None, gene_name_column = None,
                           show_table=True):
-    ''' 
-    Build and render an improved Differential Expression (DE) table
+    """Build and render an improved Differential Expression (DE) table.
     
     Builds an improved DE table including
     - Additional useful gene statistics
@@ -203,41 +212,35 @@ def build_pretty_DE_table(adata, n_genes = 25,
     It is a multipage table where every page corresponds to
     one leiden cluster in the data.
 
-    Parameters
-    ----------
-    adata: AnnData object
-    n_genes: int
-        Number of top DE genes to include in table
-    adata_var_columns_to_include: List of strings.
-        Column names of columns from adata.var to include in DE table
-    rank_genes_groups_keys_to_include: List of strings.
-        Keys from adata.uns['rank_genes_groups']. Listed keys will be included in DE table
-    gene_ID_column: String
-        Column in adata.var with Ensemble gene_IDs
-        If both this and gene_name_column is provid
-        the database links will attempt to be a bit smarter
-    gene_name_column: String
-        Column in adata.var with HGNC gene symbols
-        If both this and gene_ID_column is provided,
-        the database links will attempt to be a bit smarter
-    show_table: Boolean
-        If True, table will be rendered.
-        If False, table will be returned as a dictionary.
-        
-    Returns
-    -------
-    Only if show_table is False.
-    Returns a dictionary:
-        Each key:value pair corresponds to one page in table.
-        Keys are the names of the leiden categories in
+    Args:
+        adata (AnnData object): The anndata/count table
+        n_genes (int):  Number of top DE genes to include in table
+        adata_var_columns_to_include ([strings]): 
+             Column names of columns from adata.var to include in DE table
+        rank_genes_groups_keys_to_include ([strings]):
+             Keys from adata.uns['rank_genes_groups']. Listed keys will be included in DE table
+        gene_ID_column (string):
+             Column in adata.var with Ensemble gene_IDs
+             If both this and gene_name_column is provid
+             the database links will attempt to be a bit smarter
+        gene_name_column (string):
+             Column in adata.var with HGNC gene symbols
+             If both this and gene_ID_column is provided,
+             the database links will attempt to be a bit smarter
+        show_table (bool):
+             If True, the table will be rendered.
+             If False, the table will be returned as a dictionary.
+
+    Returns:
+        Only if show_table is False.
+        dictionary:
+            Each key:value pair corresponds to one page in table.
+            Keys are the names of the leiden categories in
             adata.obs.leiden.cat.categories, or single key = '0' if it doesnt exist.
-        Values are [n_genes x total number of columns] data frames 
+            Values are [n_genes x total number of columns] data frames 
             with data for the corresponding pages.
-    
-        
-    
-    '''
-    
+    """
+
     # To do:
     # - Ordering of columns in table. How is best?
     # - Test if it works when adata.obs.leiden.cat.categories doesnt exist
@@ -357,34 +360,33 @@ def build_pretty_DE_table(adata, n_genes = 25,
 
 
 
-
-
-
-
-
-
-
-
-
-
 ###################################################################
 ###################################################################
 ###################################################################
-
-# Interactive UMAPS 
-
+# Interactive UMAPS ###############################################
 ###################################################################
 ###################################################################
 ###################################################################
-
-
-
-
 
 
 
 
 def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3"):
+    """Plot two UMAPs and allow the user to see which points correspond using the mouse.
+
+    Args:
+        adata1 (anndata): The first count data object
+        adata2 (anndata): The second count data object
+        obsname (string, optional): Name of the .obs column to show
+        palette (string, optional): Colors to use for plotting categorical annotation groups.
+            Either a name of a matplotlib predefined palette to pick from
+            :class:`~matplotlib.colors.ListedColormap`,
+            or a list of matplotlib predefined named colors.
+            (see :func:`~matplotlib.colors.is_color_like`).
+
+    Returns:
+        Nothing; displays interactive HTML
+    """
 
     ### Figure out the color mapping
     if not isinstance(palette, list):
@@ -585,9 +587,7 @@ def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3"):
 ###################################################################
 ###################################################################
 ###################################################################
-
-# 3D UMAPS 
-
+# 3D UMAPS ########################################################
 ###################################################################
 ###################################################################
 ###################################################################
@@ -599,14 +599,24 @@ def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3"):
 # User exposed function for 3D umap. 
 # Handles arguments, loops if many indentifiers given or if identifier is not unique, and calls inner_plot_3d_umap
 def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis', marker_size=1):
-    # adata:          anndata object
-    # indentifiers:   String or list of strings.
-    #                 Elements in chosen_column: Identifier (name, id, ...) of thing to color UMAP on.
-    #                 Will make one umap for each identifier.
-    # column:         String. Column in adata.var to find indentifier in. Defaults to adata.var.index
-    # palette:        Either a name of a matplotlib predefined palette to pick from,
-    #                 or a list of matplotlib predefined named colors. 
-    #                 Colors in list will be interpolated to get a continuous color scale
+    """Plot an interactive 3D UMAP colored by a continuous .obs (using plotly).
+
+    Args:
+        adata (anndata): The count data object
+        identifiers (string / [string]): 
+            One or several elements in chosen_column: Identifier (name, id, ...) of thing to color UMAP on.
+            Will make one umap for each identifier.
+        column (string): Column in adata.var to find identifier in. Defaults to adata.var.index
+        palette (string / [string]):
+            Either a name of a matplotlib predefined palette to pick from
+            :class:`~matplotlib.colors.ListedColormap`,
+            or a list of matplotlib predefined named colors.
+            (see :func:`~matplotlib.colors.is_color_like`).
+            The colors in the list will be interpolated to get a continuous color scale
+
+    Returns:
+        Nothing; displays interactive HTML
+    """
 
     import matplotlib
     import matplotlib.cm as cm
@@ -636,35 +646,34 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
                   column + '\nMaking one UMAP for each occurrence..')
             for ii in identifier_index:
                 bb = adata.X[:, identifier_index[ii]]
-                plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, 
+                __plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, 
                                               palette=pal, marker_size=marker_size)
         else:
             bb = adata.X[:, identifier_index[0]]
-            plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, palette=pal, marker_size=marker_size)
+            __plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, palette=pal, marker_size=marker_size)
 
 
 # (Inner) Function for 3D UMAP. Takes array (or series or list) of values for color values
-def plot_3d_umap_continuous_inner(adata, color_values, title, palette='viridis', marker_size=1):
+def __plot_3d_umap_continuous_inner(adata, color_values, title, palette='viridis', marker_size=1):
     # adata:          anndata object
     # color_values:   Values used for color of markers. Same length as the number of observations in adata (adata.shape[0])
     # palette:        List of strings. Colors in hexadecimal. 
     #                 Colors in list will be interpolated to get a continuous color scale
-    
+
     import plotly.express as px
-#     import matplotlib.cm as cm
-    
+
     # Format data to pandas data frame
     x = adata.obsm["X_umap"][:,0].tolist()
     y = adata.obsm["X_umap"][:,1].tolist()
     z = adata.obsm["X_umap"][:,2].tolist()
     cols = {'UMAP1': x, 'UMAP2': y, 'UMAP3': z, title: color_values}
     df = pd.DataFrame(data=cols)
-    
+
     # Currently going without titles since this leaves more space for data,
     # and since the name of the identifier (same as title currently) is displayed on legend anyways.
     # If titles wanted, enable title arg. Also disable margin=dict(l=0, r=0, b=0, t=0) below,
     # otherwise the title will be outside canvas.
-    fig = px.scatter_3d(df, x='UMAP1', y='UMAP2', z='UMAP3', color=title, color_continuous_scale=palette, 
+    fig = px.scatter_3d(df, x='UMAP1', y='UMAP2', z='UMAP3', color=title, color_continuous_scale=palette,
 #                         title=title
                        )
     fig.update_traces(marker=dict(size=marker_size))
@@ -698,21 +707,32 @@ def plot_3d_umap_continuous_inner(adata, color_values, title, palette='viridis',
 
 ## Function for categorical 3D UMAPs
 def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1):
-    # adata:       anndata object
-    # column:      String. a column name from bdata.obs. Note that only a single one is allowed,
-    #              in contrast to the 2D umaps of scanpy.
-    # palette:     Either a name of a matplotlib predefined palette to pick from,
-    #              or a list of colors with length matching the number of colors needed.
-    #              Default: None --> matplotlib.rcParams["axes.prop_cycle"] used
-    #              This is the default used by scanpy. See docs for scanpy.pl.umap.
-    #              Not sure I like it, because scanpy also overwrites axes.prop_cycle when user plots
-    #              with a custom palette, which has been more of an annoying side effect than a
-    #              convenience for me so far in data analysis. However, it is easily worked around
-    #              by the user, so going for compatibility/consistency here
-    # marker_size: Number. Marker size in scatter.
+    """Plot an interactive 3D UMAP colored by a discrete/categorial .obs (using plotly).
+
+    Args:
+        adata (anndata): The count data object
+        identifiers (string / [string]): 
+            One or several elements in chosen_column: Identifier (name, id, ...) of thing to color UMAP on.
+            Will make one umap for each identifier. (TODO support multiple)
+        column (string): Column in adata.var to find identifier in. Defaults to adata.var.index
+        palette (string / [string]):
+            Either a name of a matplotlib predefined palette to pick from,
+            or a list of colors with length matching the number of colors needed.
+            Default: None --> matplotlib.rcParams["axes.prop_cycle"] used
+            This is the default used by scanpy. See docs for scanpy.pl.umap.
+            Not sure I like it, because scanpy also overwrites axes.prop_cycle when user plots
+            with a custom palette, which has been more of an annoying side effect than a
+            convenience for me so far in data analysis. However, it is easily worked around
+            by the user, so going for compatibility/consistency here
+            The colors in the list will be interpolated to get a continuous color scale
+
+        marker_size (number): 
+            Marker size in scatter.
+
+    Returns:
+        Nothing; displays interactive HTML
+    """
     
-    import plotly.express as px
-    import matplotlib
     
     if palette is None:
         ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]

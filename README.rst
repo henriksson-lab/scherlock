@@ -2,6 +2,8 @@
 SCherlock – Detailed Single-Cell Analysis in Python
 ===================================================
 
+.. image:: docs/_static/scherlock_overview.svg
+
 SCherlock is a set of utilities to make the most out of your single-cell data.
 It is supposed to be used in conjuntion with `anndata <https://anndata.readthedocs.io>`__ and
 `scanpy <https://scanpy.readthedocs.io>`__.
