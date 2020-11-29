@@ -11,8 +11,8 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="161.03409mm"
-   height="136.55956mm"
-   viewBox="0 0 161.03409 136.55956"
+   height="120.68454mm"
+   viewBox="0 0 161.03409 120.68454"
    version="1.1"
    id="svg8"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
@@ -167,8 +167,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="247.69548"
-     inkscape:cy="251.44096"
+     inkscape:cx="248.20055"
+     inkscape:cy="171.23786"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -182,13 +182,7 @@
      fit-margin-top="1"
      fit-margin-left="1"
      fit-margin-right="1"
-     fit-margin-bottom="1">
-    <sodipodi:guide
-       position="-24.379465,15.308036"
-       orientation="0,1"
-       id="guide2459"
-       inkscape:locked="false" />
-  </sodipodi:namedview>
+     fit-margin-bottom="1" />
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -207,7 +201,7 @@
      id="layer1"
      transform="translate(-10.830654,-68.647324)">
     <image
-       y="194.88976"
+       y="179.01474"
        x="15.742707"
        id="image1689"
        xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABJ8AAAF/CAYAAADn8WhUAAAABHNCSVQICAgIfAhkiAAAIABJREFU
@@ -1660,7 +1654,7 @@ AKA1hE8AAAAAAABoDeETAAAAAAAAWkP4BAAAAAAAgNYQPgEAAAAAAKA1hE8AAAAAAABozf8Hzig+
        height="8.542263"
        width="26.385109" />
     <image
-       y="195.41891"
+       y="179.5439"
        x="44.773663"
        id="image1711"
        xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+4AAAGaCAYAAACRyBlAAAAABHNCSVQICAgIfAhkiAAAIABJREFU
@@ -4146,7 +4140,7 @@ RU5ErkJggg==
        height="8.3154669"
        width="20.403318" />
     <image
-       y="195.55122"
+       y="179.67621"
        x="69.698807"
        id="image1722"
        xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUwAAACYCAYAAACPttDSAAAABHNCSVQICAgIfAhkiAAAIABJREFU
@@ -4347,10 +4341,10 @@ iUuXUGEYf7sbq1BgekIC5qamThhBCnX+Bx20QrERaOIaAAAAAElFTkSuQmCC
        ry="0"
        y="123.37504"
        x="11.830654"
-       height="66.523811"
+       height="50.280121"
        width="9.8273811"
        id="rect1614"
-       style="opacity:1;vector-effect:none;fill:#5e97e6;fill-opacity:1;stroke:none;stroke-width:0.29095498;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+       style="opacity:1;vector-effect:none;fill:#5e97e6;fill-opacity:1;stroke:none;stroke-width:0.2529504;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
     <rect
        style="opacity:1;vector-effect:none;fill:#5e97e6;fill-opacity:1;stroke:none;stroke-width:0.25590071;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect1612"
@@ -4360,12 +4354,12 @@ iUuXUGEYf7sbq1BgekIC5qamThhBCnX+Bx20QrERaOIaAAAAAElFTkSuQmCC
        y="69.647324"
        ry="0" />
     <rect
-       style="opacity:1;vector-effect:none;fill:#8bca7a;fill-opacity:0.98952876;stroke:none;stroke-width:1.58323765;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="opacity:1;vector-effect:none;fill:#8bca7a;fill-opacity:0.98952876;stroke:none;stroke-width:1.37643504;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect1598"
        width="146.89"
-       height="66.602837"
+       height="50.339851"
        x="23.974735"
-       y="123.54072" />
+       y="123.50027" />
     <rect
        y="71.548775"
        x="71.561745"
@@ -4742,14 +4736,14 @@ iUuXUGEYf7sbq1BgekIC5qamThhBCnX+Bx20QrERaOIaAAAAAElFTkSuQmCC
     <text
        id="text1610"
        y="18.035896"
-       x="-176.77228"
+       x="-166.18893"
        style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"
        transform="rotate(-90)"><tspan
          id="tspan1608"
          style="font-size:5.29166651px;stroke-width:0.26458332"
          y="18.035896"
-         x="-176.77228"
+         x="-166.18893"
          sodipodi:role="line">Visualization</tspan></text>
     <text
        xml:space="preserve"
@@ -4764,17 +4758,17 @@ iUuXUGEYf7sbq1BgekIC5qamThhBCnX+Bx20QrERaOIaAAAAAElFTkSuQmCC
          style="font-size:5.29166651px;stroke-width:0.26458332">scherlock.pl</tspan></text>
     <text
        id="text1653"
-       y="183.97881"
+       y="166.51631"
        x="93.580177"
        style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          style="font-size:5.29166651px;stroke-width:0.26458332"
-         y="183.97881"
+         y="166.51631"
          x="93.580177"
          id="tspan1651"
          sodipodi:role="line">Isoform and ATAC validation</tspan></text>
     <image
-       y="145.19443"
+       y="139.3736"
        x="93.999374"
        id="image1674"
        xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+QAAADYCAIAAADtb74NAAAAA3NCSVQICAjb4U/gAAAgAElEQVR4
@@ -5103,46 +5097,67 @@ xXuqaU3lBwAgKbFOaq21UsrXdYxxD2ut537OefYtAIBfiHVS673XWr+uEXEPr1iPiL332c8AAM4T
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        x="26.376013"
-       y="180.27461"
+       y="164.3996"
        id="text1679"><tspan
          sodipodi:role="line"
          id="tspan1677"
          x="26.376013"
-         y="180.27461"
+         y="164.3996"
          style="font-size:5.29166651px;stroke-width:0.26458332">Help with annotation</tspan></text>
     <path
        sodipodi:nodetypes="cc"
        inkscape:connector-curvature="0"
        id="path1743"
-       d="m 53.981641,187.06525 v 7.32463"
+       d="m 53.981641,171.19024 v 7.32463"
        style="fill:none;stroke:#000000;stroke-width:0.14284702;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker1751)" />
     <path
        inkscape:connector-curvature="0"
        id="path1745"
-       d="M 48.989856,186.99389 36.107179,194.4317"
+       d="m 48.989856,171.11888 -12.882677,7.43781"
        style="fill:none;stroke:#000000;stroke-width:0.14284702;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2029)" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.14284702;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker2099)"
-       d="m 58.926768,186.99389 12.882677,7.43781"
+       d="m 58.926768,171.11888 12.882677,7.43781"
        id="path1747"
        inkscape:connector-curvature="0" />
     <text
        id="text2025"
-       y="185.56628"
+       y="169.69127"
        x="37.396011"
        style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          style="font-size:5.29166651px;stroke-width:0.26458332"
-         y="185.56628"
+         y="169.69127"
          x="37.396011"
          id="tspan2023"
          sodipodi:role="line">and curation</tspan></text>
     <rect
-       style="opacity:1;vector-effect:none;fill:#5e97e6;fill-opacity:1;stroke:none;stroke-width:0.26499999;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       id="rect2455"
-       width="46.113098"
-       height="26.836309"
-       x="34.017857"
-       y="142.78571" />
+       y="139.38106"
+       x="24.930693"
+       height="15.477348"
+       width="59.342941"
+       id="rect2461"
+       style="opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.30062026;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.79208779px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.06980219"
+       x="27.098888"
+       y="143.39442"
+       id="text2465"><tspan
+         sodipodi:role="line"
+         x="27.098888"
+         y="143.39442"
+         style="font-weight:bold;stroke-width:0.06980219"
+         id="tspan2475">Gene  Pval   FC       External links</tspan><tspan
+         sodipodi:role="line"
+         x="27.098888"
+         y="146.88454"
+         style="stroke-width:0.06980219"
+         id="tspan2479">XYZ     0.01    3.5       ...</tspan><tspan
+         sodipodi:role="line"
+         x="27.098888"
+         y="150.37465"
+         style="stroke-width:0.06980219"
+         id="tspan2481">ZYY     0.03    6.3       ...</tspan></text>
   </g>
 </svg>
