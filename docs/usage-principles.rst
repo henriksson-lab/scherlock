@@ -1,9 +1,10 @@
 Usage Principles
 ----------------
 
-Import Cellpile as::
+Import Cellpile and the plotting routines as::
 
-    import cellpile
+    import scherlock.cp
+    import scherlock.pl
 
 Workflow
 ^^^^^^^^

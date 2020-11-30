@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.StringTokenizer;
 import java.util.zip.GZIPOutputStream;
 
@@ -53,6 +54,21 @@ public class FeatureFile {
 			ff.features.add(f);
 		}
 		br.close();
+		
+		//Sort the entries
+		ff.features.sort(new Comparator<Feature>() {
+			public int compare(Feature a, Feature b) {
+				int comp=a.source.compareTo(b.source);
+				if(comp==0) {
+					return Integer.compare(a.from, b.from);
+				} else {
+					return comp;
+				}
+			}
+		});
+		
+		
+		
 		return ff;
 	}
 

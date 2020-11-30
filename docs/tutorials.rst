@@ -3,7 +3,7 @@ Tutorials
 
 .. include:: _links.rst
 
-Conventient Plotting
+Convenient Plotting
 --------------------
 
 
