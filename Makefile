@@ -1,3 +1,8 @@
+
+
+installpy: pypkg
+	cd py; python setup.py install
+
 compile:
 	mkdir -p out
 	mkdir -p build
@@ -30,9 +35,6 @@ getpytools:
 pypkg:compile
 	#build the python package
 	cd py; python3 setup.py sdist bdist_wheel
-
-installpy: pypkg
-	cd py; python setup.py install
 
 testpypkg:
 	python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps cellpile
