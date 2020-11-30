@@ -1,7 +1,7 @@
 Contributing
 ============
 
-Contributions to SCerlock are highly welcome! A few bug reports go a long way already
+Contributions to SCherlock are highly welcome! A few bug reports go a long way already
 
 Before filing an issue
 ----------------------
