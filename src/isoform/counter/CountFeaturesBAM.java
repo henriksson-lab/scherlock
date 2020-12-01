@@ -132,6 +132,8 @@ public class CountFeaturesBAM {
 
 			//Check if we can step to the next feature or if we should remain
 			Feature feature=listFeatures.get(searchFeatureListFrom+1);
+			if(feature.source==null)
+				throw new RuntimeException(); //6666666666666666666666666666666666666666666666666666
 			//System.out.println("Feature:\t"+feature.from+"\t"+feature.to);
 			int comparisonSource=feature.source.compareTo(blockSource);  // could pre-split the chromosome to avoid these checks
 			if(comparisonSource==0) {
@@ -179,6 +181,7 @@ public class CountFeaturesBAM {
 		int keptRecords=0;
 		String currentSource=null;
 		int currentPos=0;
+		int unalignedRecord=0;
 		
 		//Instead of keeping features in a treemap, which is O(log n) to look up,
 		//we can exploit that the input file is sorted. By keeping a pointer to the
@@ -221,67 +224,76 @@ public class CountFeaturesBAM {
 						//Which cell is this?
 						int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
 						
-						//Move the search feature forward
-						//System.out.println("Moving search initial position:");
-						int nextSearchFeatureListFrom=nextFeatureBeforeOrOverlap(
-								samRecord.getContig(), samRecord.getAlignmentStart(),
-								searchFeatureListFrom);
-						
-						//Since the input is position sorted, we can compress all features up until now
-						for(;searchFeatureListFrom<nextSearchFeatureListFrom;searchFeatureListFrom++) {
-							compressFeature(searchFeatureListFrom);
-						}
-						
-
-						/////////////////////////////////
-						///////////////// Count the blocks
-						/////////////////////////////////
-						
-						//A read may have been split into multiple blocks. 
-						//Count these separately. Naive assumption that these are split over introns... is this correct?
-						List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
-						for(int curAB=0;curAB<listBlocks.size();curAB++) {
-							AlignmentBlock ab=listBlocks.get(curAB);
+						if(samRecord.getContig()!=null) {
 							
-							String blockSource=samRecord.getContig();
-							int blockFrom=ab.getReferenceStart();
-							int blockTo=ab.getReferenceStart()+ab.getLength();
 
-							//Find new suitable place to start searching from
-							int fi=nextFeatureBeforeOrOverlap(samRecord.getContig(), ab.getReadStart(),searchFeatureListFrom);
+							//Move the search feature forward
+							//System.out.println("Moving search initial position:");
+							int nextSearchFeatureListFrom=nextFeatureBeforeOrOverlap(
+									samRecord.getContig(), samRecord.getAlignmentStart(),
+									searchFeatureListFrom);
 							
-							//Look up overlapping features. Continue searching from where we were last time.
-							//This assumes that the FASTQ has been position sorted!
-							//System.out.println("Fitting block");
-							blocksearch: for(;fi<listFeatures.size();fi++) {
-								Feature feature=listFeatures.get(fi);
-								int comparisonSource=feature.source.compareTo(blockSource);  // could pre-split the chromosome to avoid these checks
-								if(comparisonSource==0) {
-									//Currently checking features on the same chromosome. Most common case.
-									
-									/*System.out.println("AB!\t"+blockSource+"\t"+blockFrom+"\t"+blockTo+"\t"+curAB+"\tumi "+bcCellCurrentUMI+"\tbc "+bcCellCurrentCellBarcode);
-									System.out.println("Feature:\t"+feature.from+"\t"+feature.to);
-									System.out.println();*/
-									
-									//Now continue to check if there is an overlap position-wise
-									if(feature.to<blockFrom) {
-										//Feature is before block. We have not reached the region yet. Continue the search
-									} else if(feature.from>blockTo) {
-										//Now we are past the feature, but on the same chromosome. Can stop looking
-										break blocksearch;
+							//Since the input is position sorted, we can compress all features up until now
+							for(;searchFeatureListFrom<nextSearchFeatureListFrom;searchFeatureListFrom++) {
+								compressFeature(searchFeatureListFrom);
+							}
+							
+
+							/////////////////////////////////
+							///////////////// Count the blocks
+							/////////////////////////////////
+							
+							//A read may have been split into multiple blocks. 
+							//Count these separately. Naive assumption that these are split over introns... is this correct?
+							List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
+							for(int curAB=0;curAB<listBlocks.size();curAB++) {
+								AlignmentBlock ab=listBlocks.get(curAB);
+								
+								String blockSource=samRecord.getContig();
+								int blockFrom=ab.getReferenceStart();
+								int blockTo=ab.getReferenceStart()+ab.getLength();
+
+								//Find new suitable place to start searching from
+								int fi=nextFeatureBeforeOrOverlap(samRecord.getContig(), ab.getReadStart(),searchFeatureListFrom);
+								
+								//Look up overlapping features. Continue searching from where we were last time.
+								//This assumes that the FASTQ has been position sorted!
+								//System.out.println("Fitting block");
+								blocksearch: for(;fi<listFeatures.size();fi++) {
+									Feature feature=listFeatures.get(fi);
+									int comparisonSource=feature.source.compareTo(blockSource);  // could pre-split the chromosome to avoid these checks
+									if(comparisonSource==0) {
+										//Currently checking features on the same chromosome. Most common case.
+										
+										/*System.out.println("AB!\t"+blockSource+"\t"+blockFrom+"\t"+blockTo+"\t"+curAB+"\tumi "+bcCellCurrentUMI+"\tbc "+bcCellCurrentCellBarcode);
+										System.out.println("Feature:\t"+feature.from+"\t"+feature.to);
+										System.out.println();*/
+										
+										//Now continue to check if there is an overlap position-wise
+										if(feature.to<blockFrom) {
+											//Feature is before block. We have not reached the region yet. Continue the search
+										} else if(feature.from>blockTo) {
+											//Now we are past the feature, but on the same chromosome. Can stop looking
+											break blocksearch;
+										} else {
+											//This feature overlaps, so count it. But continue the loop as multiple features might overlap the block
+											count(fi,barcodeIndex);
+											keptRecords++;
+										}
+									} else if(comparisonSource<0) {
+										//Not yet comparing the same chromosome. Keep scanning along the features until we get there. Uncommon case
 									} else {
-										//This feature overlaps, so count it. But continue the loop as multiple features might overlap the block
-										count(fi,barcodeIndex);
-										keptRecords++;
+										//Now we are looking at the next chromosome, so past the block for certain. Can stop looking
+										break blocksearch;
 									}
-								} else if(comparisonSource<0) {
-									//Not yet comparing the same chromosome. Keep scanning along the features until we get there. Uncommon case
-								} else {
-									//Now we are looking at the next chromosome, so past the block for certain. Can stop looking
-									break blocksearch;
 								}
 							}
+							
+						} else {
+							//Unaligned read
+							unalignedRecord++;
 						}
+						
 					}
 				}
 			}
@@ -292,7 +304,7 @@ public class CountFeaturesBAM {
 			compressFeature(searchFeatureListFrom);
 		}
 		
-		System.out.println("Kept/Read: "+keptRecords+"/"+readRecords+" --- "+(int)(100*keptRecords/(double)readRecords)+"%");
+		System.out.println("Kept/Read: "+keptRecords+"/"+readRecords+" --- "+(int)(100*keptRecords/(double)readRecords)+"%   unaligned "+unalignedRecord);
 
 		reader.close();
 	}
