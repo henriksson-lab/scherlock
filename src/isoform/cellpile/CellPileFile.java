@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import cern.colt.list.IntArrayList;
 import htsjdk.samtools.AlignmentBlock;
@@ -219,6 +220,8 @@ public class CellPileFile {
 	}
 	
 	
+	TreeSet<String> seqs=new TreeSet<String>();
+	
 
 	/**
 	 * Perform the counting from a BAM file. Can be called multiple times
@@ -261,6 +264,7 @@ public class CellPileFile {
 				passedChunks+=currentChunk;
 				int prc=100*passedChunks/totalChunks;
 				System.out.println(""+prc+"%\tKept/Read: "+keptRecords+"/"+readRecords+"\tOn sequence: +"+currentSeq);
+				System.out.println(seqs);
 			}
 				
 			//Get UMI and BC for this read
@@ -283,6 +287,8 @@ public class CellPileFile {
 						//Which cell is this?
 						int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
 						
+
+						
 						//A read may have been split into multiple blocks. 
 						//Count these separately. Naive assumption that these are split over introns... is this correct?
 						List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
@@ -295,6 +301,10 @@ public class CellPileFile {
 							int blockTo=ab.getReferenceStart()+ab.getLength();
 							
 							int shouldBeInChunk=blockFrom/chunkSize;
+							
+							
+							seqs.add(blockSource);
+
 							
 							//If this is the first read we see, start chunking from here
 							/*if(currentSeq.equals("")) {
