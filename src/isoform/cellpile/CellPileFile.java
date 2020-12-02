@@ -217,11 +217,8 @@ public class CellPileFile {
 		mapCellRegions.clear();
 		currentSeq=newSeq;
 		currentChunk=newChunkNum;
+		
 	}
-	
-	
-	TreeSet<String> seqs=new TreeSet<String>();
-	
 
 	/**
 	 * Perform the counting from a BAM file. Can be called multiple times
@@ -242,6 +239,9 @@ public class CellPileFile {
 		//To know progress, status variables
 		int readRecords=0;
 		int keptRecords=0;
+		int skippedWrongBC=0;
+		int skippedBadUMI=0;
+		int skippedDup=0;
 
 		//This is to keep track of duplicates.
 		//Approximate, as the same cDNA can be fragmented multiple times in the library prep
@@ -250,6 +250,12 @@ public class CellPileFile {
 				
 		//Loop through all SAM records
 		for (final SAMRecord samRecord : reader) {
+			
+			if(samRecord.getContig().equals("+1")) {
+				System.out.println(samRecord.getSAMString());
+				System.exit(1);
+			}
+			
 			
 			//Update user about progress
 			readRecords++;
@@ -263,8 +269,8 @@ public class CellPileFile {
 				}
 				passedChunks+=currentChunk;
 				int prc=100*passedChunks/totalChunks;
-				System.out.println(""+prc+"%\tKept/Read: "+keptRecords+"/"+readRecords+"\tOn sequence: +"+currentSeq);
-				System.out.println(seqs);
+				System.out.println(""+prc+"%\tKept/Read: "+keptRecords+"/"+readRecords+"\tOn sequence: "+currentSeq+
+						" wrongBC: "+skippedWrongBC+" badUMI: "+skippedBadUMI+" skipDup: "+skippedDup);
 			}
 				
 			//Get UMI and BC for this read
@@ -274,11 +280,12 @@ public class CellPileFile {
 			//Check if this is a cell to count
 			if(mapBarcodeIndex.keySet().contains(bcCellCurrentCellBarcode)) {
 				//If the read has no UMI nor BC then ignore it
-				if(bcCellCurrentUMI!=null && bcCellCurrentCellBarcode!=null) {
-					//Check if duplicate read
-					if(bcCellCurrentUMI.equals(bcCellPreviousUMI) && bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
+				if(bcCellCurrentCellBarcode!=null) {
+					//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
+					if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousUMI) && bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
 						//Do nothing, ignore read
 						//System.out.println("Got duplicate");
+						skippedDup++;
 					} else {
 						//Remember for later
 						bcCellPreviousUMI=bcCellCurrentUMI;
@@ -302,10 +309,6 @@ public class CellPileFile {
 							
 							int shouldBeInChunk=blockFrom/chunkSize;
 							
-							
-							seqs.add(blockSource);
-
-							
 							//If this is the first read we see, start chunking from here
 							/*if(currentSeq.equals("")) {
 								currentSeq=blockSource;
@@ -321,8 +324,11 @@ public class CellPileFile {
 						}
 					}
 				} else {
+					skippedBadUMI++;
 					//System.out.println("Incomplete BAM record");
 				}
+			} else {
+				skippedWrongBC++;
 			}
 		}
 		

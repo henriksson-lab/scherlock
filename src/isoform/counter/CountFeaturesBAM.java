@@ -209,8 +209,8 @@ public class CountFeaturesBAM {
 			if(mapBarcodeIndex.keySet().contains(bcCellCurrentCellBarcode)) {
 				//If the read has no UMI nor BC then ignore it
 				if(bcCellCurrentUMI!=null && bcCellCurrentCellBarcode!=null) {
-					//Check if duplicate read
-					if(bcCellCurrentUMI.equals(bcCellPreviousU) && bcCellCurrentCellBarcode.equals(bcCellPreviousC)) {
+					//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
+					if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousU) && bcCellCurrentCellBarcode.equals(bcCellPreviousC)) {
 						//Do nothing, just ignore - this is a duplicate read
 					} else {
 						//Remember for later
