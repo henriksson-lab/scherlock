@@ -182,6 +182,9 @@ public class CountFeaturesBAM {
 		String currentSource=null;
 		int currentPos=0;
 		int unalignedRecord=0;
+		int skippedDup=0;
+		int skippedWrongBC=0;
+
 		
 		//Instead of keeping features in a treemap, which is O(log n) to look up,
 		//we can exploit that the input file is sorted. By keeping a pointer to the
@@ -198,7 +201,8 @@ public class CountFeaturesBAM {
 			readRecords++;
 			if(readRecords%1000000 == 0){
 				int prcDone=(int)(100.0*searchFeatureListFrom/(double)listFeatures.size());
-				System.out.println("Progress: "+prcDone+"%\t  Kept/Read: "+keptRecords+"/"+readRecords+"\tCurrently@read: "+currentSource+"\t"+currentPos);
+				System.out.println("Progress: "+prcDone+"%\t  Kept/Read: "+keptRecords+"/"+readRecords+
+						"\tCurrently@read: "+currentSource+"\tstartpos: "+currentPos+" unaligned:"+unalignedRecord+" dup: "+skippedDup+" badBC: "+skippedWrongBC);
 			}
 
 			//Get UMI and BC for this read
@@ -207,11 +211,12 @@ public class CountFeaturesBAM {
 				
 			//Check if this is a cell to count
 			if(mapBarcodeIndex.keySet().contains(bcCellCurrentCellBarcode)) {
-				//If the read has no UMI nor BC then ignore it
-				if(bcCellCurrentUMI!=null && bcCellCurrentCellBarcode!=null) {
+				//If the read has no BC then ignore it
+				if(bcCellCurrentCellBarcode!=null) {
 					//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
 					if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousU) && bcCellCurrentCellBarcode.equals(bcCellPreviousC)) {
 						//Do nothing, just ignore - this is a duplicate read
+						skippedDup++;
 					} else {
 						//Remember for later
 						bcCellPreviousU=bcCellCurrentUMI;
@@ -295,6 +300,8 @@ public class CountFeaturesBAM {
 						}
 						
 					}
+				} else {
+					skippedWrongBC++;
 				}
 			}
 		}
