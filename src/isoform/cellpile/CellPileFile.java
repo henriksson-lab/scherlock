@@ -251,12 +251,6 @@ public class CellPileFile {
 		//Loop through all SAM records
 		for (final SAMRecord samRecord : reader) {
 			
-			if(samRecord.getContig().equals("+1")) {
-				System.out.println(samRecord.getSAMString());
-				System.exit(1);
-			}
-			
-			
 			//Update user about progress
 			readRecords++;
 			if(readRecords%1000000 == 0){
