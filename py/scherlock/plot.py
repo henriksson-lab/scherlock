@@ -723,8 +723,7 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1):
             Not sure I like it, because scanpy also overwrites axes.prop_cycle when user plots
             with a custom palette, which has been more of an annoying side effect than a
             convenience for me so far in data analysis. However, it is easily worked around
-            by the user, so going for compatibility/consistency here
-            The colors in the list will be interpolated to get a continuous color scale
+            by the user, so going for compatibility/consistency here.
 
         marker_size (number): 
             Marker size in scatter.
@@ -732,7 +731,8 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1):
     Returns:
         Nothing; displays interactive HTML
     """
-    
+
+    import plotly.express as px
     
     if palette is None:
         ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]
@@ -740,10 +740,12 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1):
         ppp = matplotlib.cm.get_cmap(palette).colors
     else:
         ppp = palette
-    
     pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
     
     cats = adata.obs[column].cat.categories
+    if len(cats) > len(pp):
+        raise(Exception("Number of categories in data is bigger than number of colors in chosen" +
+                        " palette. Please choose another palette"))
     color_dict = {cats[ii]: pp[ii] for ii in range(len(cats))}
     
     x=adata.obsm["X_umap"][:,0].tolist()
