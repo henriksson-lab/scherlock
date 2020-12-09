@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 import java.util.zip.GZIPOutputStream;
 
 
@@ -41,22 +42,40 @@ public class FeatureFile {
 		FeatureFile ff=new FeatureFile();
 		BufferedReader br=new BufferedReader(new FileReader(fFeature));
 		String line;
+		
+		//Read header
+		ArrayList<String> header=new ArrayList<String>();
+		line=br.readLine();
+		StringTokenizer stok2=new StringTokenizer(line, "\t");
+		while(stok2.hasMoreTokens()) {
+			header.add(stok2.nextToken());
+		}
+		
+		//Read features
 		while((line=br.readLine())!=null) {
-			StringTokenizer stok=new StringTokenizer(line, "\t");
-			String source=stok.nextToken();
-			int from=Integer.parseInt(stok.nextToken());
-			int to=Integer.parseInt(stok.nextToken());
-			String fname=stok.nextToken();
-			String gene=stok.nextToken();
-			String type=stok.nextToken();
-			
-			Feature f=new Feature(gene, fname, type, source, from, to);
+			StringTokenizer stok=new StringTokenizer(line, "\t");			
+			int i=0;
+			TreeMap<String, String> map=new TreeMap<String, String>();
+			while(stok.hasMoreTokens()) {
+				map.put(header.get(i),stok.nextToken());
+				i++;
+			}
+
+			Feature f=new Feature(map);
 			ff.features.add(f);
 		}
 		br.close();
 		
-		//Sort the entries
-		ff.features.sort(new Comparator<Feature>() {
+		ff.sortByPosition();
+		return ff;
+	}
+
+
+	/**
+	 * Sort entries by position, same order as sorted BAM files
+	 */
+	private void sortByPosition() {
+		features.sort(new Comparator<Feature>() {
 			public int compare(Feature a, Feature b) {
 				int comp=a.source.compareTo(b.source);
 				if(comp==0) {
@@ -66,12 +85,7 @@ public class FeatureFile {
 				}
 			}
 		});
-		
-		
-		
-		return ff;
 	}
-
 
 	/**
 	 * Store the features
@@ -88,8 +102,23 @@ public class FeatureFile {
 	 */
 	public void write(OutputStream os) throws IOException {
 		PrintWriter pwFeatures=new PrintWriter(os);
+		
+		//Write header
+		pwFeatures.print("source\tfrom\tto\tfeature");
+		if(!features.isEmpty()) {
+			for(String n:features.get(0).extraAttr.keySet()) {
+				pwFeatures.print("\t"+n);
+			}
+		}
+		pwFeatures.println();
+		
+		//Write all the features
 		for(Feature r:features) {
-			pwFeatures.println(r.source+"\t"+r.from+"\t"+r.to+"\t"+r.featureName+"\t"+r.gene+"\t"+r.type);
+			pwFeatures.println(r.source+"\t"+r.from+"\t"+r.to+"\t"+r.featureName);
+			for(String val:r.extraAttr.values()) {
+				pwFeatures.print("\t"+val);
+			}
+			pwFeatures.println();
 		}
 		pwFeatures.close();
 	}
