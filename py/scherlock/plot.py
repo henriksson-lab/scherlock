@@ -5,7 +5,8 @@ import matplotlib
 import matplotlib.cm
 import plotly.express as px
 import matplotlib
-
+import numpy as np
+import pandas as pd
 
 
 
@@ -620,6 +621,7 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
 
     import matplotlib
     import matplotlib.cm as cm
+
     
     # adata.var['index'] doesnt work
     if column == 'index':
@@ -641,13 +643,15 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
         
     for identifier in identifiers:
         identifier_index = np.where(chosen_column == identifier)[0]
-        if len(identifier_index) != 1:
+        if len(identifier_index) > 1:
             print('Warning: ' + identifier + ' appears several times in ' + 
                   column + '\nMaking one UMAP for each occurrence..')
             for ii in identifier_index:
-                bb = adata.X[:, identifier_index[ii]]
+                bb = adata.X[:, ii]
                 __plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, 
                                               palette=pal, marker_size=marker_size)
+        elif len(identifier_index) < 1:
+            raise(Exception("SCherlock: Specified identifiers do not exist in column (adata.var.index by default)"))
         else:
             bb = adata.X[:, identifier_index[0]]
             __plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, palette=pal, marker_size=marker_size)
@@ -733,6 +737,7 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1):
     """
 
     import plotly.express as px
+    import pandas as pd
     
     if palette is None:
         ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]
