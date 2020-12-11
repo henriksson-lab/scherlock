@@ -30,10 +30,10 @@ public class Feature {
 	
 
 	public Feature(TreeMap<String, String> a) {
-		featureName=pop(extraAttr,"feature");
-		source=pop(extraAttr,"source");
-		from=Integer.parseInt(pop(extraAttr,"from"));
-		to=Integer.parseInt(pop(extraAttr,"to"));
+		featureName=pop(a,"feature");
+		source=pop(a,"source");
+		from=Integer.parseInt(pop(a,"from"));
+		to=Integer.parseInt(pop(a,"to"));
 		extraAttr.putAll(a);
 	}
 
