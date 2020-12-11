@@ -61,7 +61,6 @@ public class FeatureFile {
 				i++;
 			}
 
-			System.out.println(map);
 			Feature f=new Feature(map);
 			ff.features.add(f);
 		}
