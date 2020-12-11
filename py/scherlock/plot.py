@@ -5,7 +5,8 @@ import matplotlib
 import matplotlib.cm
 import plotly.express as px
 import matplotlib
-
+import numpy as np
+import pandas as pd
 
 
 
@@ -184,7 +185,7 @@ def multipage_html_table(panel_dict):
     
     ## Hide our horrible formatting ;)
     from bs4 import BeautifulSoup as bs
-    aa = bs(js)  # Read html from string
+    aa = bs(js, features="html.parser")  # Read html from string
     pretty_js = aa.prettify()   # prettify
     
     return(pretty_js)
@@ -282,7 +283,7 @@ def build_pretty_DE_table(adata, n_genes = 25,
 
         # Get identifiers for the top DE genes in current page/cluster
         page_genes = [adata.uns['rank_genes_groups']['names'][ii][ii_group] for ii in range(n_genes)]
-
+        
         # Data from adata.uns['rank_genes_groups']
         column_dict = {}
         for col in rank_genes_groups_keys_to_include:
@@ -298,11 +299,11 @@ def build_pretty_DE_table(adata, n_genes = 25,
             gene_ids = adata.var[gene_ID_column][page_genes]
             gene_names = adata.var[gene_name_column][page_genes]
 
-
-            for gene_name, gene_id in zip(gene_names, gene_ids):
-
-                # For link format, see: https://www.genecards.org/Guide/AboutGeneCards
-                df['gene_cards_link'] = "https://www.genecards.org/cgi-bin/carddisp.pl?id=" + gene_id + "&id_type=ensembl"
+            # For link format, see: https://www.genecards.org/Guide/AboutGeneCards
+            prefix = "https://www.genecards.org/cgi-bin/carddisp.pl?id="
+            suffix = "&id_type=ensembl"
+            df['gene_cards_link'] = [prefix + gene + suffix for gene in gene_ids]
+            
 
 #                 # With the current really shitty implementation, retrieving uniProtIDs on the
 #                 # fly takes way too long. Easily fixed, but waiting for response from uniProt
@@ -316,20 +317,26 @@ def build_pretty_DE_table(adata, n_genes = 25,
 #                 print('Retrieving of uniProt ID finished:' + str(datetime.datetime.now()))
 #                 print('It took ' + str(datetime.datetime.now() - t0))
 #                 link_uniprot = 'https://www.uniprot.org/uniprot/' + uniProt_id
-                df['uniprot_link'] = "https://www.uniprot.org/uniprot/?query="+gene_name+"&sort=score"
+            prefix = "https://www.uniprot.org/uniprot/?query="
+            suffix = "&sort=score"
+            df['uniprot_link'] = [prefix + gene + suffix for gene in gene_names]
 
-                # Not fixed to go straight to gene page yet, so just links to database internal search results
-                df['wikipedia_link'] = "https://en.wikipedia.org/w/index.php?search="+gene_name+"&go=Go"
-                df['ensembl_link'] = "http://www.ensembl.org/Multi/Search/Results?q="+gene_name+";site=ensembl_all"
+            ## Not fixed to go straight to gene page yet, so just links to database internal search results
+            prefix = "https://en.wikipedia.org/w/index.php?search="
+            suffix = "&go=Go"
+            df['wikipedia_link'] = [prefix + gene + suffix for gene in gene_names]
+            prefix = "http://www.ensembl.org/Multi/Search/Results?q="
+            suffix = ";site=ensembl_all"
+            df['ensembl_link'] = [prefix + gene + suffix for gene in gene_names]
+            
         else:
-            for gene in page_genes:
-                # Search databases for the gene name or whatever was in adata.var.index upon running
-                # scanpy.tl.rank_genes_groups
-                df['gene_cards_link']  = "https://www.genecards.org/cgi-bin/carddisp.pl?gene="+gene+"&keywords="+gene
-                df['uniprot_link']     = "https://www.uniprot.org/uniprot/?query="+gene+"&sort=score"
-                df['wikipedia_link']   = "https://en.wikipedia.org/w/index.php?search="+gene+"&go=Go"
-                df['ensembl_link']     = "http://www.ensembl.org/Multi/Search/Results?q="+gene+";site=ensembl_all"
-
+            # for gene in page_genes:
+            # Search databases for the gene name or whatever was in adata.var.index upon running
+            # scanpy.tl.rank_genes_groups
+            df['gene_cards_link']  = ["https://www.genecards.org/cgi-bin/carddisp.pl?gene="+gene+"&keywords="+gene for gene in page_genes]
+            df['uniprot_link']     = ["https://www.uniprot.org/uniprot/?query="+gene+"&sort=score" for gene in page_genes]
+            df['wikipedia_link']   = ["https://en.wikipedia.org/w/index.php?search="+gene+"&go=Go" for gene in page_genes]
+            df['ensembl_link']     = ["http://www.ensembl.org/Multi/Search/Results?q="+gene+";site=ensembl_all" for gene in page_genes]
 
         # User requested columns from adata.var
         if adata_var_columns_to_include is not None:
@@ -338,7 +345,6 @@ def build_pretty_DE_table(adata, n_genes = 25,
 
         # Add current page to dictionary
         page_dict[groups[ii_group]] = df
-    
     
     # Turn page dictionary into html
     js = multipage_html_table(page_dict)
@@ -620,6 +626,7 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
 
     import matplotlib
     import matplotlib.cm as cm
+
     
     # adata.var['index'] doesnt work
     if column == 'index':
@@ -641,13 +648,15 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
         
     for identifier in identifiers:
         identifier_index = np.where(chosen_column == identifier)[0]
-        if len(identifier_index) != 1:
+        if len(identifier_index) > 1:
             print('Warning: ' + identifier + ' appears several times in ' + 
                   column + '\nMaking one UMAP for each occurrence..')
             for ii in identifier_index:
-                bb = adata.X[:, identifier_index[ii]]
+                bb = adata.X[:, ii]
                 __plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, 
                                               palette=pal, marker_size=marker_size)
+        elif len(identifier_index) < 1:
+            raise(Exception("SCherlock: Specified identifiers do not exist in column (adata.var.index by default)"))
         else:
             bb = adata.X[:, identifier_index[0]]
             __plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, palette=pal, marker_size=marker_size)
@@ -733,6 +742,7 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1):
     """
 
     import plotly.express as px
+    import pandas as pd
     
     if palette is None:
         ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]
