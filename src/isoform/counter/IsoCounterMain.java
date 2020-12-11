@@ -20,9 +20,9 @@ public class IsoCounterMain {
 	public static void main(String[] args) throws IOException {
 		
 		
-		
-		if(args.length > 0 && args[0].equals("build")) {
-			if(args.length==3) {
+		if(args.length ==3 && args[0].equals("build")) {		
+//		if(args.length > 0 && args[0].equals("build")) {
+//			if(args.length==3) {
 				//////////////////////////////////////////////////////////////////
 				////////////////// Build a basic list of features that can be counted
 				//////////////////////////////////////////////////////////////////
@@ -40,37 +40,51 @@ public class IsoCounterMain {
 				
 				System.out.println("Storing in: "+fOut);
 				ff.write(fOut);
-			} else {
-				System.out.println("Too few arguments");
-			}
-		} else if(args.length > 0 && args[0].equals("count")) {
-			if(args.length==4) {
+				
+//			} else {
+//				System.out.println("Too few arguments");
+//			}
+		} else if(args.length == 5 && args[0].equals("count")) {
+//		} else if(args.length == 4 && args[0].equals("count")) {
+//		} else if(args.length > 0 && args[0].equals("count")) {
+//			if(args.length==4) {
 				//////////////////////////////////////////////////////////////////
 				////////////////// Perform counting
 				//////////////////////////////////////////////////////////////////
 				
-				File fFeature=new File(args[1]);
-				File f10x=new File(args[2]);
-				File fOut=new File(args[3]);
-
+				File fOut=new File(args[1]);
+				File fFeature=new File(args[2]);
+				File fBAM=new File(args[3]);
+				File fBarcodes=new File(args[3]);
+				
 				if(!fFeature.exists()) {
-					System.out.println("Feature-file does not exist: "+fFeature);
+					System.out.println("Feature-file does not exist: " + fFeature);
 					System.exit(1);
 				}
 
-				if(!f10x.exists()) {
-					System.out.println("10x directory does not exist: "+f10x);
+//				if(!f10x.exists()) {
+//					System.out.println("10x directory does not exist: "+f10x);
+//					System.exit(1);
+//				}
+
+				if(!fBAM.exists()) {
+					System.out.println("10x directory does not exist: " + fBAM);
 					System.exit(1);
 				}
-
+				
+				if(!fBarcodes.exists()) {
+					System.out.println("10x directory does not exist: " + fBarcodes);
+					System.exit(1);
+				}
+				
 				if(!fOut.exists()) {
-					System.out.println("Outdir does not exist, creating: "+fOut);
+					System.out.println("Outdir does not exist, creating: " + fOut);
 					fOut.mkdir();
 				}
 
-				//The regular 10x paths to filtered lists. Should we support unfiltered too?
-				File fBarcodes=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
-				File fBAM=new File(f10x, "possorted_genome_bam.bam");
+//				//The regular 10x paths to filtered lists. Should we support unfiltered too?
+//				File fBarcodes=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
+//				File fBAM=new File(f10x, "possorted_genome_bam.bam");
 
 				System.out.println("Reading barcodes: "+fBarcodes);
 				ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBarcodes);
@@ -87,10 +101,10 @@ public class IsoCounterMain {
 				ff.writeZip(new File(fOut,"features.ext.tsv.gz"));
 				
 				
-			} else {
-				System.out.println("Too few arguments");
-			}
-		} else {
+//			} else {
+//				System.out.println("Too few arguments");
+//			}
+		} else { 
 			System.out.println("==================================================");
 			System.out.println("USAGE: isocounter build GTFFILE FEATUREFILE.ff");
 			System.out.println("Where ");
@@ -99,11 +113,12 @@ public class IsoCounterMain {
 			System.out.println();
 			System.out.println();
 			System.out.println("==================================================");
-			System.out.println("USAGE: isocounter count FEATUREFILE.ff MATRIXDIR OUTDIR");
+			System.out.println("USAGE: isocounter count OUTDIR FEATUREFILE.ff sorted.bam barcodes.tsv.gz");
 			System.out.println("Where ");
-			System.out.println("   FEATUREFILE is a list of features to count");
-			System.out.println("   MATRIXDIR is the 10x matrix out-directory");
-			System.out.println("   OUTDIR is where compressed new matrices will be stored, and what the features are (.bed)");
+			System.out.println("   OUTDIR is where compressed new matrices will be stored");
+			System.out.println("   FEATUREFILE.ff is a list of features to count");
+			System.out.println("   sorted.bam is a position sorted bam file");
+			System.out.println("   barcodes.tsv.gz is a gzipped tsv file with the cell barcodes in the first column");
 			System.out.println();
 			System.exit(1);
 		}
@@ -113,3 +128,4 @@ public class IsoCounterMain {
 	}
 	
 }
+

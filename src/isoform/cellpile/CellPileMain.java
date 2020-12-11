@@ -18,11 +18,6 @@ public class CellPileMain {
 
 			File fCellpile=new File(args[1]);
 			File fChromSizes=new File(args[2]);
-//			File f10x=new File(args[3]);
-			
-//			File fBAM=new File(f10x,"possorted_genome_bam.bam");
-//			File fBC=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
-			
 			File fBAM=new File(args[3]);
 			File fBC=new File(args[4]);
 			
@@ -48,7 +43,7 @@ public class CellPileMain {
 			System.out.println("Usages: ");
 			System.out.println("=============================================================================");
 			System.out.println("java -jar cellpile.jar build OUTFILE.cellpile sizes.chromosome sorted.bam barcodes.tsv.gz");
-			System.out.println("   where");
+			System.out.println("where");
 			System.out.println("   sorted.bam is a position sorted bam file");
 			System.out.println("   barcodes.tsv.gz is a gzipped tsv file with the cell barcodes in the first column");
 			System.out.println("");
