@@ -21,7 +21,7 @@ public class CellPileTestReadAnton {
 	public static void main(String[] args) throws IOException {
 		
 		// Get cellpile
-		File fCellpile=new File("C:\\Users\\anton\\java_projects\\isocounter\\data\\SRR11816791.cellpile");
+		File fCellpile=new File("C:\\Users\\anton\\java_projects\\scherlock\\data\\SRR11816791.cellpile");
 		CellPileFile cp=CellPileFile.open(fCellpile);
 		int[][] clusters=cp.convertBarcodeNamesToIDs(
 				new String[][] {
@@ -38,7 +38,7 @@ public class CellPileTestReadAnton {
 		// Get GTF
 //		long time=System.currentTimeMillis();
 		//File fGTF=new File("/home/mahogny/umeå/project/isoform/refgenome/Homo_sapiens.GRCh38.101.chr.gff3");
-		File fGTF=new File("C:\\Users\\anton\\java_projects\\isocounter\\data\\Homo_sapiens.GRCh38.101.chr.gff3.gz");
+		File fGTF=new File("C:\\Users\\anton\\java_projects\\scherlock\\data\\Homo_sapiens.GRCh38.101.chr.gff3.gz");
 //		File fGTF=new File("/home/mahogny/all.gtf.gz");
 		System.out.println("parse gtf");
 		GtfParser gtf=new GtfParser(fGTF);
@@ -53,7 +53,7 @@ public class CellPileTestReadAnton {
 		
 		
 		// Render bed file
-		String bedFile = new String("C:\\Users\\anton\\java_projects\\isocounter\\data\\beds\\merged_interesting.sorted.bed_details_compatible.chr_is_plain_number.bed.gz");
+		String bedFile = new String("C:\\Users\\anton\\java_projects\\scherlock\\data\\beds\\merged_interesting.sorted.bed_details_compatible.chr_is_plain_number.bed.gz");
 		renderer.addTrack(new TrackBed(bedFile));
 		
 		
