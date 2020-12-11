@@ -114,7 +114,7 @@ public class FeatureFile {
 		
 		//Write all the features
 		for(Feature r:features) {
-			pwFeatures.println(r.source+"\t"+r.from+"\t"+r.to+"\t"+r.featureName);
+			pwFeatures.print(r.source+"\t"+r.from+"\t"+r.to+"\t"+r.featureName);
 			for(String val:r.extraAttr.values()) {
 				pwFeatures.print("\t"+val);
 			}
