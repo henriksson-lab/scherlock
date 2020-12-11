@@ -55,7 +55,7 @@ public class IsoCounterMain {
 				File fOut=new File(args[1]);
 				File fFeature=new File(args[2]);
 				File fBAM=new File(args[3]);
-				File fBarcodes=new File(args[3]);
+				File fBarcodes=new File(args[4]);
 				
 				if(!fFeature.exists()) {
 					System.out.println("Feature-file does not exist: " + fFeature);
