@@ -20,9 +20,7 @@ public class IsoCounterMain {
 	public static void main(String[] args) throws IOException {
 		
 		
-		if(args.length ==3 && args[0].equals("build")) {		
-//		if(args.length > 0 && args[0].equals("build")) {
-//			if(args.length==3) {
+		if(args.length ==3 && args[0].equals("build")) {
 				//////////////////////////////////////////////////////////////////
 				////////////////// Build a basic list of features that can be counted
 				//////////////////////////////////////////////////////////////////
@@ -41,13 +39,7 @@ public class IsoCounterMain {
 				System.out.println("Storing in: "+fOut);
 				ff.write(fOut);
 				
-//			} else {
-//				System.out.println("Too few arguments");
-//			}
 		} else if(args.length == 5 && args[0].equals("count")) {
-//		} else if(args.length == 4 && args[0].equals("count")) {
-//		} else if(args.length > 0 && args[0].equals("count")) {
-//			if(args.length==4) {
 				//////////////////////////////////////////////////////////////////
 				////////////////// Perform counting
 				//////////////////////////////////////////////////////////////////
@@ -61,11 +53,6 @@ public class IsoCounterMain {
 					System.out.println("Feature-file does not exist: " + fFeature);
 					System.exit(1);
 				}
-
-//				if(!f10x.exists()) {
-//					System.out.println("10x directory does not exist: "+f10x);
-//					System.exit(1);
-//				}
 
 				if(!fBAM.exists()) {
 					System.out.println("10x directory does not exist: " + fBAM);
@@ -82,10 +69,6 @@ public class IsoCounterMain {
 					fOut.mkdir();
 				}
 
-//				//The regular 10x paths to filtered lists. Should we support unfiltered too?
-//				File fBarcodes=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
-//				File fBAM=new File(f10x, "possorted_genome_bam.bam");
-
 				System.out.println("Reading barcodes: "+fBarcodes);
 				ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBarcodes);
 
@@ -100,10 +83,6 @@ public class IsoCounterMain {
 				cb.writeMatrix(fOut);			
 				ff.writeZip(new File(fOut,"features.ext.tsv.gz"));
 				
-				
-//			} else {
-//				System.out.println("Too few arguments");
-//			}
 		} else { 
 			System.out.println("==================================================");
 			System.out.println("USAGE: isocounter build GTFFILE FEATUREFILE.ff");
