@@ -1,7 +1,7 @@
 import scanpy as sc
 import pandas as pd
 
-list_bc = pd.read_csv("barcodes.tsv.gz",header=None)[0].tolist()
+list_bc = pd.read_csv("reduced/barcodes.tsv.gz",header=None)[0].tolist()
 
 ###############################################################
 ### Subset 10x GEX matrix to reduced set of barcodes ##########
@@ -10,6 +10,10 @@ list_bc = pd.read_csv("barcodes.tsv.gz",header=None)[0].tolist()
 one_sample = sc.read("orig/gex/matrix.mtx.h5ad")
 sub_sample = one_sample[[x in list_bc for x in one_sample.obs_names],:]
 sub_sample.write_h5ad("reduced/10x_gex.h5ad")
+
+# Note: the ipynb that does annotation should maybe completely replace this file; or store cell type annotation in a completely separate CSV
+#so subsetting is easier to perform here
+
 
 ###############################################################
 ### Subset 10x GEX matrix to reduced set of barcodes ##########
