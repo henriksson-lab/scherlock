@@ -56,6 +56,7 @@ class CellPile:
 
 	def addPile(self,fname,pileName=""):
 		"""Load one pile and add to the list"""
+		fname = os.path.abspath(fname)
 		if pileName=="" and self.cp.getNumFiles():
 			print("WARNING: No pile name given. You most likely want to use this if you work with multiple piles")
 		f = CellPile._gateway.jvm.java.io.File(fname)
@@ -65,6 +66,7 @@ class CellPile:
 
 	def addGTF(self, fname, trackName="gtf"):
 		"""Load a GTF file to display features"""
+		fname = os.path.abspath(fname)
 		fname = CellPile._gateway.jvm.java.io.File(fname)
 		self.cp.addTrackGTF(trackName, fname)
 
