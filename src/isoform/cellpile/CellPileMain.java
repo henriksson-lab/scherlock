@@ -40,12 +40,7 @@ public class CellPileMain {
 			System.out.println("Number of barcodes included: "+cp.getListBarcodes().size());
 			System.out.println("Number of sequences included: "+cp.getListSequences().size());
 
-		} else if(cmd.equals("randomsubset") && args.length==2) {
-
-			
-			//The regular 10x paths to filtered lists. Should we support unfiltered too?
-			//File fBarcodes=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
-			//File fBAM=new File(f10x, "possorted_genome_bam.bam");
+		} else if(cmd.equals("randomsubset") && args.length==6) {
 
 			File fBarcodes=new File(args[1]);
 			File fInBam=new File(args[2]);
@@ -63,16 +58,20 @@ public class CellPileMain {
 			System.out.println("Usages: ");
 			System.out.println("=============================================================================");
 			System.out.println("java -jar cellpile.jar build OUTFILE.cellpile sizes.chromosome sorted.bam barcodes.tsv.gz");
-			System.out.println("where");
-			System.out.println("   sorted.bam is a position sorted bam file");
-			System.out.println("   barcodes.tsv.gz is a gzipped tsv file with the cell barcodes in the first column");
+			System.out.println("   where");
+			System.out.println("      sorted.bam is a position sorted bam file");
+			System.out.println("      barcodes.tsv.gz is a gzipped tsv file with the cell barcodes in the first column");
 			System.out.println("");
-			System.out.println("java -jar cellpile.jar inspect OUTFILE.cellpile");
 			System.out.println("=============================================================================");
-			System.out.println("How to produce chromosome sizes:");
-			System.out.println("  samtools faidx input.fa");
-			System.out.println("  cut -f1,2 input.fa.fai > sizes.genome");
-			
+			System.out.println("java -jar cellpile.jar inspect OUTFILE.cellpile");
+			System.out.println("   How to produce chromosome sizes:");
+			System.out.println("     samtools faidx input.fa");
+			System.out.println("     cut -f1,2 input.fa.fai > sizes.genome");
+			System.out.println("");
+			System.out.println("=============================================================================");
+			System.out.println("java -jar cellpile.jar randomsubset BARCODES.tsv.gz IN.bam OUT.bam P_KEEP_BC P_KEEP_NONBC");
+			System.out.println("   Produces random subsamplings. P-values given as e.g. 0.05");
+			System.out.println();
 		}
 	}
 }
