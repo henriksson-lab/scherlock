@@ -39,8 +39,8 @@ public class RandomSubset {
 			if(readRecords%1000000 == 0){
 				System.out.println(
 						"Kept BC: "+keptRecordsBC+
-						"Kept NonBC: "+keptRecordsNonBC+
-						"Total: "+readRecords);
+						"\tKept NonBC: "+keptRecordsNonBC+
+						"\tTotal: "+readRecords);
 			}
 				
 			//Get BC for this read
@@ -66,8 +66,8 @@ public class RandomSubset {
 		
 		System.out.println(
 				"Kept BC: "+keptRecordsBC+
-				"Kept NonBC: "+keptRecordsNonBC+
-				"Total: "+readRecords);
+				"\tKept NonBC: "+keptRecordsNonBC+
+				"\tTotal: "+readRecords);
 	}
 	
 	
