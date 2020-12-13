@@ -25,7 +25,6 @@ package isoform.trackRenderer;
 
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
-import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.AsciiFeatureCodec;
 import htsjdk.tribble.annotation.Strand;
 import htsjdk.tribble.bed.BEDFeature;

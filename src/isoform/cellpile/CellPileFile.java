@@ -11,8 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.TreeSet;
-
 import cern.colt.list.IntArrayList;
 import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;

@@ -3,8 +3,10 @@ package isoform.cellpile;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import isoform.util.PileUtil;
+import isoform.util.RandomSubset;
 
 public class CellPileMain {
 	
@@ -39,7 +41,25 @@ public class CellPileMain {
 
 			System.out.println("Number of barcodes included: "+cp.getListBarcodes().size());
 			System.out.println("Number of sequences included: "+cp.getListSequences().size());
+
+		} else if(cmd.equals("randomsubset") && args.length==2) {
+
 			
+			//The regular 10x paths to filtered lists. Should we support unfiltered too?
+			//File fBarcodes=new File(f10x, "filtered_feature_bc_matrix/barcodes.tsv.gz");
+			//File fBAM=new File(f10x, "possorted_genome_bam.bam");
+
+			File fBarcodes=new File(args[1]);
+			File fInBam=new File(args[2]);
+			File fOutBam=new File(args[3]);
+			double pKeepBC=Double.parseDouble(args[4]);
+			double pKeepNonBC=Double.parseDouble(args[5]);
+			
+			System.out.println("Reading barcodes: "+fBarcodes);
+			ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBarcodes);
+			
+			System.out.println("Subsetting");
+			RandomSubset.subset(fInBam, fOutBam, new HashSet<String>(listBarcodes), pKeepBC, pKeepNonBC);
 		} else {
 			
 			System.out.println("Usages: ");
