@@ -93,6 +93,9 @@ public class CellPileManager {
 			String[] cellBC, String[] cellPile, String[] cellCluster, 
 			String forCluster){
 		CellPileFile pile=listPileFile.get(forPile);
+		if (pile == null) {
+			throw new RuntimeException("No pile with id " + forPile);
+		}
 		String thisPileName=listPileName.get(forPile);
 		
 		
@@ -120,6 +123,18 @@ public class CellPileManager {
 			String windowSeq, int windowFrom, int windowTo, 
 			int numdiv,
 			String[] cellBC, String[] cellFile, String[] cellCluster) throws IOException {
+		
+		
+		if (cellBC == null) {
+			throw new RuntimeException("cellBC is null!");
+		}
+		if (cellFile == null) {
+			throw new RuntimeException("cellFile is null!");
+		}
+		if (cellCluster == null) {
+			throw new RuntimeException("cellCluster is null!");
+		}
+		
 		
 		System.out.println("--- got BC");
 		print(cellBC);
