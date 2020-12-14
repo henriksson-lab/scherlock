@@ -93,6 +93,7 @@ public class CellPileManager {
 			String[] cellBC, String[] cellPile, String[] cellCluster, 
 			String forCluster){
 		CellPileFile pile=listPileFile.get(forPile);
+		System.out.println("haha");
 		if (pile == null) {
 			throw new RuntimeException("No pile with id " + forPile);
 		}
