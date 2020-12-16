@@ -93,7 +93,6 @@ public class CellPileManager {
 			String[] cellBC, String[] cellPile, String[] cellCluster, 
 			String forCluster){
 		CellPileFile pile=listPileFile.get(forPile);
-		System.out.println("haha");
 		if (pile == null) {
 			throw new RuntimeException("No pile with id " + forPile);
 		}
@@ -103,7 +102,16 @@ public class CellPileManager {
 		IntArrayList list2=new IntArrayList(cellBC.length);
 		for(int j=0;j<cellBC.length;j++) {
 			if(cellPile[j].equals(thisPileName) && cellCluster[j].equals(forCluster)) {
-				list2.add(pile.mapBarcodeIndex.get(cellBC[j]));
+
+				// Add to list if barcode is found
+				Integer aa = pile.mapBarcodeIndex.get(cellBC[j]);  // null if cellBC[j] not in pile.mapBarcodeIndex
+				if (aa != null) {  // Integer can be null but int cannot, so check before convert
+					int bb = aa.intValue();
+					list2.add(bb); // IntArrayList only takes int, not Integer
+				}
+
+				// Original line that was crashing sometimes
+				// list2.add(pile.mapBarcodeIndex.get(cellBC[j]));
 			}
 		}
 		list2.trimToSize();
