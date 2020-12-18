@@ -6,3 +6,4 @@ java -jar ../../build/isocount.jar count reduced/isocount.gex reduced/featurefil
 
 #Build the count table (whole)
 java -jar ../../build/isocount.jar count orig/isocount.gex reduced/featurefile.ff orig/gex/possorted_genome_bam.bam barcodes.tsv.gz
+

@@ -93,13 +93,25 @@ public class CellPileManager {
 			String[] cellBC, String[] cellPile, String[] cellCluster, 
 			String forCluster){
 		CellPileFile pile=listPileFile.get(forPile);
+		if (pile == null) {
+			throw new RuntimeException("No pile with id " + forPile);
+		}
 		String thisPileName=listPileName.get(forPile);
 		
 		
 		IntArrayList list2=new IntArrayList(cellBC.length);
 		for(int j=0;j<cellBC.length;j++) {
 			if(cellPile[j].equals(thisPileName) && cellCluster[j].equals(forCluster)) {
-				list2.add(pile.mapBarcodeIndex.get(cellBC[j]));
+
+				// Add to list if barcode is found
+				Integer aa = pile.mapBarcodeIndex.get(cellBC[j]);  // null if cellBC[j] not in pile.mapBarcodeIndex
+				if (aa != null) {  // Integer can be null but int cannot, so check before convert
+					int bb = aa.intValue();
+					list2.add(bb); // IntArrayList only takes int, not Integer
+				}
+
+				// Original line that was crashing sometimes
+				// list2.add(pile.mapBarcodeIndex.get(cellBC[j]));
 			}
 		}
 		list2.trimToSize();
@@ -120,6 +132,18 @@ public class CellPileManager {
 			String windowSeq, int windowFrom, int windowTo, 
 			int numdiv,
 			String[] cellBC, String[] cellFile, String[] cellCluster) throws IOException {
+		
+		
+		if (cellBC == null) {
+			throw new RuntimeException("cellBC is null!");
+		}
+		if (cellFile == null) {
+			throw new RuntimeException("cellFile is null!");
+		}
+		if (cellCluster == null) {
+			throw new RuntimeException("cellCluster is null!");
+		}
+		
 		
 		System.out.println("--- got BC");
 		print(cellBC);
