@@ -8,8 +8,8 @@ download_fullsize_test_data:
 	echo 'to download a small test dataset'
 	echo
 
-	wget http://beagle.henlab.org/public/cellpile/test/orig.tar
-	tar -zxvf orig.tar
+	wget http://beagle.henlab.org/public/cellpile/test/fullsize.tar
+	tar -zxvf fullsize.tar
 
 download_reduced_test_data:
 	wget http://beagle.henlab.org/public/cellpile/test/reduced.tar
@@ -28,4 +28,5 @@ download_reduced_test_data:
 # ToDo: Something nicer here..
 chromsize:
 	cut -f1,2 /big/anbjork/atac_pbmcs/refdata-cellranger-arc-GRCh38-2020-A/fasta/genome.fa.fai > sizes.chromosome
+
 

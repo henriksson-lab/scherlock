@@ -12,12 +12,17 @@ java -jar ../../build/cellpile.jar build \
 
 ######################## original ###########################################
 java -jar ../../build/cellpile.jar build \
-	orig/10x_atac.cellpile \
+	fullsize/10x_atac.cellpile \
 	sizes.chromosome \
-	orig/atac/possorted_genome_bam.bam orig/barcodes.tsv.gz
+	fullsize/atac/possorted_genome_bam.bam fullsize/barcodes.tsv.gz
 
 
 java -jar ../../build/cellpile.jar build \
-	reduced/10x_gex.cellpile \
+	fullsize/10x_gex.cellpile \
 	sizes.chromosome \
-	orig/gex/possorted_genome_bam.bam orig/barcodes.tsv.gz
+	fullsize/gex/possorted_genome_bam.bam fullsize/barcodes.tsv.gz
+# # Old one. Shouldnt be reduced, right?
+# java -jar ../../build/cellpile.jar build \
+# 	reduced/10x_gex.cellpile \
+# 	sizes.chromosome \
+# 	fullsize/gex/possorted_genome_bam.bam fullsize/barcodes.tsv.gz
