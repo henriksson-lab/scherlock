@@ -103,14 +103,17 @@ public class CellPileManager {
 		for(int j=0;j<cellBC.length;j++) {
 			if(cellPile[j].equals(thisPileName) && cellCluster[j].equals(forCluster)) {
 
-				// Add to list if barcode is found
+				// Add to list if barcode is found, else crash because of mismatch in barcode lists
 				Integer aa = pile.mapBarcodeIndex.get(cellBC[j]);  // null if cellBC[j] not in pile.mapBarcodeIndex
 				if (aa != null) {  // Integer can be null but int cannot, so check before convert
 					int bb = aa.intValue();
 					list2.add(bb); // IntArrayList only takes int, not Integer
+				} else {
+					throw new RuntimeException("No barcode " + cellBC[j].toString() +
+						" in cellpile file. Aborting");
 				}
 
-				// Original line that was crashing sometimes
+				// Original line that was crashing with nullpointer exception sometimes
 				// list2.add(pile.mapBarcodeIndex.get(cellBC[j]));
 			}
 		}
