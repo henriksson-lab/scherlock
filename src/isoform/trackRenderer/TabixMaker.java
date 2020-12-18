@@ -63,7 +63,8 @@ public class TabixMaker {
 		// Make tabix index for bed file
 //		String indexFileName = TabixMaker.indexBedFile(bedFileName);
 //		System.out.println(indexFileName);
-		String indexBgzipFileName = TabixMaker.indexBedFile(bedBgzipFileName);
+		//String indexBgzipFileName = 
+		TabixMaker.indexBedFile(bedBgzipFileName);
 //		System.out.println(indexBgzipFileName);
 
 		// Query Tabix		
