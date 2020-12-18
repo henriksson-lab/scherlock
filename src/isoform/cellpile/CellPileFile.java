@@ -16,6 +16,7 @@ import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import isoform.util.LogUtil;
 import isoform.util.PileUtil;
 
 /**
@@ -261,8 +262,14 @@ public class CellPileFile {
 				}
 				passedChunks+=currentChunk;
 				int prc=100*passedChunks/totalChunks;
-				System.out.println(""+prc+"%\tKept/Read: "+keptRecords+"/"+readRecords+"\tOn sequence: "+currentSeq+
-						" wrongBC: "+skippedWrongBC+" badUMI: "+skippedBadUMI+" skipDup: "+skippedDup);
+				
+				LogUtil.formatColumns(System.out, 25,
+						prc+"%",
+						"Kept/Read: "+keptRecords+"/"+readRecords,
+						"@sequence: "+currentSeq,
+						"WrongBC: "+skippedWrongBC,
+						"badUMI: "+skippedBadUMI,
+						"SkipDup: "+skippedDup);
 			}
 				
 			//Get UMI and BC for this read
@@ -328,7 +335,13 @@ public class CellPileFile {
 		saveCurrentChunk();
 		reader.close();
 		
-		System.out.println("Final - Kept/Read: "+keptRecords+"/"+readRecords);
+		LogUtil.formatColumns(System.out, 25,
+				"Done",
+				"Kept/Read: "+keptRecords+"/"+readRecords,
+				"@sequence: "+currentSeq,
+				"WrongBC: "+skippedWrongBC,
+				"badUMI: "+skippedBadUMI,
+				"SkipDup: "+skippedDup);
 	}
 	
 	

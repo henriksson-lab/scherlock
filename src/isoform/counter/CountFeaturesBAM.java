@@ -12,6 +12,7 @@ import htsjdk.samtools.AlignmentBlock;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
+import isoform.util.LogUtil;
 
 /**
  * Count reads from a BAM file
@@ -201,8 +202,15 @@ public class CountFeaturesBAM {
 			readRecords++;
 			if(readRecords%1000000 == 0){
 				int prcDone=(int)(100.0*searchFeatureListFrom/(double)listFeatures.size());
-				System.out.println("Progress: "+prcDone+"%\t  Kept/Read: "+keptRecords+"/"+readRecords+
-						"\tCurrently@read: "+currentSource+"\tstartpos: "+currentPos+" unaligned:"+unalignedRecord+" dup: "+skippedDup+" badBC: "+skippedWrongBC);
+				LogUtil.formatColumns(System.out, 25,
+						prcDone+"%",
+						"Kept/Read: "+keptRecords+"/"+readRecords,
+						"@sequence: "+currentSource,
+						"BadBC: "+skippedWrongBC,
+						"Unaligned: "+unalignedRecord,
+						"SkipDup: "+skippedDup);
+
+				
 			}
 
 			//Get UMI and BC for this read
@@ -311,7 +319,13 @@ public class CountFeaturesBAM {
 			compressFeature(searchFeatureListFrom);
 		}
 		
-		System.out.println("Kept/Read: "+keptRecords+"/"+readRecords+" --- "+(int)(100*keptRecords/(double)readRecords)+"%   unaligned "+unalignedRecord);
+		LogUtil.formatColumns(System.out, 25,
+				"Done",
+				"Kept/Read: "+keptRecords+"/"+readRecords,
+				"@sequence: "+currentSource,
+				"BadBC: "+skippedWrongBC,
+				"Unaligned: "+unalignedRecord,
+				"SkipDup: "+skippedDup);
 
 		reader.close();
 	}

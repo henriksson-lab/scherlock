@@ -37,10 +37,10 @@ public class RandomSubset {
 			//Update user about progress
 			readRecords++;
 			if(readRecords%1000000 == 0){
-				System.out.println(
-						"Kept BC: "+keptRecordsBC+
-						"\tKept NonBC: "+keptRecordsNonBC+
-						"\tTotal: "+readRecords);
+				LogUtil.formatColumns(System.out, 25, 
+						"Kept BC: "+keptRecordsBC,
+						"Kept NonBC: "+keptRecordsNonBC,
+						"Total: "+readRecords);
 			}
 				
 			//Get BC for this read
@@ -64,10 +64,10 @@ public class RandomSubset {
 		samreader.close();
 		samwriter.close();
 		
-		System.out.println(
-				"Kept BC: "+keptRecordsBC+
-				"\tKept NonBC: "+keptRecordsNonBC+
-				"\tTotal: "+readRecords);
+		LogUtil.formatColumns(System.out, 25, 
+				"Kept BC: "+keptRecordsBC,
+				"Kept NonBC: "+keptRecordsNonBC,
+				"Total: "+readRecords);
 	}
 	
 	
