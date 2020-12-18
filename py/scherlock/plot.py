@@ -377,13 +377,13 @@ def build_pretty_DE_table(adata, n_genes = 25,
 
 
 
-def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3"):
+def plot_umaps_sidebyside(adata1, adata2, obs_name="leiden", palette="Set3"):
     """Plot two UMAPs and allow the user to see which points correspond using the mouse.
 
     Args:
         adata1 (anndata): The first count data object
         adata2 (anndata): The second count data object
-        obsname (string, optional): Name of the .obs column to show
+        obs_name (string, optional): Name of the .obs column to show
         palette (string, optional): Colors to use for plotting categorical annotation groups.
             Either a name of a matplotlib predefined palette to pick from
             :class:`~matplotlib.colors.ListedColormap`,
