@@ -877,3 +877,333 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
 
 
 
+
+
+
+###################################################################
+###################################################################
+###################################################################
+
+# Interactive vulcano plot
+
+###################################################################
+###################################################################
+###################################################################
+
+
+
+
+
+
+def plot_vulcan(detable, obsname="leiden", 
+                colname_fc="log2fc",
+                colname_pval="qval",
+                colname_symbol="gene",  
+                colname_ensemblid=None,
+                groupby=None,
+                name_yaxis="log10 q-value",
+                name_xaxis="log2 fold change",
+                min_fc=0.1,
+                min_pval=0.5,
+                crop_fc=10,
+                crop_pval=1e-200,
+                save=None):
+    """Produce a vulcan plot and allow the user to interact using the mouse.
+
+    Args:
+        detable (dataframe): ....
+        save (string, optional): File to save to (ending with .html)
+
+    Returns:
+        Nothing; displays interactive HTML
+    """
+    
+
+    ### Reduce dataframe; this saves space in js
+    crop_pval = math.log10(crop_pval)
+    logpval = [math.log10(x) for x in detable[colname_pval]]
+    detable_red = pd.DataFrame({
+        'fc':[-crop_fc if x< -crop_fc else crop_fc if x>crop_fc else x for x in detable[colname_fc]],
+        'pval':[crop_pval if x<crop_pval else x for x in logpval],
+        'symbol':detable[colname_symbol],
+    })
+    
+    if not groupby is None:
+        detable_red['group']=detable[groupby]
+        cats = [str(x) for x in list(set(detable[groupby]))]
+        groupby_red="group"
+    else:
+        groupby_red=None
+        cats = ["ungrouped"]
+        
+    if not colname_ensemblid is None:
+        detable_red['ensemblid']=detable[colname_ensemblid]
+    
+    ### Return a value as quoted if it is a string
+    def quoteIfNeeded(x):
+        if(isinstance(x,str)):
+            return('"'+x+'"')
+        else:
+            return(str(x))
+
+    ### Turn a pandas dataframe into a javascript variable declaration
+    def df2js(df,varname):
+        outcols=[];
+        for (columnName, columnData) in df.iteritems():
+            outcols.append(columnName+":[{}]".format(",".join([quoteIfNeeded(x) for x in columnData.values])))
+        return("var "+varname+"={"+','.join(outcols)+"};");
+
+    def df2js_dict(df):
+        outcols=[];
+        for (columnName, columnData) in df.iteritems():
+            outcols.append(columnName+":[{}]".format(",".join([quoteIfNeeded(x) for x in columnData.values])))
+        return("{"+','.join(outcols)+"}");
+
+
+    def df2js_dict_groupby(df,groupcol=None):
+        if groupcol is None:
+            dictinner="ungrouped:"+df2js_dict(df)
+            return("{"+dictinner+"};")
+        else:
+            cats=list(set(df[groupcol].tolist()))
+            dictinner=",".join([str(thiscat)+":"+df2js_dict(df[df[groupcol]==thiscat]) for thiscat in cats])
+            return("{"+dictinner+"};")
+
+    
+    ### Construct all the HTML
+    js="""
+
+    <style>
+        .INSTANCEID_svg {
+          margin: 0px;
+        }
+
+        .INSTANCEID_borderrect {
+            fill:none;
+            stroke:black;
+            stroke-width:1
+        }
+    </style>
+
+    <table>
+        <tr><td>
+            <svg width="0" height="0" class="INSTANCEID_svg">
+                <g id="INSTANCEID_svg_points"/>
+                <g id="INSTANCEID_svg_xaxis"/>
+                <rect x="0" y="0" width="0" height="0" class="INSTANCEID_borderrect"/>
+            </svg>
+        </td><td style="vertical-align:top">
+            <p>
+    """
+    
+    ### Show categories if asked for
+    if not groupby is None:
+        js+="<p><b>"+groupby+": </b>"
+        for cat in cats:
+            js+='<input type="button" id="INSTANCEID_btn_"'+cat+' onclick="INSTANCEID_select_cat('+cat+')"/ value="'+cat+'">'
+            
+        js+="</p>"
+        
+    js+="""
+            </p>
+            <p class="INSTANCEID_infopane">
+            </p>
+        </td></tr>
+    </table>
+
+    <script>
+    
+        var INSTANCEID_lastpoint=null;
+        var INSTANCEID_lockpoint=false;
+
+        ///////////// Size settings
+        var INSTANCEID_totalw=400;
+        var INSTANCEID_totalh=400;
+        
+        var INSTANCEID_panelw=totalw-2;
+        var INSTANCEID_panelh=totalh-2-20;
+        
+        //midpoint, and scaling
+        var volcano_x=INSTANCEID_panelw/2;
+        var volcano_y=INSTANCEID_panelh; 
+        var volcano_sx=10;
+        var volcano_sy=10; 
+
+        ///////////// Set up sizes of the panel
+        var svgpanel = document.getElementsByClassName('INSTANCEID_svg')[0];
+        svgpanel.setAttribute("width", INSTANCEID_totalw);
+        svgpanel.setAttribute("height", INSTANCEID_totalh);
+        var borderpanel = document.getElementsByClassName('INSTANCEID_borderrect')[0];
+        borderpanel.setAttribute("width", INSTANCEID_panelw);
+        borderpanel.setAttribute("height", INSTANCEID_panelh);
+
+    """
+
+    ### Add the data declarations
+    js += "var INSTANCEID_currentgroup='"+cats[0]+"';\n"
+    js += "var INSTANCEID_detable="+df2js_dict_groupby(detable_red,groupby_red)+";\n"
+    js += "var INSTANCEID_min_pval="+str(math.log10(min_pval))+";\n"
+    js += "var INSTANCEID_min_fc="+str(min_fc)+";\n"
+    
+    js += """
+    
+    
+        function INSTANCEID_unlock_point() {
+            INSTANCEID_lockpoint=false;
+            var infopanel = document.getElementsByClassName('INSTANCEID_infopane')[0];
+            infopanel.innerHTML="";
+        }
+        
+        
+
+        ///Callback for user selecting a category
+        function INSTANCEID_select_cat(cat) {
+            INSTANCEID_currentgroup=cat;
+            INSTANCEID_putPoints();
+        }
+
+    
+        function selectPoint(ptob) {
+            var id=ptob.getAttribute("id");
+            id=parseInt(id.replace("INSTANCEID_pt",""));
+
+            if(INSTANCEID_lastpoint){
+                INSTANCEID_lastpoint.setAttribute("style", "fill:black");
+
+            }
+            INSTANCEID_lastpoint=ptob;
+            INSTANCEID_lastpoint.setAttribute("style", "fill:red");
+
+
+
+            var detable=INSTANCEID_detable[INSTANCEID_currentgroup];
+            var data_symbol=detable["symbol"];
+            var data_ensembl=detable["ensemblid"];
+
+            var infopanel = document.getElementsByClassName('INSTANCEID_infopane')[0];
+            infopanel.innerHTML="<h1>"+data_symbol[id]+"</h1>";
+
+            if(data_symbol){
+                infopanel.innerHTML+=
+                '<p><a target="_blank" href="https://en.wikipedia.org/w/index.php?search='+
+                data_symbol[id]+
+                '&go=Go">Wikipedia</a></p>';
+
+                infopanel.innerHTML+=
+                '<p><a target="_blank" href="https://www.genecards.org/cgi-bin/carddisp.pl?gene='+
+                data_symbol[id]+
+                '&keywords='+data_symbol[id]+
+                '">Genecards</a></p>';
+
+                infopanel.innerHTML+=
+                '<p><a target="_blank" href="https://www.uniprot.org/uniprot/?query='+
+                data_symbol[id]+
+                '&sort=score">Uniprot</a></p>';
+            }
+
+            if(data_ensembl){
+                infopanel.innerHTML+=
+                '<p><a target="_blank" href="http://www.ensembl.org/Multi/Search/Results?q='+
+                data_symbol[id]+
+                '";site=ensembl_all">Ensembl</a></p>';
+            }
+
+            infopanel.innerHTML+=
+            '<br/><input type="button" onclick="INSTANCEID_unlock_point()" value="Unlock point">';
+        }
+
+        ///////////// Callback whenever the mouse clicks a point
+        function mouseClickPoint() {
+            INSTANCEID_lockpoint=true;
+            selectPoint(this);
+        }
+        
+        ///////////// Callback whenever the mouse hovers a point
+        function mouseOverEffect() {
+            if(!INSTANCEID_lockpoint){
+                selectPoint(this);
+            }
+        }
+
+
+        ///////////// Function to turn an abstract point into a circle
+        function INSTANCEID_putPoints() {
+        
+            var detable=INSTANCEID_detable[INSTANCEID_currentgroup];
+            var data_fc=detable["fc"];
+            var data_pval=detable["pval"];
+            var n_points=data_fc.length;
+
+            ///// Figure out an appropriate scaling
+            var max_fc = Math.max(
+                -Math.min.apply(null, data_fc),
+                Math.max.apply(null, data_fc))
+            volcano_sx = 0.95*200.0/max_fc;
+
+            var min_pval = Math.min.apply(null, data_pval);
+            volcano_sy = -0.95*INSTANCEID_panelh/min_pval;
+
+            ///// Create x-axis
+            var svgpanel_x = document.getElementById('INSTANCEID_svg_xaxis');
+            svgpanel_x.innerHTML="";
+            for(var i=-Math.floor(max_fc);i<=Math.floor(max_fc);i++){
+                var pt = document.createElementNS("http://www.w3.org/2000/svg","text");
+                pt.setAttribute("x", volcano_x + i*volcano_sx);
+                pt.setAttribute("y", INSTANCEID_totalh-2);
+                pt.innerHTML=""+i;
+                svgpanel_x.appendChild(pt);
+            }
+
+            for(var i=Math.round(min_pval);i<=Math.round(min_pval);i++){
+                var pt = document.createElementNS("http://www.w3.org/2000/svg","text");
+                pt.setAttribute("x", 10);
+                pt.setAttribute("y", volcano_y + i*volcano_sy);
+                pt.innerHTML=""+i;
+                svgpanel_x.appendChild(pt);
+            }
+
+
+            ///// Create all the points
+            var svgpanel_points = document.getElementById('INSTANCEID_svg_points');
+            svgpanel_points.innerHTML="";
+            for(var i=0;i<n_points;i++){
+                if(data_pval[i]<INSTANCEID_min_pval & 
+                    (data_fc[i] < -INSTANCEID_min_fc || data_fc[i] > INSTANCEID_min_fc)) {
+                    var pt = document.createElementNS("http://www.w3.org/2000/svg","circle");
+
+                    var sx=data_fc[i]*volcano_sx+volcano_x;
+                    var sy=data_pval[i]*volcano_sy+volcano_y;
+
+                    pt.setAttribute("class", "INSTANCEID_circ");
+                    pt.setAttribute("cx", sx);
+                    pt.setAttribute("cy", sy);
+                    pt.setAttribute("r", 2);
+
+                    pt.setAttribute("id", "INSTANCEID_pt"+i);
+
+                    pt.addEventListener('mouseover', mouseOverEffect);
+                    pt.addEventListener('click', mouseClickPoint);
+
+                    svgpanel_points.appendChild(pt);
+                }
+            }
+        }
+        
+        
+
+        ///Generate points for current selection
+        INSTANCEID_putPoints();
+    </script>
+    """
+
+    html=js.replace("INTANCEID_","foo"+str(randint(0, 100000))+"_")
+
+    if save is not None:
+        with open(save, "w") as text_file:
+            text_file.write(html)
+
+    display(HTML(html))
+
+
+#plot_vulcan(test_summary, min_pval=1, crop_pval=1e-20)
+#plot_vulcan(test_summary, min_pval=1, crop_pval=1e-30, groupby="leiden")
