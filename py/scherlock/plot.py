@@ -377,7 +377,7 @@ def build_pretty_DE_table(adata, n_genes = 25,
 
 
 
-def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3"):
+def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3", save=None):
     """Plot two UMAPs and allow the user to see which points correspond using the mouse.
 
     Args:
@@ -389,6 +389,7 @@ def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3"):
             :class:`~matplotlib.colors.ListedColormap`,
             or a list of matplotlib predefined named colors.
             (see :func:`~matplotlib.colors.is_color_like`).
+        save (string, optional): File to save to (ending with .html)
 
     Returns:
         Nothing; displays interactive HTML
@@ -575,11 +576,15 @@ def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3"):
         }
 
     </script>
-
     """
-    display(HTML(
-       js.replace("INTANCEID_","foo"+str(randint(0, 100000))+"_")
-    ))
+
+    html=js.replace("INTANCEID_","foo"+str(randint(0, 100000))+"_")
+
+    if save is not None:
+        with open(save, "w") as text_file:
+            text_file.write(html)
+
+    display(HTML(html))
 
 
 
@@ -600,11 +605,22 @@ def plot_umaps_sidebyside(adata1, adata2, obsname="leiden", palette="Set3"):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 # Functions for continuous 3D umaps
 
 # User exposed function for 3D umap. 
 # Handles arguments, loops if many indentifiers given or if identifier is not unique, and calls inner_plot_3d_umap
-def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis', marker_size=1):
+def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis', marker_size=1, save=None, use_raw=True):
     """Plot an interactive 3D UMAP colored by a continuous .obs (using plotly).
 
     Args:
@@ -619,6 +635,7 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
             or a list of matplotlib predefined named colors.
             (see :func:`~matplotlib.colors.is_color_like`).
             The colors in the list will be interpolated to get a continuous color scale
+        save (string, optional): File to save to (ending with .html)
 
     Returns:
         Nothing; displays interactive HTML
@@ -627,17 +644,21 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
     import matplotlib
     import matplotlib.cm as cm
 
-    
-    # adata.var['index'] doesnt work
+    # Look in transformed or raw data?
+    which_adata=adata
+    if use_raw:
+        which_adata=adata.raw
+
+    # Decide which column to look in. Just adata.var['index'] doesnt work
     if column == 'index':
-        chosen_column = adata.var.index
+        chosen_column = which_adata.var.index
     else:
-        chosen_column = adata.var[column]
-        
+        chosen_column = which_adata.var[column]
+
     # Make identifiers a list if not already
     if isinstance(identifiers, str):
         identifiers = [identifiers]
-        
+
     # Handle options for palettes
     if isinstance(palette, str):
         pal = cm.get_cmap(palette)
@@ -645,7 +666,7 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
         pal = list(reversed([matplotlib.colors.to_hex(color) for color in pal.colors]))
     else:
         pal = [matplotlib.colors.cnames[color] for color in palette]
-        
+
     for identifier in identifiers:
         identifier_index = np.where(chosen_column == identifier)[0]
         if len(identifier_index) > 1:
@@ -654,20 +675,24 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
             for ii in identifier_index:
                 bb = adata.X[:, ii]
                 __plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, 
-                                              palette=pal, marker_size=marker_size)
+                                              palette=pal, marker_size=marker_size, save=save)
         elif len(identifier_index) < 1:
             raise(Exception("SCherlock: Specified identifiers do not exist in column (adata.var.index by default)"))
         else:
-            bb = adata.X[:, identifier_index[0]]
-            __plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, palette=pal, marker_size=marker_size)
+            bb = which_adata.X[:, identifier_index[0]]
+            # If sparse matrix, make it a normal list
+            if hasattr(bb, 'todense'):
+                bb=[x[0] for x in bb.todense().tolist()]
+            __plot_3d_umap_continuous_inner(adata, color_values=bb, title=identifier, palette=pal, marker_size=marker_size, save=save)
 
 
 # (Inner) Function for 3D UMAP. Takes array (or series or list) of values for color values
-def __plot_3d_umap_continuous_inner(adata, color_values, title, palette='viridis', marker_size=1):
+def __plot_3d_umap_continuous_inner(adata, color_values, title, palette='viridis', marker_size=1, save=None):
     # adata:          anndata object
     # color_values:   Values used for color of markers. Same length as the number of observations in adata (adata.shape[0])
     # palette:        List of strings. Colors in hexadecimal. 
     #                 Colors in list will be interpolated to get a continuous color scale
+    # save:           HTML-file to save to
 
     import plotly.express as px
 
@@ -687,6 +712,9 @@ def __plot_3d_umap_continuous_inner(adata, color_values, title, palette='viridis
                        )
     fig.update_traces(marker=dict(size=marker_size))
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), legend= {'itemsizing': 'constant'})
+
+    if save is not None:
+        fig.write_html(save)
     fig.show()
 
 
@@ -715,7 +743,7 @@ def __plot_3d_umap_continuous_inner(adata, color_values, title, palette='viridis
 
 
 ## Function for categorical 3D UMAPs
-def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1):
+def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=None):
     """Plot an interactive 3D UMAP colored by a discrete/categorial .obs (using plotly).
 
     Args:
@@ -736,6 +764,8 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1):
 
         marker_size (number): 
             Marker size in scatter.
+        save (string, optional):
+            File to save to (ending with .html)
 
     Returns:
         Nothing; displays interactive HTML
@@ -768,6 +798,8 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1):
     fig = px.scatter_3d(df, x='x', y='y', z='z', color=column, color_discrete_map=color_dict)
     fig.update_traces(marker=dict(size=marker_size))
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), legend= {'itemsizing': 'constant'})
+    if save is not None:
+        fig.write_html(save)
     fig.show()
 
 
