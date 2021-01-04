@@ -46,7 +46,6 @@ def findHighlyVariable(adata):
 
     #Figure out the variable genes for the full dataset
     sc.pp.highly_variable_genes(adata2, min_mean=0.5, max_mean=20, min_disp=0.3, batch_key = 'sampleid')
-    sc.pl.highly_variable_genes(adata2)
 
     # Exclude the mitochondrial genes
     for i,g in enumerate(adata2.var.highly_variable.index.values.tolist()):
