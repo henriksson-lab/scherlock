@@ -8,6 +8,7 @@ import scipy.io
 #from matplotlib.backends.backend_pdf import PdfPages
 #import matplotlib.pyplot as plt
 import os
+import scherlock
 
 
 sc.settings.verbosity = 3
@@ -52,7 +53,7 @@ def findHighlyVariable(adata):
         if g in mitochondrial_genes:
             adata2.var.highly_variable[g] = False
 
-    sc.pl.highly_variable_genes(adata2)
+    #sc.pl.highly_variable_genes(adata2)
 
     ## Set which genes to consider highly variable
     var_genes = adata2.var.highly_variable[adata2.var.highly_variable == True].copy().index
@@ -73,6 +74,10 @@ sc.tl.umap(adata, n_components=3)
 
 ### Perform the clustering
 sc.tl.leiden(adata, resolution=0.3)
+
+#########################
+######################### test pileups
+#########################
 
 
 ### For cellpiles
@@ -95,3 +100,11 @@ cp.pileup(v,
           cellCluster=adata.obs["leiden"].tolist()  # Split into different tracks for clusters
          ).plot(save="out/basic_cellpile.svg")
 
+
+#########################
+######################### test side-by-side plotting
+#########################
+
+bdata=adata.copy()
+sc.tl.umap(bdata, n_components=2)
+scherlock.plot.plot_umaps_sidebyside(adata,bdata,save="out/sidebyside.html")
