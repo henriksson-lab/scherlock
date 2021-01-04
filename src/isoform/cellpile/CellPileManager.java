@@ -109,8 +109,8 @@ public class CellPileManager {
 					int bb = aa.intValue();
 					list2.add(bb); // IntArrayList only takes int, not Integer
 				} else {
-					throw new RuntimeException("No barcode " + cellBC[j].toString() +
-						" in cellpile file. Aborting");
+//					throw new RuntimeException("No barcode " + cellBC[j].toString() +	" in cellpile file. Aborting");
+//TODO: better: store # missing barcodes in the output object. output this as statistics to the user
 				}
 
 				// Original line that was crashing with nullpointer exception sometimes

@@ -50,6 +50,6 @@ def cellcounts(adata, columns, groupby=[], percentage=False):
 #cellcounts(adata, ["genotype", "treatment"], percentage=True)
 
 ### Calculate percentage cells, within each group
-cellcounts(adata, ["genotype", "treatment"], percentage=True, groupby=["genotype"])
+#cellcounts(adata, ["genotype", "treatment"], percentage=True, groupby=["genotype"])
 
 

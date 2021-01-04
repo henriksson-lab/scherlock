@@ -18,6 +18,7 @@ setuptools.setup(
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
     ],
+    zip_safe=False,
     python_requires='>=3.6',
     include_package_data=True,
     package_data={'': ['data/*.jar']},

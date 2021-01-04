@@ -1,7 +1,7 @@
-import scherlock
+import scherlock.cp as cp
 
 
-cp = scherlock.cp.CellPile()
+cp = cp.CellPile()
 
 
 print("Loaded!")
