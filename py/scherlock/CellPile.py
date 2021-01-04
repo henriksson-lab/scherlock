@@ -30,7 +30,6 @@ class CellPile:
 	def __init__(self):
 		#Prepare metapile
 		self.cp = autoclass('isoform.cellpile.CellPileManager')()
-		print(self.cp)
 
 	def addPile(self,fname,pileName=""):
 		"""Load one pile and add to the list"""
