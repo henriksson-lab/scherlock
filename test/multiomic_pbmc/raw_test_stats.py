@@ -2,26 +2,29 @@ import scanpy as sc
 import pandas as pd
 import scrublet as scr
 import scherlock
+from random import random
 
 ######################### Read the data
 
-adata = sc.read_h5ad("orig/gex/matrix.mtx.h5ad")
+adata = sc.read_h5ad("reduced/10x_gex_500.h5ad")
 
-# but reduced ... 500
-
+#invent column values
+adata.obs["treatment"] = [x<250 for x in range(0,adata.shape[0])]
+adata.obs["genotype"] = ["ko" if random()<0.5 else "wt" for x in range(0,adata.shape[0])]
 
 
 ######################### Cell tables
 
 
 ### Calculate absolute cell counts
-print(cellcounts(adata, ["leiden"]))
+print(scherlock.stats.cellcounts(adata, ["celltype"]))
 
 ### Calculate percentage cells of the whole
-print(cellcounts(adata, ["leiden"], percentage=True))
+print(scherlock.stats.cellcounts(adata, ["celltype"], percentage=True))
 
 ### Calculate percentage cells, within each group
-#cellcounts(adata, ["genotype", "treatment"], percentage=True, groupby=["genotype"])
+print(scherlock.stats.cellcounts(adata, ["genotype", "treatment"], percentage=True, groupby=["genotype"]))
+
 
 
 
