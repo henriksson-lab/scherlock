@@ -273,9 +273,14 @@ def build_pretty_DE_table(adata, n_genes = 25,
     except:
         groups = ['0']
     
-    # Calculate some default stats
-    percent_cells = adata.var.n_cells/adata.shape[0]
-    global_means = pd.Series(np.sum(adata.X, axis=0)/adata.shape[0], index=adata.var.index)
+    # Calculate stat: how many cells the gene is present in
+    if "n_cells_by_counts" in adata.var.columns:
+        percent_cells = adata.var.n_cells_by_counts/adata.shape[0]
+    else:
+        percent_cells = None
+
+    # Calculate stat: average gene expression
+    global_means = pd.Series((np.sum(adata.X, axis=0)/adata.shape[0]).tolist()[0], index=adata.var.index)
 
     # Loop over clusters/groups/pages. Build dict of pages
     page_dict = {}
@@ -291,7 +296,8 @@ def build_pretty_DE_table(adata, n_genes = 25,
         df = pd.DataFrame(column_dict)
         
         # Some stats
-        df['percent_cells'] = np.array(percent_cells[page_genes])
+        if not percent_cells is None:
+            df['percent_cells'] = np.array(percent_cells[page_genes])
         df['mean_expression'] = np.array(global_means[page_genes])
 
         ### Links to databases
