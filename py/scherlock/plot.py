@@ -7,6 +7,28 @@ import plotly.express as px
 import matplotlib
 import numpy as np
 import pandas as pd
+import math
+
+
+
+def add_file_ext(s,endings,addend):
+    """Add a file extension if the string does not have any of those in the list.
+
+    Args:
+        s (string): Name of file
+        endings (list of strings): Acceptable file endings, including the dot
+        addend (string): The ending to add if not acceptable, including the dot
+
+    Returns:
+        string: Name of file with the ending added if needed
+    """
+    if not any([s.endswith(e) for e in endings]):
+        s=s+addend
+    return s
+
+
+def add_file_ext_html(s):
+    return add_file_ext(s,[".htm",".html"],".html")
 
 
 
@@ -202,7 +224,7 @@ def build_pretty_DE_table(adata, n_genes = 25,
                           adata_var_columns_to_include = None,
                           rank_genes_groups_keys_to_include = ['names', 'logfoldchanges', 'pvals'],
                           gene_ID_column = None, gene_name_column = None,
-                          show_table=True):
+                          show_table=True, save = None):
     """Build and render an improved Differential Expression (DE) table.
     
     Builds an improved DE table including
@@ -231,6 +253,7 @@ def build_pretty_DE_table(adata, n_genes = 25,
         show_table (bool):
              If True, the table will be rendered.
              If False, the table will be returned as a dictionary.
+        save (string, optional): File to save to (optionally ending with .html)
 
     Returns:
         Only if show_table is False.
@@ -354,7 +377,12 @@ def build_pretty_DE_table(adata, n_genes = 25,
     
     # Turn page dictionary into html
     js = multipage_html_table(page_dict)
-    
+
+    # Save?
+    if save is not None:
+        with open(add_file_ext_html(save), "w") as text_file:
+            text_file.write(js)
+
     # Render or return page dictionary
     if show_table: 
         display(HTML(js))
@@ -395,7 +423,7 @@ def plot_umaps_sidebyside(adata1, adata2, obs_name="leiden", palette="Set3", sav
             :class:`~matplotlib.colors.ListedColormap`,
             or a list of matplotlib predefined named colors.
             (see :func:`~matplotlib.colors.is_color_like`).
-        save (string, optional): File to save to (ending with .html)
+        save (string, optional): File to save to (optionally ending with .html)
 
     Returns:
         Nothing; displays interactive HTML
@@ -587,7 +615,7 @@ def plot_umaps_sidebyside(adata1, adata2, obs_name="leiden", palette="Set3", sav
     html=js.replace("INTANCEID_","foo"+str(randint(0, 100000))+"_")
 
     if save is not None:
-        with open(save, "w") as text_file:
+        with open(add_file_ext_html(save), "w") as text_file:
             text_file.write(html)
 
     display(HTML(html))
@@ -641,7 +669,7 @@ def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis
             or a list of matplotlib predefined named colors.
             (see :func:`~matplotlib.colors.is_color_like`).
             The colors in the list will be interpolated to get a continuous color scale
-        save (string, optional): File to save to (ending with .html)
+        save (string, optional): File to save to (optionally ending with .html)
 
     Returns:
         Nothing; displays interactive HTML
@@ -720,7 +748,7 @@ def __plot_3d_umap_continuous_inner(adata, color_values, title, palette='viridis
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), legend= {'itemsizing': 'constant'})
 
     if save is not None:
-        fig.write_html(save)
+        fig.write_html(add_file_ext_html(save))
     fig.show()
 
 
@@ -771,7 +799,7 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
         marker_size (number): 
             Marker size in scatter.
         save (string, optional):
-            File to save to (ending with .html)
+            File to save to (optionally ending with .html)
 
     Returns:
         Nothing; displays interactive HTML
@@ -805,7 +833,7 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
     fig.update_traces(marker=dict(size=marker_size))
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), legend= {'itemsizing': 'constant'})
     if save is not None:
-        fig.write_html(save)
+        fig.write_html(add_file_ext_html(save))
     fig.show()
 
 
@@ -918,12 +946,18 @@ def plot_vulcan(detable, obsname="leiden",
 
     Args:
         detable (dataframe): ....
-        save (string, optional): File to save to (ending with .html)
+        save (string, optional): File to save to (optionally ending with .html)
 
     Returns:
         Nothing; displays interactive HTML
     """
-    
+
+    ### Avoid NaNs, they cause issues later
+    detable=detable.copy()
+    if "pval" in detable.columns:
+        detable["pval"] = [1 if math.isnan(x) else x for x in detable["pval"]]
+    if "qval" in detable.columns:
+        detable["qval"] = [1 if math.isnan(x) else x for x in detable["qval"]]
 
     ### Reduce dataframe; this saves space in js
     crop_pval = math.log10(crop_pval)
@@ -933,7 +967,7 @@ def plot_vulcan(detable, obsname="leiden",
         'pval':[crop_pval if x<crop_pval else x for x in logpval],
         'symbol':detable[colname_symbol],
     })
-    
+
     if not groupby is None:
         detable_red['group']=detable[groupby]
         cats = [str(x) for x in list(set(detable[groupby]))]
@@ -941,10 +975,10 @@ def plot_vulcan(detable, obsname="leiden",
     else:
         groupby_red=None
         cats = ["ungrouped"]
-        
+
     if not colname_ensemblid is None:
         detable_red['ensemblid']=detable[colname_ensemblid]
-    
+
     ### Return a value as quoted if it is a string
     def quoteIfNeeded(x):
         if(isinstance(x,str)):
@@ -975,7 +1009,6 @@ def plot_vulcan(detable, obsname="leiden",
             dictinner=",".join([str(thiscat)+":"+df2js_dict(df[df[groupcol]==thiscat]) for thiscat in cats])
             return("{"+dictinner+"};")
 
-    
     ### Construct all the HTML
     js="""
 
@@ -1001,15 +1034,14 @@ def plot_vulcan(detable, obsname="leiden",
         </td><td style="vertical-align:top">
             <p>
     """
-    
+
     ### Show categories if asked for
     if not groupby is None:
         js+="<p><b>"+groupby+": </b>"
         for cat in cats:
             js+='<input type="button" id="INSTANCEID_btn_"'+cat+' onclick="INSTANCEID_select_cat('+cat+')"/ value="'+cat+'">'
-            
         js+="</p>"
-        
+
     js+="""
             </p>
             <p class="INSTANCEID_infopane">
@@ -1018,22 +1050,18 @@ def plot_vulcan(detable, obsname="leiden",
     </table>
 
     <script>
-    
         var INSTANCEID_lastpoint=null;
         var INSTANCEID_lockpoint=false;
 
         ///////////// Size settings
         var INSTANCEID_totalw=400;
         var INSTANCEID_totalh=400;
-        
-        var INSTANCEID_panelw=totalw-2;
-        var INSTANCEID_panelh=totalh-2-20;
-        
+        var INSTANCEID_panelw=INSTANCEID_totalw-2;
+        var INSTANCEID_panelh=INSTANCEID_totalh-2-20;
+
         //midpoint, and scaling
-        var volcano_x=INSTANCEID_panelw/2;
-        var volcano_y=INSTANCEID_panelh; 
-        var volcano_sx=10;
-        var volcano_sy=10; 
+        var INSTANCEID_volcano_x=INSTANCEID_panelw/2;
+        var INSTANCEID_volcano_y=INSTANCEID_panelh;
 
         ///////////// Set up sizes of the panel
         var svgpanel = document.getElementsByClassName('INSTANCEID_svg')[0];
@@ -1050,17 +1078,12 @@ def plot_vulcan(detable, obsname="leiden",
     js += "var INSTANCEID_detable="+df2js_dict_groupby(detable_red,groupby_red)+";\n"
     js += "var INSTANCEID_min_pval="+str(math.log10(min_pval))+";\n"
     js += "var INSTANCEID_min_fc="+str(min_fc)+";\n"
-    
     js += """
-    
-    
         function INSTANCEID_unlock_point() {
             INSTANCEID_lockpoint=false;
             var infopanel = document.getElementsByClassName('INSTANCEID_infopane')[0];
             infopanel.innerHTML="";
         }
-        
-        
 
         ///Callback for user selecting a category
         function INSTANCEID_select_cat(cat) {
@@ -1068,7 +1091,6 @@ def plot_vulcan(detable, obsname="leiden",
             INSTANCEID_putPoints();
         }
 
-    
         function selectPoint(ptob) {
             var id=ptob.getAttribute("id");
             id=parseInt(id.replace("INSTANCEID_pt",""));
@@ -1079,8 +1101,6 @@ def plot_vulcan(detable, obsname="leiden",
             }
             INSTANCEID_lastpoint=ptob;
             INSTANCEID_lastpoint.setAttribute("style", "fill:red");
-
-
 
             var detable=INSTANCEID_detable[INSTANCEID_currentgroup];
             var data_symbol=detable["symbol"];
@@ -1123,7 +1143,7 @@ def plot_vulcan(detable, obsname="leiden",
             INSTANCEID_lockpoint=true;
             selectPoint(this);
         }
-        
+
         ///////////// Callback whenever the mouse hovers a point
         function mouseOverEffect() {
             if(!INSTANCEID_lockpoint){
@@ -1134,7 +1154,6 @@ def plot_vulcan(detable, obsname="leiden",
 
         ///////////// Function to turn an abstract point into a circle
         function INSTANCEID_putPoints() {
-        
             var detable=INSTANCEID_detable[INSTANCEID_currentgroup];
             var data_fc=detable["fc"];
             var data_pval=detable["pval"];
@@ -1144,17 +1163,17 @@ def plot_vulcan(detable, obsname="leiden",
             var max_fc = Math.max(
                 -Math.min.apply(null, data_fc),
                 Math.max.apply(null, data_fc))
-            volcano_sx = 0.95*200.0/max_fc;
+            var INSTANCEID_volcano_sx = 0.95*200.0/max_fc;
 
             var min_pval = Math.min.apply(null, data_pval);
-            volcano_sy = -0.95*INSTANCEID_panelh/min_pval;
+            var INSTANCEID_volcano_sy = -0.95*INSTANCEID_panelh/min_pval;
 
             ///// Create x-axis
             var svgpanel_x = document.getElementById('INSTANCEID_svg_xaxis');
             svgpanel_x.innerHTML="";
             for(var i=-Math.floor(max_fc);i<=Math.floor(max_fc);i++){
                 var pt = document.createElementNS("http://www.w3.org/2000/svg","text");
-                pt.setAttribute("x", volcano_x + i*volcano_sx);
+                pt.setAttribute("x", INSTANCEID_volcano_x + i*INSTANCEID_volcano_sx);
                 pt.setAttribute("y", INSTANCEID_totalh-2);
                 pt.innerHTML=""+i;
                 svgpanel_x.appendChild(pt);
@@ -1163,7 +1182,7 @@ def plot_vulcan(detable, obsname="leiden",
             for(var i=Math.round(min_pval);i<=Math.round(min_pval);i++){
                 var pt = document.createElementNS("http://www.w3.org/2000/svg","text");
                 pt.setAttribute("x", 10);
-                pt.setAttribute("y", volcano_y + i*volcano_sy);
+                pt.setAttribute("y", INSTANCEID_volcano_y + i*INSTANCEID_volcano_sy);
                 pt.innerHTML=""+i;
                 svgpanel_x.appendChild(pt);
             }
@@ -1177,8 +1196,8 @@ def plot_vulcan(detable, obsname="leiden",
                     (data_fc[i] < -INSTANCEID_min_fc || data_fc[i] > INSTANCEID_min_fc)) {
                     var pt = document.createElementNS("http://www.w3.org/2000/svg","circle");
 
-                    var sx=data_fc[i]*volcano_sx+volcano_x;
-                    var sy=data_pval[i]*volcano_sy+volcano_y;
+                    var sx=data_fc[i]  *INSTANCEID_volcano_sx+INSTANCEID_volcano_x;
+                    var sy=data_pval[i]*INSTANCEID_volcano_sy+INSTANCEID_volcano_y;
 
                     pt.setAttribute("class", "INSTANCEID_circ");
                     pt.setAttribute("cx", sx);
@@ -1194,8 +1213,6 @@ def plot_vulcan(detable, obsname="leiden",
                 }
             }
         }
-        
-        
 
         ///Generate points for current selection
         INSTANCEID_putPoints();
@@ -1205,7 +1222,7 @@ def plot_vulcan(detable, obsname="leiden",
     html=js.replace("INTANCEID_","foo"+str(randint(0, 100000))+"_")
 
     if save is not None:
-        with open(save, "w") as text_file:
+        with open(add_file_ext_html(save), "w") as text_file:
             text_file.write(html)
 
     display(HTML(html))
@@ -1213,3 +1230,4 @@ def plot_vulcan(detable, obsname="leiden",
 
 #plot_vulcan(test_summary, min_pval=1, crop_pval=1e-20)
 #plot_vulcan(test_summary, min_pval=1, crop_pval=1e-30, groupby="leiden")
+
