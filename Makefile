@@ -1,7 +1,7 @@
 
 
 installpy: pypkg
-	cd py; python setup.py install
+	cd py; pip install .
 
 compile:
 	mkdir -p out
@@ -30,9 +30,9 @@ docs:
 
 getpytools:
 	#to build python packages
-	python3 -m pip install --upgrade setuptools wheel
+	python3 -m pip install --upgrade pip setuptools wheel
 
-pypkg:compile
+pypkg:compile getpytools  # Added getpytools to make testing from fresh env more convenient
 	#build the python package
 	cd py; python3 setup.py sdist bdist_wheel
 

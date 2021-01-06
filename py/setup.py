@@ -14,8 +14,10 @@ setuptools.setup(
     url="https://github.com/henriksson-lab/isocounter",
     packages=setuptools.find_packages(),
     install_requires=[
-        'pandasql','scanpy','anndata','jnius','IPython',
-        'matplotlib','plotly','numpy','pandas','validators','beautifulsoup4'
+        'pandasql','pyjnius','IPython',
+        'matplotlib','plotly',
+        'numpy','pandas','validators','beautifulsoup4',
+        'anndata','scanpy'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
