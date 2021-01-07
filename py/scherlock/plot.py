@@ -925,14 +925,10 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
 ###################################################################
 
 
-
-
-
-
-def plot_vulcan(detable, obsname="leiden", 
+def plot_vulcan(detable,
                 colname_fc="log2fc",
                 colname_pval="qval",
-                colname_symbol="gene",  
+                colname_symbol="gene",
                 colname_ensemblid=None,
                 groupby=None,
                 name_yaxis="log10 q-value",
@@ -946,7 +942,30 @@ def plot_vulcan(detable, obsname="leiden",
 
     Args:
         detable (dataframe): ....
-        save (string, optional): File to save to (optionally ending with .html)
+        colname_fc (str):
+            Name of the column with the log2 fold-change values
+        colname_pval (str):
+            Name of the column with probability values
+        colname_symbol (str):
+            Name of the column with the gene symbol (or ID)
+        colname_ensemblid (str, optional):
+            Name of the column with the gene ENSEMBL ID
+        groupby (str, optional):
+            If given, multiple vulcan plots will be made, across several tabs
+        name_yaxis (str):
+            Text to show on the y-axis
+        name_xaxis
+            Text to show on the x-axis
+        min_fc (number):
+            Only show genes with a fold-change larger than this
+        min_pval (number):
+            Only show genes having a smaller p-value than this
+        crop_fc=10 (number):
+            If fold-change is larger than this, then show this value instead
+        crop_pval (number):
+            If p-value is smaller than this, then show this value instead
+        save (string, optional):
+            File to save to (optionally ending with .html)
 
     Returns:
         Nothing; displays interactive HTML
@@ -959,16 +978,22 @@ def plot_vulcan(detable, obsname="leiden",
     if "qval" in detable.columns:
         detable["qval"] = [1 if math.isnan(x) else x for x in detable["qval"]]
 
-    ### Reduce dataframe; this saves space in js
-    crop_pval = math.log10(crop_pval)
-    logpval = [math.log10(x) for x in detable[colname_pval]]
+    ### Reduce dataframe; this saves space in js.
+    #Also transform into log10-pval. Note that python math.log() crashes on p=0 so need to check the value first
+    if not colname_fc in detable.columns:
+        raise ValueError('detable does not have the given fc-column')
+    if not colname_pval in detable.columns:
+        raise ValueError('detable does not have the given pval-column')
+    log_crop_pval = math.log10(crop_pval)
     detable_red = pd.DataFrame({
         'fc':[-crop_fc if x< -crop_fc else crop_fc if x>crop_fc else x for x in detable[colname_fc]],
-        'pval':[crop_pval if x<crop_pval else x for x in logpval],
+        'pval':[log_crop_pval if x<crop_pval else math.log10(x) for x in detable[colname_pval]],
         'symbol':detable[colname_symbol],
     })
 
     if not groupby is None:
+        if not groupby in detable.columns:
+            raise ValueError('detable does not have the given groupby column')
         detable_red['group']=detable[groupby]
         cats = [str(x) for x in list(set(detable[groupby]))]
         groupby_red="group"
@@ -977,6 +1002,8 @@ def plot_vulcan(detable, obsname="leiden",
         cats = ["ungrouped"]
 
     if not colname_ensemblid is None:
+        if not colname_ensemblid in detable.columns:
+            raise ValueError('detable does not have the given ensemblid column')
         detable_red['ensemblid']=detable[colname_ensemblid]
 
     ### Return a value as quoted if it is a string
@@ -1052,7 +1079,6 @@ def plot_vulcan(detable, obsname="leiden",
     <script>
         var INSTANCEID_lastpoint=null;
         var INSTANCEID_lockpoint=false;
-
         ///////////// Size settings
         var INSTANCEID_totalw=400;
         var INSTANCEID_totalh=400;

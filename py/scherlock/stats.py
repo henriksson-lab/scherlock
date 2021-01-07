@@ -1,5 +1,7 @@
 from pandasql import sqldf
 
+
+
 def cellcounts(adata, columns, groupby=[], percentage=False):
     """Get the number of cells for each of the condition.
 
@@ -53,3 +55,51 @@ def cellcounts(adata, columns, groupby=[], percentage=False):
 #cellcounts(adata, ["genotype", "treatment"], percentage=True, groupby=["genotype"])
 
 
+
+
+
+
+
+
+
+
+def correlateGenesWithValues(adata, Y, sort_ascending=False):
+    """Calculate correlations of all genes with the list of values in Y.
+       See also https://en.wikipedia.org/wiki/Covariance
+
+    Args:
+        adata (anndata): The single-cell count object
+        Y (list of values): Vector to correlate with. Should be as long as the number of cells
+
+
+    Returns:
+        Dataframe having correlations, percent of non-zero values, and corresponding geneid
+    """
+
+    #Remove mean from Y once and for all
+    Y=np.asarray(Y)
+    y=Y-np.mean(Y)
+
+    # If sparse matrix, ensure the optimal shape for subsetting
+    W=adata.X
+    if hasattr(W, 'tocsc'):
+        W=W.tocsc()
+
+    #Perform the correlation calculation
+    def cor2(i):
+        w=W[:,i]
+        if hasattr(w, 'todense'):
+            w=w.todense()
+        w=w-w.mean()
+        w=np.asarray(np.transpose(w))[0,:]
+        return np.mean(w*y)
+    clist = [cor2(i) for i in range(0,W.shape[1])]
+
+    infcorr = pd.DataFrame({
+        'symbol':adata.var_names,
+        'pct':[x/W.shape[1] for x in sklearn.preprocessing.binarize(W).sum(0).tolist()[0]],
+        'corr':clist})
+
+    infcorr.sort_values("corr",ascending=sort_ascending)
+
+    return(infcorr)
