@@ -1,6 +1,10 @@
 from pandasql import sqldf
+import scipy
+import sklearn
 
-
+###################################################################
+###################################################################
+###################################################################
 
 def cellcounts(adata, columns, groupby=[], percentage=False):
     """Get the number of cells for each of the condition.
@@ -61,6 +65,9 @@ def cellcounts(adata, columns, groupby=[], percentage=False):
 
 
 
+###################################################################
+###################################################################
+###################################################################
 
 
 def correlateGenesWithValues(adata, Y, sort_ascending=False):

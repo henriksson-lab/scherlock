@@ -16,8 +16,10 @@ setuptools.setup(
     install_requires=[
         'pandasql','pyjnius','IPython',
         'matplotlib','plotly',
-        'numpy','pandas','validators','beautifulsoup4',
-        'anndata','scanpy'
+        'numpy','pandas',
+        'validators','beautifulsoup4',
+        'anndata','scanpy',
+        'scipy','sklearn'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
