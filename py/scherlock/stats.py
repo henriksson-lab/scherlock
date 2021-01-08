@@ -19,6 +19,12 @@ def cellcounts(adata, columns, groupby=[], percentage=False):
         Dataframe with counts for each condition. The conditions are sorted according to
         their order in the columns argument.
     """
+    #Handle the possibility of items not being lists
+    if not groupby is None and not type(groupby) is list:
+        groupby=[groupby]
+    if not type(columns) is list:
+        groupby=[columns]
+
     tobs=adata.obs
     jcol = ",".join(columns)
     if not percentage:
