@@ -3,7 +3,6 @@ from random import randint
 import plotly.express as px
 import matplotlib
 import matplotlib.cm
-import plotly.express as px
 import matplotlib
 import numpy as np
 import pandas as pd
@@ -637,22 +636,7 @@ def plot_umaps_sidebyside(adata1, adata2, obs_name="leiden", palette="Set3", sav
 ###################################################################
 ###################################################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Functions for continuous 3D umaps
-
-# User exposed function for 3D umap. 
+# User exposed function for 3D umap.
 # Handles arguments, loops if many indentifiers given or if identifier is not unique, and calls inner_plot_3d_umap
 def plot_3d_umap_continuous(adata, identifiers, column='index', palette='viridis', marker_size=1, save=None, use_raw=True):
     """Plot an interactive 3D UMAP colored by a continuous .obs (using plotly).
@@ -805,9 +789,6 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
         Nothing; displays interactive HTML
     """
 
-    import plotly.express as px
-    import pandas as pd
-    
     if palette is None:
         ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]
     elif not isinstance(palette, list):
@@ -815,20 +796,20 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
     else:
         ppp = palette
     pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
-    
+
     cats = adata.obs[column].cat.categories
     if len(cats) > len(pp):
         raise(Exception("Number of categories in data is bigger than number of colors in chosen" +
                         " palette. Please choose another palette"))
     color_dict = {cats[ii]: pp[ii] for ii in range(len(cats))}
-    
+
     x=adata.obsm["X_umap"][:,0].tolist()
     y=adata.obsm["X_umap"][:,1].tolist()
     z=adata.obsm["X_umap"][:,2].tolist()
     cats = adata.obs[column].tolist()
     cols = {'x': x, 'y': y, 'z': z, column: cats}
     df = pd.DataFrame(data=cols)
-    
+
     fig = px.scatter_3d(df, x='x', y='y', z='z', color=column, color_discrete_map=color_dict)
     fig.update_traces(marker=dict(size=marker_size))
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), legend= {'itemsizing': 'constant'})
@@ -845,11 +826,75 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
 
 
 
+###################################################################
+###################################################################
+###################################################################
+# 2D UMAPS ########################################################
+###################################################################
+###################################################################
+###################################################################
 
 
 
 
 
+
+## Function for categorical 2D UMAPs
+def plot_2d_umap_categorical(adata, column, palette=None, marker_size=1, save=None):
+    """Plot an interactive 2D UMAP colored by a discrete/categorial .obs (using plotly).
+
+    Args:
+        adata (anndata): The count data object
+        identifiers (string / [string]): 
+            One or several elements in chosen_column: Identifier (name, id, ...) of thing to color UMAP on.
+            Will make one umap for each identifier. (TODO support multiple)
+        column (string): Column in adata.var to find identifier in. Defaults to adata.var.index
+        palette (string / [string]):
+            Either a name of a matplotlib predefined palette to pick from,
+            or a list of colors with length matching the number of colors needed.
+            Default: None --> matplotlib.rcParams["axes.prop_cycle"] used
+            This is the default used by scanpy. See docs for scanpy.pl.umap.
+            Not sure I like it, because scanpy also overwrites axes.prop_cycle when user plots
+            with a custom palette, which has been more of an annoying side effect than a
+            convenience for me so far in data analysis. However, it is easily worked around
+            by the user, so going for compatibility/consistency here.
+
+        marker_size (number): 
+            Marker size in scatter.
+        save (string, optional):
+            File to save to (optionally ending with .html)
+
+    Returns:
+        Nothing; displays interactive HTML
+    """
+
+
+    if palette is None:
+        ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]
+    elif not isinstance(palette, list):
+        ppp = matplotlib.cm.get_cmap(palette).colors
+    else:
+        ppp = palette
+    pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
+
+    cats = adata.obs[column].cat.categories
+    if len(cats) > len(pp):
+        raise(Exception("Number of categories in data is bigger than number of colors in chosen" +
+                        " palette. Please choose another palette"))
+    color_dict = {cats[ii]: pp[ii] for ii in range(len(cats))}
+
+    x=adata.obsm["X_umap"][:,0].tolist()
+    y=adata.obsm["X_umap"][:,1].tolist()
+    cats = adata.obs[column].tolist()
+    cols = {'x': x, 'y': y, column: cats}
+    df = pd.DataFrame(data=cols)
+
+    fig = px.scatter_2d(df, x='x', y='y', color=column, color_discrete_map=color_dict)
+    fig.update_traces(marker=dict(size=marker_size))
+    fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), legend= {'itemsizing': 'constant'})
+    if save is not None:
+        fig.write_html(add_file_ext_html(save))
+    fig.show()
 
 
 
