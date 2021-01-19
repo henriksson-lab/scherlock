@@ -440,8 +440,10 @@ def plot_umaps_sidebyside(adata1, adata2, obs_name="leiden", palette="Set3", sav
     def one_adata_tojs(adata):
         cats = adata.obs[obs_name].cat.categories
         color_dict = {cats[ii]: pp[ii] for ii in range(len(cats))}
-        x=adata.obsm["X_umap"][:,0].tolist()
-        y=adata.obsm["X_umap"][:,1].tolist()
+        # For some reason, scanpy flips one axes, 
+        # so lets do the same to stay compatible
+        x = np.array(adata.obsm["X_umap"][:,0])
+        y = -np.array(adata.obsm["X_umap"][:,1])
         cols = {'x': x, 'y': y, 
                 'bc': adata.obs_names,
                 'color':[color_dict[i] for i in adata.obs[obs_name].tolist()]}
