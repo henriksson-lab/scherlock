@@ -287,7 +287,32 @@ def build_pretty_DE_table(adata, n_genes = 25,
               "scanpy.tl.rank_genes_groups() was run. That would break the connection \n" +
               "between adata.uns['rank_genes_groups']['names'] and adata.var.index \n" + 
               "If that is the case, run scanpy.tl.rank_genes_groups() and this function \n" +
-              "without changing adata.var.index inbetween")
+              "without changing adata.var.index inbetween" + 
+"""
+
+Also check if use_raw=False in call to
+scanpy.tl.rank_genes_groups()
+If not it seems to rank all the genes in .raw and then put them
+in adata.uns['rank_genes_groups'], but any genes filtered out 
+after writing .raw will not be found in adata.var.index,
+which will give this error.
+"""
+              )
+
+    def format_float_array(array):
+        bb = np.median(array)
+        if abs(bb) < 0.00001 or abs(bb) > 5000:
+            cc = np.array([np.format_float_scientific(elem, precision=2, trim='0') for elem in array])
+        elif bb == 0:
+            cc = array
+        elif bb < 1:
+            from math import floor, log10
+            decimal_offset = int(floor(log10(abs(bb))))
+            cc = np.array([round(elem, 2-decimal_offset-1) for elem in array])
+        else:
+            cc = array
+        return(cc)
+
 
     # Get cluster/group names
     try:
@@ -314,13 +339,17 @@ def build_pretty_DE_table(adata, n_genes = 25,
         # Data from adata.uns['rank_genes_groups']
         column_dict = {}
         for col in rank_genes_groups_keys_to_include:
-            column_dict[col] = [adata.uns['rank_genes_groups'][col][ii][ii_group] for ii in range(n_genes)]
+            aa = np.array([adata.uns['rank_genes_groups'][col][ii][ii_group] for ii in range(n_genes)])
+            if issubclass(aa.dtype.type, np.floating):
+                column_dict[col] = format_float_array(aa)
+            else:
+                column_dict[col] = aa
         df = pd.DataFrame(column_dict)
         
         # Some stats
-        if not percent_cells is None:
-            df['percent_cells'] = np.array(percent_cells[page_genes])
-        df['mean_expression'] = np.array(global_means[page_genes])
+        if percent_cells is not None:
+            df['percent_cells'] = format_float_array(np.array(percent_cells[page_genes]))
+        df['mean_expression'] = format_float_array(np.array(global_means[page_genes]))
 
         ### Links to databases
         if gene_ID_column is not None and gene_name_column is not None:
@@ -366,10 +395,20 @@ def build_pretty_DE_table(adata, n_genes = 25,
             df['wikipedia_link']   = ["https://en.wikipedia.org/w/index.php?search="+gene+"&go=Go" for gene in page_genes]
             df['ensembl_link']     = ["http://www.ensembl.org/Multi/Search/Results?q="+gene+";site=ensembl_all" for gene in page_genes]
 
+        # # User requested columns from adata.var
+        # if adata_var_columns_to_include is not None:
+        #     for column in adata_var_columns_to_include:
+        #         df[column] = np.array(adata.var[column][page_genes])
+
         # User requested columns from adata.var
         if adata_var_columns_to_include is not None:
             for column in adata_var_columns_to_include:
-                df[column] = np.array(adata.var[column][page_genes])
+                aa = np.array(adata.var[column][page_genes])
+                if issubclass(aa.dtype.type, np.floating):
+                    df[column] = format_float_array(aa)
+                else:
+                    df[column] = aa
+
 
         # Add current page to dictionary
         page_dict[groups[ii_group]] = df
