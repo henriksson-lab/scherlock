@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import cern.colt.list.IntArrayList;
 import isoform.trackRenderer.Track;
 import isoform.trackRenderer.TrackGTF;
+import isoform.trackRenderer.TrackBed;
 import isoform.trackRenderer.TrackPileup;
 import isoform.trackRenderer.TrackRenderer;
 import isoform.util.GtfParser;
@@ -74,6 +75,15 @@ public class CellPileManager {
 	}
 	
 	
+	/**
+	 * Add a Bed file track
+	 */
+	public void addTrackBed(String name, String fname) throws IOException {
+		TrackBed t=new TrackBed(fname);
+		t.trackName=name;
+		listTracks.add(t);
+	}
+
 	
 	
 	

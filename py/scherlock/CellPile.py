@@ -48,6 +48,13 @@ class CellPile:
 		fname = jFile(fname)
 		self.cp.addTrackGTF(trackName, fname)
 
+	def addBed(self, fname, trackName="bed"):
+		"""Load a Bed file to display features"""
+		jFile = autoclass("java.io.File")
+		# fname = os.path.abspath(fname)
+		# fname = jFile(fname)
+		self.cp.addTrackBed(trackName, fname)
+
 
 	def getView(self, gene):
 		"""Return the view that will cover the span of a gene"""
@@ -62,6 +69,13 @@ class CellPile:
 	def getBarcodes(self, index):
 		"""Get the barcodes in one pileup file"""
 		return self.cp.getBarcodes(index)
+
+	def getNumCellPiles(self):
+		"""Get the number of pileups"""
+		return self.cp.getNumCellPiles()
+
+
+
 
 	def _toStringArray(self,pa):
 		"""Turn python array into java array"""
