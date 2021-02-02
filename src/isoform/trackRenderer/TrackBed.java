@@ -10,6 +10,7 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.samtools.util.FileExtensions;
 
 /**
  * Renderer: BED file track
@@ -41,49 +42,71 @@ public class TrackBed extends Track {
 	// Bed file parsing
 	public static Iterator<BEDFeature> bedParser(String fileName, Interval interval) throws Exception {
 		String bgzipFileName;
-		
-		// Attempt to block gzip and index input file if not already done
-		if (IOUtil.hasBlockCompressedExtension(fileName)) {
-//			System.out.println("file is block gzipped");
-			bgzipFileName = fileName;
-			File f = new File(fileName + ".tbi");
-			if (!f.exists() || f.isDirectory()) {
-//				System.out.println("file index missing. Attempting to make one");
-				TabixMaker.indexBedFile(bgzipFileName);
-			}
-			else {
-//				System.out.println("and has corresponding .tbi index file");
-			}
-		}
-		else {
-			System.out.println("input is not block gzipped. Attempting to block gzip and make .tbi index file");
+
+		// // Check what file extensions are deemed block compressed
+		// FileExtensions blockGzippedFileExtensions = new FileExtensions();
+		// System.out.println(blockGzippedFileExtensions.BLOCK_COMPRESSED);
+		// // [.gzip, .gz, .bgz, .bgzf]
+
+		// This is a problem since .gz files are not blocked compressed by default, see
+		// https://www.uppmax.uu.se/support/faq/resources-faq/which-compression-format-should-i-use-for-ngs-related-files/
+		// This could lead to difficult bugs for user that is not aware of difference between
+		// block gzipped and non-blocked gzip, or anyone being a bit tired that day 
+		// "Why is my .gz file not working?"
+		// Thus disabling the checks for already compressed and indexed files
+		// for now, so that it only takes plain bed files and makes the compression
+		// no matter. Slightly longer runtime in some cases should be motivated
+		// by lower risk of bugs/unexpected behaviors.
+		// It's strange that htsjdk relies on file endings to determine file type.
+		// Better to check file contents, no?
+
+// 		// Attempt to block gzip and index input file if not already done
+// 		if (IOUtil.hasBlockCompressedExtension(fileName)) {
+// //			System.out.println("file is block gzipped");
+// 			bgzipFileName = fileName;
+// 			File f = new File(fileName + ".tbi");
+// 			if (!f.exists() || f.isDirectory()) {
+// //				System.out.println("file index missing. Attempting to make one");
+// 				TabixMaker.indexBedFile(bgzipFileName);
+// 			}
+// 			else {
+// //				System.out.println("and has corresponding .tbi index file");
+// 			}
+// 		}
+// 		else {
+			// System.out.println("input is not block gzipped. Attempting to block gzip and make .tbi index file");
 			bgzipFileName = TabixMaker.bgzipBedFile(fileName);
 			TabixMaker.indexBedFile(bgzipFileName);
-		}
+		// }
 		
 		final FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(bgzipFileName, new BEDDetailCodec());
 		final Iterator<BEDFeature> readerIterator = 
 				reader.query(interval.getContig(), interval.getStart(), interval.getEnd());
 		
-//		System.out.println(interval.getContig());
-//		System.out.println(interval.getStart());
-//		System.out.println(interval.getEnd());
-		
-//		while (readerIterator.hasNext()) {
-//			BEDFeature bedFeature = readerIterator.next();
-////			System.out.println(bedFeature);
-////			System.out.println(bedFeature.getColor());
-////			System.out.println(bedFeature.getDescription());
-////			System.out.println(bedFeature.getExons());
-////			System.out.println(bedFeature.getLink());
-////			System.out.println(bedFeature.getName());
-////			System.out.println(bedFeature.getScore());
-////			System.out.println(bedFeature.getStrand());
-////			System.out.println(bedFeature.getType());
-////			System.out.println(bedFeature.getStart());
-////			System.out.println(bedFeature.getEnd());
-////			System.out.println();	
-//		}
+		// // Debug prints
+		// System.out.println(readerIterator);
+		// System.out.println(interval.getContig());
+		// System.out.println(interval.getStart());
+		// System.out.println(interval.getEnd());
+
+		// // OBS that if this enabled for debugging, it exhausts the
+		// // the iterator so that empty one is returned
+		// // and nothing rendered to the output svg
+		// while (readerIterator.hasNext()) {
+		// 	BEDFeature bedFeature = readerIterator.next();
+		// 	System.out.println(bedFeature);
+		// 	System.out.println(bedFeature.getColor());
+		// 	System.out.println(bedFeature.getDescription());
+		// 	System.out.println(bedFeature.getExons());
+		// 	System.out.println(bedFeature.getLink());
+		// 	System.out.println(bedFeature.getName());
+		// 	System.out.println(bedFeature.getScore());
+		// 	System.out.println(bedFeature.getStrand());
+		// 	System.out.println(bedFeature.getType());
+		// 	System.out.println(bedFeature.getStart());
+		// 	System.out.println(bedFeature.getEnd());
+		// 	System.out.println();	
+		// }
 		
 		return readerIterator;
 	}
@@ -99,7 +122,7 @@ public class TrackBed extends Track {
 		// Had to add try catch to avoid syntax error (?) from unmatching/uncaught errors
 		// Is there nicer way to do this?  //AB
 		// Johan: No
-		
+
 		Interval interval = new Interval(renderer.seq, renderer.from, renderer.to);
 		
 		try {  // This try/catch block is to prevent Java from complaining about uncaught errors
@@ -135,7 +158,7 @@ public class TrackBed extends Track {
 	public void render(TrackRenderer renderer, StringBuilder sb, int offsetY) {
 
 		String textStyle="font: italic sans-serif; fill: red;";
-		int canvasWidthBp = renderer.to - renderer.from;	
+		int canvasWidthBp = renderer.to - renderer.from;
 		
 		for (int ii = 0; ii<nLines; ii++) {
 
