@@ -16,12 +16,13 @@ public class CellPileMain {
 		if(args.length>0) {
 			cmd=args[0];
 		}
-		if(cmd.equals("build") && args.length==5) {
 
-			File fCellpile=new File(args[1]);
-			File fChromSizes=new File(args[2]);
-			File fBAM=new File(args[3]);
-			File fBC=new File(args[4]);
+		if(cmd.equals("build") && args.length==6 && args[1].equals("--single_cell")) {
+
+			File fCellpile=new File(args[2]);
+			File fChromSizes=new File(args[3]);
+			File fBAM=new File(args[4]);
+			File fBC=new File(args[5]);
 			
 			ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBC);
 			
@@ -30,8 +31,28 @@ public class CellPileMain {
 			CellPileFile cp=CellPileFile.writeFile(fCellpile, fChromSizes, fBAM, listBarcodes);
 			cp.close();
 			
-			System.out.println("Done writing cellpile");			
+			System.out.println("Done writing cellpile");
+
+		} else if(cmd.equals("build") && args.length==6 && args[1].equals("--bulk")) {
+
+			File fCellpile=new File(args[2]);
+			File fChromSizes=new File(args[3]);
+			File fBAM=new File(args[4]);
+			String bulk_id=new String(args[5]);
 			
+			// Old single cell version
+			// ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBC);
+			// New bulk version; only one barcode
+			ArrayList<String> listBarcodes = new ArrayList<String>();
+			listBarcodes.add(bulk_id);
+			
+			System.out.println("Building cellpile from: "+fBAM);
+			System.out.println("To: "+fCellpile);
+			CellPileFileBulk cp=CellPileFileBulk.writeFile(fCellpile, fChromSizes, fBAM, listBarcodes);
+			cp.close();
+			
+			System.out.println("Done writing cellpile");
+
 		} else if(cmd.equals("inspect") && args.length==2) {
 			
 			File fCellpile=new File(args[1]);
@@ -53,6 +74,7 @@ public class CellPileMain {
 			
 			System.out.println("Subsetting");
 			RandomSubset.subset(fInBam, fOutBam, new HashSet<String>(listBarcodes), pKeepBC, pKeepNonBC);
+		
 		} else {
 			
 			System.out.println("Usages: ");
