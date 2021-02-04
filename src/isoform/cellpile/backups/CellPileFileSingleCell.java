@@ -89,7 +89,6 @@ public class CellPileFile {
 			File fCellpile, 
 			File fChromSizes,
 			File fBAM,
-			String bamType,
 			ArrayList<String> listBarcodes) throws IOException {
 		
 		//Delete file or it will keep increasing in size
@@ -104,7 +103,7 @@ public class CellPileFile {
 		//Write header - this gets the position right for later writes
 		p.writeHeader();
 
-		p.countReads(fBAM, bamType);
+		p.countReads(fBAM);
 		
 		//Update header with pointers
 		p.writeHeader();
@@ -223,7 +222,7 @@ public class CellPileFile {
 	/**
 	 * Perform the counting from a BAM file. Can be called multiple times
 	 */
-	public void countReads(File fBAM, String bamType) throws IOException {
+	public void countReads(File fBAM) throws IOException {
 		//Open BAM file
 		final SamReader reader = SamReaderFactory.makeDefault().open(fBAM);
 
@@ -247,187 +246,91 @@ public class CellPileFile {
 		//Approximate, as the same cDNA can be fragmented multiple times in the library prep
 		String bcCellPreviousUMI="";
 		String bcCellPreviousCB="";
-
-
-		if (bamType.equals("--single_cell")) {
-	
-			//Loop through all SAM records
-			for (final SAMRecord samRecord : reader) {
 				
-				//Update user about progress
-				readRecords++;
-				if(readRecords%1000000 == 0){
-					//Calculate progress
-					int passedChunks=0;
-					for(String seq:mapChunkStarts.keySet()) {
-						if(seq.equals(currentSeq))
-							break;
-						passedChunks+=mapChunkStarts.get(seq).length;
-					}
-					passedChunks+=currentChunk;
-					int prc=100*passedChunks/totalChunks;
-					
-					LogUtil.formatColumns(System.out, 25,
-							prc+"%",
-							"Kept/Read: "+keptRecords+"/"+readRecords,
-							"@sequence: "+currentSeq,
-							"WrongBC: "+skippedWrongBC,
-							"badUMI: "+skippedBadUMI,
-							"SkipDup: "+skippedDup);
+		//Loop through all SAM records
+		for (final SAMRecord samRecord : reader) {
+			
+			//Update user about progress
+			readRecords++;
+			if(readRecords%1000000 == 0){
+				//Calculate progress
+				int passedChunks=0;
+				for(String seq:mapChunkStarts.keySet()) {
+					if(seq.equals(currentSeq))
+						break;
+					passedChunks+=mapChunkStarts.get(seq).length;
 				}
-					
-				//Get UMI and BC for this read
-				String bcCellCurrentUMI=(String)samRecord.getAttribute("UB");
-				String bcCellCurrentCellBarcode=(String)samRecord.getAttribute("CB");
+				passedChunks+=currentChunk;
+				int prc=100*passedChunks/totalChunks;
 				
-				//Check if this is a cell to count
-				if(mapBarcodeIndex.keySet().contains(bcCellCurrentCellBarcode)) {
-					//If the read has no UMI nor BC then ignore it
-					if(bcCellCurrentCellBarcode!=null) {
-						//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
-						if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousUMI) && bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
-							//Do nothing, ignore read
-							//System.out.println("Got duplicate");
-							skippedDup++;
-						} else {
-							//Remember for later
-							bcCellPreviousUMI=bcCellCurrentUMI;
-							bcCellPreviousCB=bcCellCurrentCellBarcode;
-
-							//Which cell is this?
-							int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
-
-							
-							//A read may have been split into multiple blocks. 
-							//Count these separately. Naive assumption that these are split over introns... is this correct?
-							List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
-							//System.out.println("#alignment blocks "+listBlocks.size());
-							for(int curAB=0;curAB<listBlocks.size();curAB++) {
-								AlignmentBlock ab=listBlocks.get(curAB);
-																
-								String blockSource=samRecord.getContig();
-								int blockFrom=ab.getReferenceStart();
-								int blockTo=ab.getReferenceStart()+ab.getLength();
-								
-								int shouldBeInChunk=blockFrom/chunkSize;
-								
-								//If this is the first read we see, start chunking from here
-								/*if(currentSeq.equals("")) {
-									currentSeq=blockSource;
-									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-								} else*/ 
-								if(curAB==0 && (!currentSeq.equals(blockSource) || currentChunk!=shouldBeInChunk)) {
-									//Check if we are still within the same chunk. otherwise move on.
-									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-								}
-								
-								addRegion(barcodeIndex, blockFrom, blockTo);
-								keptRecords++;
-							}
-						}
+				LogUtil.formatColumns(System.out, 25,
+						prc+"%",
+						"Kept/Read: "+keptRecords+"/"+readRecords,
+						"@sequence: "+currentSeq,
+						"WrongBC: "+skippedWrongBC,
+						"badUMI: "+skippedBadUMI,
+						"SkipDup: "+skippedDup);
+			}
+				
+			//Get UMI and BC for this read
+			String bcCellCurrentUMI=(String)samRecord.getAttribute("UB");
+			String bcCellCurrentCellBarcode=(String)samRecord.getAttribute("CB");
+			
+			//Check if this is a cell to count
+			if(mapBarcodeIndex.keySet().contains(bcCellCurrentCellBarcode)) {
+				//If the read has no UMI nor BC then ignore it
+				if(bcCellCurrentCellBarcode!=null) {
+					//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
+					if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousUMI) && bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
+						//Do nothing, ignore read
+						//System.out.println("Got duplicate");
+						skippedDup++;
 					} else {
-						skippedBadUMI++;
-						//System.out.println("Incomplete BAM record");
+						//Remember for later
+						bcCellPreviousUMI=bcCellCurrentUMI;
+						bcCellPreviousCB=bcCellCurrentCellBarcode;
+
+						//Which cell is this?
+						int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
+						
+
+						
+						//A read may have been split into multiple blocks. 
+						//Count these separately. Naive assumption that these are split over introns... is this correct?
+						List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
+						//System.out.println("#alignment blocks "+listBlocks.size());
+						for(int curAB=0;curAB<listBlocks.size();curAB++) {
+							AlignmentBlock ab=listBlocks.get(curAB);
+															
+							String blockSource=samRecord.getContig();
+							int blockFrom=ab.getReferenceStart();
+							int blockTo=ab.getReferenceStart()+ab.getLength();
+							
+							int shouldBeInChunk=blockFrom/chunkSize;
+							
+							//If this is the first read we see, start chunking from here
+							/*if(currentSeq.equals("")) {
+								currentSeq=blockSource;
+								saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+							} else*/ 
+							if(curAB==0 && (!currentSeq.equals(blockSource) || currentChunk!=shouldBeInChunk)) {
+								//Check if we are still within the same chunk. otherwise move on.
+								saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+							}
+							
+							addRegion(barcodeIndex, blockFrom, blockTo);
+							keptRecords++;
+						}
 					}
 				} else {
-					skippedWrongBC++;
+					skippedBadUMI++;
+					//System.out.println("Incomplete BAM record");
 				}
-			}
-
-		// BAM file is bulk type
-		// (bamType.equals("--bulk")) must be, since only two options
-		} else {  
-
-			//Loop through all SAM records
-			for (final SAMRecord samRecord : reader) {
-				
-				//Update user about progress
-				readRecords++;
-				if(readRecords%1000000 == 0){
-					//Calculate progress
-					int passedChunks=0;
-					for(String seq:mapChunkStarts.keySet()) {
-						if(seq.equals(currentSeq))
-							break;
-						passedChunks+=mapChunkStarts.get(seq).length;
-					}
-					passedChunks+=currentChunk;
-					int prc=100*passedChunks/totalChunks;
-					
-					LogUtil.formatColumns(System.out, 25,
-							prc+"%",
-							"Kept/Read: "+keptRecords+"/"+readRecords,
-							"@sequence: "+currentSeq,
-							"WrongBC: "+skippedWrongBC,
-							"badUMI: "+skippedBadUMI,
-							"SkipDup: "+skippedDup);
-				}
-					
-				// //Get UMI and BC for this read
-				// String bcCellCurrentUMI=(String)samRecord.getAttribute("UB");
-				// String bcCellCurrentCellBarcode=(String)samRecord.getAttribute("CB");
-				
-				// Bulk verion; No check against BCs and UMIs
-				//
-				// //Check if this is a cell to count
-				// if(mapBarcodeIndex.keySet().contains(bcCellCurrentCellBarcode)) {
-				// 	//If the read has no UMI nor BC then ignore it
-				// 	if(bcCellCurrentCellBarcode!=null) {
-				// 		//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
-				// 		if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousUMI) && bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
-				// 			//Do nothing, ignore read
-				// 			//System.out.println("Got duplicate");
-				// 			skippedDup++;
-				// 		} else {
-				// 			//Remember for later
-				// 			bcCellPreviousUMI=bcCellCurrentUMI;
-				// 			bcCellPreviousCB=bcCellCurrentCellBarcode;
-
-							// // Which cell is this?
-							// int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
-							//
-							// Bulk version; Only one barcode
-							int barcodeIndex=0;
-							
-							
-							//A read may have been split into multiple blocks. 
-							//Count these separately. Naive assumption that these are split over introns... is this correct?
-							List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
-							//System.out.println("#alignment blocks "+listBlocks.size());
-							for(int curAB=0;curAB<listBlocks.size();curAB++) {
-								AlignmentBlock ab=listBlocks.get(curAB);
-																
-								String blockSource=samRecord.getContig();
-								int blockFrom=ab.getReferenceStart();
-								int blockTo=ab.getReferenceStart()+ab.getLength();
-								
-								int shouldBeInChunk=blockFrom/chunkSize;
-								
-								//If this is the first read we see, start chunking from here
-								/*if(currentSeq.equals("")) {
-									currentSeq=blockSource;
-									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-								} else*/ 
-								if(curAB==0 && (!currentSeq.equals(blockSource) || currentChunk!=shouldBeInChunk)) {
-									//Check if we are still within the same chunk. otherwise move on.
-									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-								}
-								
-								addRegion(barcodeIndex, blockFrom, blockTo);
-								keptRecords++;
-							}
-			// 			}
-			// 		} else {
-			// 			skippedBadUMI++;
-			// 			//System.out.println("Incomplete BAM record");
-			// 		}
-			// 	} else {
-			// 		skippedWrongBC++;
-			// 	}
+			} else {
+				skippedWrongBC++;
 			}
 		}
-
-
+		
 		//Get out the last ones from memory. TODO remember to fix this in countBAM too
 		saveCurrentChunk();
 		reader.close();

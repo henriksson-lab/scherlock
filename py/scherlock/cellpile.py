@@ -25,30 +25,30 @@ from IPython.core.display import SVG
 
 ###########################################
 ## One CellPile file
-class CellPile:
+class cellpile:
 
 	def __init__(self):
 		#Prepare metapile
 		self.cp = autoclass('isoform.cellpile.CellPileManager')()
 
-	def addPile(self,fname,pileName=""):
+	def add_cellpile(self,fname,cellpile_name=""):
 		"""Load one pile and add to the list"""
 		jFile = autoclass("java.io.File")
 		fname = os.path.abspath(fname)
-		if pileName=="" and self.cp.getNumCellPiles()>1:
+		if cellpile_name=="" and self.cp.getNumCellPiles()>1:
 			print("WARNING: No pile name given. You most likely want to use this if you work with multiple piles")
 		f = jFile(fname)
 		onepile = autoclass('isoform.cellpile.CellPileFile').open(f)
-		self.cp.addCellPile(onepile,pileName)
+		self.cp.addCellPile(onepile,cellpile_name)
 
-	def addGTF(self, fname, trackName="gtf"):
+	def add_gtf(self, fname, trackName="gtf"):
 		"""Load a GTF file to display features"""
 		jFile = autoclass("java.io.File")
 		fname = os.path.abspath(fname)
 		fname = jFile(fname)
 		self.cp.addTrackGTF(trackName, fname)
 
-	def addBed(self, fname, trackName="bed"):
+	def add_bed(self, fname, trackName="bed"):
 		"""Load a Bed file to display features"""
 		jFile = autoclass("java.io.File")
 		# fname = os.path.abspath(fname)
@@ -56,7 +56,7 @@ class CellPile:
 		self.cp.addTrackBed(trackName, fname)
 
 
-	def getView(self, gene):
+	def get_view(self, gene):
 		"""Return the view that will cover the span of a gene"""
 		grange = self.cp.getRangeForGene(gene)
 		if grange is None:
@@ -66,11 +66,11 @@ class CellPile:
 
 
 
-	def getBarcodes(self, index):
+	def get_barcodes(self, index):
 		"""Get the barcodes in one pileup file"""
 		return self.cp.getBarcodes(index)
 
-	def getNumCellPiles(self):
+	def get_number_of_cellpiles(self):
 		"""Get the number of pileups"""
 		return self.cp.getNumCellPiles()
 
@@ -86,41 +86,41 @@ class CellPile:
 			str_array[i] = jString(pa[i])
 		return str_array
 
-	def pileup(self, viewrange, cellBC=None, cellCluster=None, cellFile=None, numdiv=1000):
+	def pileup(self, viewrange, barcodes=None, track_labels=None, cellpile_names=None, numdiv=1000):
 		"""Build a pileup"""
 
 		#Split up the viewrange. [sequence, from, to]  where sequence is a string
 		seq, sfrom, sto = viewrange
 
 		#If no cells given then everything into one group
-		if cellBC is None:
+		if barcodes is None:
 			pileup=self.cp.buildPileup(seq, sfrom, sto, numdiv)
 			renderer=self.cp.render(seq, sfrom, sto, pileup)
 			return Pileup(renderer)
 
 		#If no cell cluster given, put everything in one group
-		if cellCluster is None:
-			cellCluster = [""] * len(cellBC)
+		if track_labels is None:
+			track_labels = [""] * len(barcodes)
 
 		#If no cell file given, assume all ""
-		if cellFile is None:
-			cellFile = [""] * len(cellBC)
+		if cellpile_names is None:
+			cellpile_names = [""] * len(barcodes)
 
 		#Convenience conversions, especially for scanpy
-		if hasattr(cellFile, 'tolist'):
-			#if isinstance(cellFile, pandas.core.series.Series):
-			cellFile = cellFile.tolist()
-		if hasattr(cellBC, 'tolist'):
-			#if isinstance(cellBC, pandas.core.series.Series):
-			cellBC = cellBC.tolist()
-		if hasattr(cellCluster, 'tolist'):
-			#if isinstance(cellFile, pandas.core.series.Series):
-			cellCluster = cellCluster.tolist()
+		if hasattr(cellpile_names, 'tolist'):
+			#if isinstance(cellpile_names, pandas.core.series.Series):
+			cellpile_names = cellpile_names.tolist()
+		if hasattr(barcodes, 'tolist'):
+			#if isinstance(barcodes, pandas.core.series.Series):
+			barcodes = barcodes.tolist()
+		if hasattr(track_labels, 'tolist'):
+			#if isinstance(cellpile_names, pandas.core.series.Series):
+			track_labels = track_labels.tolist()
 
 		pileup=self.cp.buildPileup(seq, sfrom, sto, numdiv, 
-			self._toStringArray(cellBC), 
-			self._toStringArray(cellFile), 
-			self._toStringArray(cellCluster))
+			self._toStringArray(barcodes), 
+			self._toStringArray(cellpile_names), 
+			self._toStringArray(track_labels))
 
 		renderer=self.cp.render(seq, sfrom, sto, pileup)
 

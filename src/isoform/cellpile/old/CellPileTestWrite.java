@@ -17,7 +17,7 @@ public class CellPileTestWrite {
 	public static void main(String[] args) throws IOException {
 		
 		
-		
+		String bamType="--single_cell";
 		File fCellpile=new File("/home/mahogny/temp/cellpile");
 		File fBAM=new File("/big/henriksson/tonsil/possorted_genome_bam.bam");
 		File fChromSizes=new File("/data/henlab/ref_genome/human/sizes.genome");
@@ -25,7 +25,7 @@ public class CellPileTestWrite {
 		
 		ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBC);
 		
-		CellPileFile cp=CellPileFile.writeFile(fCellpile, fChromSizes, fBAM, listBarcodes);
+		CellPileFile cp=CellPileFile.writeFile(fCellpile, fChromSizes, fBAM, bamType, listBarcodes);
 		cp.close();
 		
 		System.out.println("File written! ------ ");
