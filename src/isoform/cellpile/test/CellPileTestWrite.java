@@ -1,4 +1,4 @@
-package isoform.cellpile;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -19,10 +19,10 @@ public class CellPileTestWrite {
 		
 		
 		String bamType="--single_cell";
-		File fCellpile=new File("/home/mahogny/temp/cellpile");
-		File fBAM=new File("/big/henriksson/tonsil/possorted_genome_bam.bam");
+		File fCellpile=new File("TestWriteOut.cellpile");
+		File fBAM=new File("/big/henriksson/tonsil/individual_10x/SRR11816791_out/possorted_genome_bam.bam");
 		File fChromSizes=new File("/data/henlab/ref_genome/human/sizes.genome");
-		File fBC=new File("/big/henriksson/tonsil/filtered_feature_bc_matrix/barcodes.tsv.gz");
+		File fBC=new File("/big/henriksson/tonsil/individual_10x/SRR11816791_out/filtered_feature_bc_matrix/barcodes.tsv.gz");
 		
 		ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBC);
 		
@@ -54,8 +54,10 @@ public class CellPileTestWrite {
 			
 			System.out.println();
 		}*/
-		
+	
 		
 	}
 
 }
+
+
