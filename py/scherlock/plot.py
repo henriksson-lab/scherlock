@@ -834,10 +834,11 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
 
     if palette is None:
         ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]
+        pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
     else:
         try:  # iterable of rgb triplets or predefined color strings
             pp = [matplotlib.colors.rgb2hex(color) for color in palette]
-        except TypeError:  # Name of predefined palette
+        except ValueError:  # Name of predefined palette
             ppp = matplotlib.cm.get_cmap(palette).colors
             pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
 

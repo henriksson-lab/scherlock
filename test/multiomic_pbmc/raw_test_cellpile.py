@@ -81,23 +81,23 @@ sc.tl.leiden(adata, resolution=0.3)
 
 
 ### For cellpiles
-import scherlock.CellPile as cpl
+import scherlock.cellpile as cpl
 
 # Initialize cellpile
-cp = cpl.CellPile()
+cp = cpl.cellpile()
 
 ### Load the reference genome
-cp.addGTF("reduced/ref/genes.gtf.gz")
-cp.addPile("reduced/10x_atac.cellpile", pileName='sample1')  #Note that the pilename must correspond to sampleid
+cp.add_gtf("reduced/ref/genes.gtf.gz")
+cp.add_cellpile("reduced/10x_atac.cellpile", cellpile_name='sample1')  #Note that the pilename must correspond to sampleid
 
 
 ### Check our favourite genes, global pileup
-v = cp.getView("CD55")
+v = cp.get_view("CD55")
 
 cp.pileup(v,
-          cellBC=adata.obs["origbc"].tolist(),  # subset on cell BCs
-          cellFile=adata.obs["sampleid"].tolist(), 
-          cellCluster=adata.obs["leiden"].tolist()  # Split into different tracks for clusters
+          barcodes=adata.obs["origbc"].tolist(),  # subset on cell BCs
+          cellpile_names=adata.obs["sampleid"].tolist(), 
+          track_labels=adata.obs["leiden"].tolist()  # Split into different tracks for clusters
          ).plot(save="out/basic_cellpile.svg")
 
 
