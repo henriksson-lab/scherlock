@@ -428,14 +428,6 @@ which will give this error.
         return(page_dict)
 
 
-    
-# # Testing
-# build_pretty_DE_table(adata, n_genes = 10, 
-#                           adata_var_columns_to_include = ['gene_names', 'from', 'feature_types', 'highly_variable'],
-#                           rank_genes_groups_keys_to_include = ['logfoldchanges', 'pvals'],
-#                           gene_ID_column = 'gene_ids_isocount', gene_name_column = 'gene_names',
-#                           show_table=True)
-
 
 
 ###################################################################
@@ -459,27 +451,6 @@ def plot_umaps_sidebyside(adata1, adata2,
         adata2 (anndata): The second count data object
         adata1_color: The categorical column from adata1 to color UMAP on
         adata2_color: The categorical column from adata2 to color UMAP on
-        palette (string, optional): Colors to use for plotting categorical annotation groups.
-            Either a name of a matplotlib predefined palette to pick from
-            :class:`~matplotlib.colors.ListedColormap`,
-            or a list of matplotlib predefined named colors.
-            (see :func:`~matplotlib.colors.is_color_like`).
-        save (string, optional): File to save to (optionally ending with .html)
-
-    Returns:
-        Nothing; displays interactive HTML
-    """
-
-
-
-
-    """
-    Args:
-        adata (anndata): The count data object
-        identifiers (string / [string]): 
-            One or several elements in chosen_column: Identifier (name, id, ...) of thing to color UMAP on.
-            Will make one umap for each identifier. (TODO support multiple)
-        column (string): Column in adata.var to find identifier in. Defaults to adata.var.index
         palette (string / iterable[ string ] / iterable[ rgb triplet as iterable ]):
             Either a name of a matplotlib predefined palette to pick from,
             or a list of colors with length matching the number of colors needed.
@@ -491,15 +462,12 @@ def plot_umaps_sidebyside(adata1, adata2,
             with a custom palette, which has been more of an annoying side effect than a
             convenience for me so far in data analysis. However, it is easily worked around
             by the user, so going for compatibility/consistency here.
-
-        marker_size (number): 
-            Marker size in scatter.
-        save (string, optional):
-            File to save to (optionally ending with .html)
+        save (string, optional): File to save to (optionally ending with .html)
 
     Returns:
         Nothing; displays interactive HTML
     """
+
 
     if palette is None:
         ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]
@@ -829,26 +797,6 @@ def __plot_3d_umap_continuous_inner(adata, color_values, title, palette='viridis
 
 
 
-# # Test continuous 3D umap
-
-# print('Test: One unique identifier..')
-# plot_3d_umap_continuous(adata, identifiers = 'ENSG00000187608_6_e')
-# print('Test: One identifier from custom column that has duplicates..')
-# plot_3d_umap_continuous(adata, identifiers = 'ISG15', column='gene_names')
-# print('Test: List of two unique identifiers')
-# plot_3d_umap_continuous(adata, identifiers = ['ENSG00000198692_3_e', 'ENSG00000187608_6_e'])
-# print('Test: Custom colors')
-# plot_3d_umap_continuous(adata, 'ENSG00000111732_1_e', palette=['cornflowerblue', 'lemonchiffon', 'brown'])
-# plot_3d_umap_continuous(adata, 'ENSG00000111732_1_e', palette=['cornflowerblue', 'brown', 'lemonchiffon'])
-
-# # All pass 2020-11-24 :)
-# # Commenting out to make notebook less heavy
-
-
-
-
-
-
 
 
 ## Function for categorical 3D UMAPs
@@ -872,7 +820,6 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
             with a custom palette, which has been more of an annoying side effect than a
             convenience for me so far in data analysis. However, it is easily worked around
             by the user, so going for compatibility/consistency here.
-
         marker_size (number): 
             Marker size in scatter.
         save (string, optional):
