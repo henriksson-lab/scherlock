@@ -449,13 +449,16 @@ which will give this error.
 
 
 
-def plot_umaps_sidebyside(adata1, adata2, obs_name="leiden", palette="Set3", save=None):
+def plot_umaps_sidebyside(adata1, adata2, 
+                          adata1_color="leiden", adata2_color="leiden", 
+                          palette="Set3", save=None):
     """Plot two UMAPs and allow the user to see which points correspond using the mouse.
 
     Args:
         adata1 (anndata): The first count data object
         adata2 (anndata): The second count data object
-        obs_name (string, optional): Name of the .obs column to show
+        adata1_color: The categorical column from adata1 to color UMAP on
+        adata2_color: The categorical column from adata2 to color UMAP on
         palette (string, optional): Colors to use for plotting categorical annotation groups.
             Either a name of a matplotlib predefined palette to pick from
             :class:`~matplotlib.colors.ListedColormap`,
@@ -467,17 +470,64 @@ def plot_umaps_sidebyside(adata1, adata2, obs_name="leiden", palette="Set3", sav
         Nothing; displays interactive HTML
     """
 
-    ### Figure out the color mapping
-    if not isinstance(palette, list):
-        ppp = matplotlib.cm.get_cmap(palette).colors
+
+
+
+    """
+    Args:
+        adata (anndata): The count data object
+        identifiers (string / [string]): 
+            One or several elements in chosen_column: Identifier (name, id, ...) of thing to color UMAP on.
+            Will make one umap for each identifier. (TODO support multiple)
+        column (string): Column in adata.var to find identifier in. Defaults to adata.var.index
+        palette (string / iterable[ string ] / iterable[ rgb triplet as iterable ]):
+            Either a name of a matplotlib predefined palette to pick from,
+            or a list of colors with length matching the number of colors needed.
+            Colors can be specified using either string names of matplotlib
+            predefined colors, or as rgb triplets.
+            Default: None --> matplotlib.rcParams["axes.prop_cycle"] used
+            This is the default used by scanpy. See docs for scanpy.pl.umap.
+            Not sure I like it, because scanpy also overwrites axes.prop_cycle when user plots
+            with a custom palette, which has been more of an annoying side effect than a
+            convenience for me so far in data analysis. However, it is easily worked around
+            by the user, so going for compatibility/consistency here.
+
+        marker_size (number): 
+            Marker size in scatter.
+        save (string, optional):
+            File to save to (optionally ending with .html)
+
+    Returns:
+        Nothing; displays interactive HTML
+    """
+
+    if palette is None:
+        ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]
+        pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
     else:
-        ppp = palette
-    #pp = [matplotlib.colors.rgb2hex(color).replace("#","%23") for color in ppp]
-    pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
+        try:  # Palette is iterable of rgb triplets or predefined color strings
+            pp = [matplotlib.colors.rgb2hex(color) for color in palette]
+        except ValueError:  # Palette is string: Name of predefined palette
+            ppp = matplotlib.cm.get_cmap(palette).colors
+            pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
+
+
+    def fix_palette_length(categories, palette):
+        if len(categories) > len(palette):
+            palette = palette + palette
+            print("""
+WARNING: Length of palette colors is smaller than the number of categories.
+         Doubling the current palette. 
+         Some categories will have the same color.
+""")
+            palette = fix_palette_length(categories, palette)
+        return(palette)
+
 
     ### Turn points from one umap into a dataframe
-    def one_adata_tojs(adata):
-        cats = adata.obs[obs_name].cat.categories
+    def one_adata_tojs(adata, adata_color, pp):
+        cats = adata.obs[adata_color].cat.categories
+        pp = fix_palette_length(cats, pp)
         color_dict = {cats[ii]: pp[ii] for ii in range(len(cats))}
         # For some reason, scanpy flips one axes, 
         # so lets do the same to stay compatible
@@ -485,12 +535,12 @@ def plot_umaps_sidebyside(adata1, adata2, obs_name="leiden", palette="Set3", sav
         y = -np.array(adata.obsm["X_umap"][:,1])
         cols = {'x': x, 'y': y, 
                 'bc': adata.obs_names,
-                'color':[color_dict[i] for i in adata.obs[obs_name].tolist()]}
+                'color':[color_dict[i] for i in adata.obs[adata_color].tolist()]}
         df = pd.DataFrame(data=cols)
         return(df)
 
-    df_ptA=one_adata_tojs(adata1)
-    df_ptB=one_adata_tojs(adata2)
+    df_ptA=one_adata_tojs(adata1, adata1_color, pp)
+    df_ptB=one_adata_tojs(adata2, adata2_color, pp)
 
     ### Generate the point-to-point correspondence table
     df1=pd.DataFrame(data={'indA':range(0,len(adata1.obs_names)),'bc':adata1.obs_names})
@@ -832,31 +882,32 @@ def plot_3d_umap_categorical(adata, column, palette=None, marker_size=1, save=No
         Nothing; displays interactive HTML
     """
 
+
     if palette is None:
         ppp = [d['color'] for d in matplotlib.rcParams["axes.prop_cycle"]]
         pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
     else:
-        try:  # iterable of rgb triplets or predefined color strings
+        try:  # Palette is iterable of rgb triplets or predefined color strings
             pp = [matplotlib.colors.rgb2hex(color) for color in palette]
-        except ValueError:  # Name of predefined palette
+        except ValueError:  # Palette is string: Name of predefined palette
             ppp = matplotlib.cm.get_cmap(palette).colors
             pp = [matplotlib.colors.rgb2hex(color) for color in ppp]
 
-    cats = adata.obs[column].cat.categories
 
     def fix_palette_length(categories, palette):
-        if len(cats) > len(palette):
+        if len(categories) > len(palette):
             palette = palette + palette
             print("""
 WARNING: Length of palette colors is smaller than the number of categories.
          Doubling the current palette. 
          Some categories will have the same color.
 """)
-            fix_palette_length(categories, palette)
+            palette = fix_palette_length(categories, palette)
         return(palette)
 
-    pp = fix_palette_length(cats, pp)
 
+    cats = adata.obs[column].cat.categories
+    pp = fix_palette_length(cats, pp)
     color_dict = {cats[ii]: pp[ii] for ii in range(len(cats))}
 
     x=adata.obsm["X_umap"][:,0].tolist()
@@ -866,18 +917,13 @@ WARNING: Length of palette colors is smaller than the number of categories.
     cols = {'x': x, 'y': y, 'z': z, column: cats}
     df = pd.DataFrame(data=cols)
 
+
     fig = px.scatter_3d(df, x='x', y='y', z='z', color=column, color_discrete_map=color_dict)
     fig.update_traces(marker=dict(size=marker_size))
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0), legend= {'itemsizing': 'constant'})
     if save is not None:
         fig.write_html(add_file_ext_html(save))
     fig.show()
-
-
-# # Test categorical 3D umap
-# plot_3d_umap_categorical(adata, "gc_zone")
-# plot_3d_umap_categorical(adata, "leiden", "tab10")
-# plot_3d_umap_categorical(adata, "gc_zone", palette=['cornflowerblue', 'lemonchiffon', 'brown'])
 
 
 
