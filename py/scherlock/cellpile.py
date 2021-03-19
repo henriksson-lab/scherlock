@@ -12,7 +12,7 @@ jarfile = os.path.join(jardir,'pycellpile.jar')
 
 ########### Need to set these things before importing jnius
 import jnius_config
-jnius_config.add_options('-Xrs', '-Xmx1024M')
+jnius_config.add_options('-Xrs', '-Xmx2048M')
 jnius_config.set_classpath('.', jarfile)
 import jnius
 from jnius import autoclass
