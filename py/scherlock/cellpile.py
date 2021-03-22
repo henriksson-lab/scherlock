@@ -12,7 +12,7 @@ jarfile = os.path.join(jardir,'pycellpile.jar')
 
 ########### Need to set these things before importing jnius
 import jnius_config
-jnius_config.add_options('-Xrs', '-Xmx2048M')
+jnius_config.add_options('-Xrs', '-Xmx100000M')
 jnius_config.set_classpath('.', jarfile)
 import jnius
 from jnius import autoclass
@@ -31,6 +31,8 @@ class cellpile:
 		#Prepare metapile
 		self.cp = autoclass('isoform.cellpile.CellPileManager')()
 
+
+
 	def add_cellpile(self,fname,cellpile_name=""):
 		"""Load one pile and add to the list"""
 		jFile = autoclass("java.io.File")
@@ -41,12 +43,23 @@ class cellpile:
 		onepile = autoclass('isoform.cellpile.CellPileFile').open(f)
 		self.cp.addCellPile(onepile,cellpile_name)
 
+
+
 	def add_gtf(self, fname, trackName="gtf"):
 		"""Load a GTF file to display features"""
 		jFile = autoclass("java.io.File")
 		fname = os.path.abspath(fname)
 		fname = jFile(fname)
 		self.cp.addTrackGTF(trackName, fname)
+
+	def dump_gtf(self, fname, trackName="gtf"):
+		"""Dump a parsed gtf file on user"""
+		jFile = autoclass("java.io.File")
+		fname = os.path.abspath(fname)
+		fname = jFile(fname)
+		return self.cp.dumpTrackGTF(trackName, fname)
+
+
 
 	def add_bed(self, fname, trackName="bed"):
 		"""Load a Bed file to display features"""
@@ -56,15 +69,13 @@ class cellpile:
 		self.cp.addTrackBed(trackName, fname)
 
 
+
 	def get_view(self, gene):
 		"""Return the view that will cover the span of a gene"""
 		grange = self.cp.getRangeForGene(gene)
 		if grange is None:
 			raise Exception('Gene does not exist in GTF')
 		return (grange.getSource(), grange.getFrom(), grange.getTo())
-
-
-
 
 	def get_barcodes(self, index):
 		"""Get the barcodes in one pileup file"""
@@ -76,7 +87,6 @@ class cellpile:
 
 
 
-
 	def _toStringArray(self,pa):
 		"""Turn python array into java array"""
 		jString = autoclass("java.lang.String")
@@ -85,6 +95,8 @@ class cellpile:
 		for i in range(0,len(pa)):
 			str_array[i] = jString(pa[i])
 		return str_array
+
+
 
 	def pileup(self, viewrange, barcodes=None, track_labels=None, cellpile_names=None, numdiv=1000):
 		"""Build a pileup"""
@@ -125,6 +137,59 @@ class cellpile:
 		renderer=self.cp.render(seq, sfrom, sto, pileup)
 
 		return Pileup(renderer)
+
+
+
+
+
+
+	def pileup_raw(self, viewrange, barcodes=None, track_labels=None, cellpile_names=None, numdiv=1000):
+		"""Build a pileup"""
+
+		#Split up the viewrange. [sequence, from, to]  where sequence is a string
+		seq, sfrom, sto = viewrange
+
+		#If no cells given then everything into one group
+		if barcodes is None:
+			pileup=self.cp.buildPileup(seq, sfrom, sto, numdiv)
+			renderer=self.cp.render(seq, sfrom, sto, pileup)
+			return Pileup(renderer)
+
+		#If no cell cluster given, put everything in one group
+		if track_labels is None:
+			track_labels = [""] * len(barcodes)
+
+		#If no cell file given, assume all ""
+		if cellpile_names is None:
+			cellpile_names = [""] * len(barcodes)
+
+		#Convenience conversions, especially for scanpy
+		if hasattr(cellpile_names, 'tolist'):
+			#if isinstance(cellpile_names, pandas.core.series.Series):
+			cellpile_names = cellpile_names.tolist()
+		if hasattr(barcodes, 'tolist'):
+			#if isinstance(barcodes, pandas.core.series.Series):
+			barcodes = barcodes.tolist()
+		if hasattr(track_labels, 'tolist'):
+			#if isinstance(cellpile_names, pandas.core.series.Series):
+			track_labels = track_labels.tolist()
+
+		pileup=self.cp.buildPileup(seq, sfrom, sto, numdiv, 
+			self._toStringArray(barcodes), 
+			self._toStringArray(cellpile_names), 
+			self._toStringArray(track_labels))
+
+
+		return(pileup)
+
+
+		# renderer=self.cp.render(seq, sfrom, sto, pileup)
+
+		# return Pileup(renderer)	
+
+
+
+
 
 
 ############################################################################################
