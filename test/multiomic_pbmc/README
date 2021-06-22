@@ -1,0 +1,12 @@
+
+Use the makefile to download test data from the public part of our
+in lab server. The fullsize test data is too big for github.
+
+The .sh scripts in here shows how the test data was produced.
+(ToDo; this is not reproducible since done with local files on our computer)
+
+The .py scripts tests different parts of the scherlock suite.
+
+
+NOTE: Would not be surprised if most of this is broken now since there have
+      been substantial changes to scherlock
