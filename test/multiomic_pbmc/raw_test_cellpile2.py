@@ -1,5 +1,6 @@
 ### For cellpiles
-import scherlock.CellPile as cpl
+import pathlib
+import scherlock.cellpile as cpl
 import scanpy as sc
 
 # count tables
@@ -9,19 +10,21 @@ adata.obs["sampleid"] = "sample1"
 adata.obs["leiden"] = "all"
 
 # Initialize cellpile
-cp = cpl.CellPile()
+cp = cpl.cellpile()
 
 ### Load the reference genome
-cp.addGTF("reduced/ref/genes.gtf.gz")
-cp.addPile("reduced/10x_atac.cellpile", pileName='sample1')  #Note that the pilename must correspond to sampleid
-
+cp.add_gtf("reduced/ref/genes.gtf.gz")
+# Note that the pilename must correspond to sample id
+cp.add_cellpile("reduced/10x_atac.cellpile", cellpile_name='sample1')  
 
 ### Check our favourite genes, global pileup
-v = cp.getView("CD55")
+v = cp.get_view("CD55")
 
+# Plot and save
+pathlib.Path("outs/").mkdir(parents=True, exist_ok=True)
 cp.pileup(v,
-          cellBC=adata.obs["origbc"].tolist(),      # subset on cell BCs
-          cellFile=adata.obs["sampleid"].tolist(),
-          cellCluster=adata.obs["leiden"].tolist()  # Split into different tracks for clusters
-         ).plot(save="out/cd55.svg")
+          barcodes=adata.obs["origbc"].tolist(),      # subset on cell BCs
+          cellpile_names=adata.obs["sampleid"].tolist(),
+          track_labels=adata.obs["leiden"].tolist()  # Split into different tracks for clusters
+         ).plot(save="outs/cd55.svg")
 
