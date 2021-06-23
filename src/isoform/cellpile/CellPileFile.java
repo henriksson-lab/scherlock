@@ -68,6 +68,8 @@ public class CellPileFile {
 	/**
 	 * Read chromosome sizes and calculate chunk sizes
 	 */
+	// mapChunkStarts contains the starting points of chunks within the
+	// different chromosomes. Note that ech chromosome has several chunks
 	private void readChromosomeSizes(File f) throws IOException {
 		BufferedReader br=new BufferedReader(new FileReader(f));
 		String line;
@@ -123,6 +125,7 @@ public class CellPileFile {
 	/**
 	 * Write the header to the file
 	 */
+	// How are the chunk pointers in the file known before writing the chunks?? //AB
 	private void writeHeader() throws IOException {
 		//Go to the beginning of the file
 		raf.seek(0);
@@ -187,7 +190,8 @@ public class CellPileFile {
 					for(int cellBarcode:mapCellRegions.keySet()) {
 						raf.writeInt(cellBarcode);
 						IntArrayList ia=mapCellRegions.get(cellBarcode);
-						int[] list=ia.elements(); //Note, this is not a copy of the array, and it is the wrong size
+						//Note, this is not a copy of the array, and it is the wrong size
+						int[] list=ia.elements(); 
 						int numRegion2=ia.size();
 						raf.writeShort(numRegion2/2);
 						for(int i=0;i<numRegion2;i++) {
@@ -285,7 +289,9 @@ public class CellPileFile {
 					//If the read has no UMI nor BC then ignore it
 					if(bcCellCurrentCellBarcode!=null) {
 						//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
-						if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousUMI) && bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
+						if(bcCellCurrentUMI!=null && 
+							bcCellCurrentUMI.equals(bcCellPreviousUMI) && 
+							bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
 							//Do nothing, ignore read
 							//System.out.println("Got duplicate");
 							skippedDup++;
@@ -299,7 +305,8 @@ public class CellPileFile {
 
 							
 							//A read may have been split into multiple blocks. 
-							//Count these separately. Naive assumption that these are split over introns... is this correct?
+							//Count these separately. Naive assumption that these are split over introns... 
+							//is this correct?
 							List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
 							//System.out.println("#alignment blocks "+listBlocks.size());
 							for(int curAB=0;curAB<listBlocks.size();curAB++) {
@@ -316,8 +323,37 @@ public class CellPileFile {
 									currentSeq=blockSource;
 									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
 								} else*/ 
-								if(curAB==0 && (!currentSeq.equals(blockSource) || currentChunk!=shouldBeInChunk)) {
-									//Check if we are still within the same chunk. otherwise move on.
+
+
+								
+
+								// // Check if we are still within the same chunk. otherwise move on.
+								// !currentSeq.equals(blockSource) 
+								// --> currentSeq and blockSource are both contig name.
+								//     If the new sam record is on a new contig, blocksource has been set
+								//     to that contig at
+								//     String blockSource=samRecord.getContig();
+								//     above. 
+								//     So essentially if we changed contig
+								//
+								// curAB==0
+								// --> First block in read
+								//     I guess that means, don't change chunk every time one hits a
+								//     block in a read first on its chromosome.
+								//     However, currentSeq is updated by 
+								// 	   saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+								//     so that should not be a problem anyways.
+								//     Unnecessary check?
+								//
+								// currentChunk!=shouldBeInChunk
+								// --> currentChunk set by saveAndSetCurrentChunk.
+								//     shouldBeInChunk=blockFrom/chunkSize from above.
+								//     so if we reached a block in sam file that starts ("From")
+								//     outside the intended coordinates
+								// 
+								if(curAB==0 && (!currentSeq.equals(blockSource) || 
+									currentChunk!=shouldBeInChunk)) {
+									
 									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
 								}
 								

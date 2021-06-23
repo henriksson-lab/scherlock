@@ -127,12 +127,13 @@ public class CellPileManager {
 			if(cellPile[j].equals(thisPileName) && cellCluster[j].equals(forCluster)) {
 
 				// Add to list if barcode is found, else crash because of mismatch in barcode lists
-				Integer aa = pile.mapBarcodeIndex.get(cellBC[j]);  // null if cellBC[j] not in pile.mapBarcodeIndex
+				// null if cellBC[j] not in pile.mapBarcodeIndex
+				Integer aa = pile.mapBarcodeIndex.get(cellBC[j]);  
 				if (aa != null) {  // Integer can be null but int cannot, so check before convert
 					int bb = aa.intValue();
 					list2.add(bb); // IntArrayList only takes int, not Integer
 				} else {
-//					throw new RuntimeException("No barcode " + cellBC[j].toString() +	" in cellpile file. Aborting");
+// throw new RuntimeException("No barcode " + cellBC[j].toString() +	" in cellpile file. Aborting");
 //TODO: better: store # missing barcodes in the output object. output this as statistics to the user
 				}
 
@@ -201,7 +202,8 @@ public class CellPileManager {
 			//Generate barcode mappings for this file, which is a subset of all BCs given
 			int[][] listBCs=new int[numClusters][];
 			for(int iCluster=0;iCluster<numClusters;iCluster++) {
-				listBCs[iCluster] = convertBarcodeNamesToIDs(iFile, cellBC, cellFile, cellCluster, listClusterNames[iCluster]);
+				listBCs[iCluster] = convertBarcodeNamesToIDs(iFile, cellBC, cellFile, 
+					cellCluster, listClusterNames[iCluster]);
 				System.out.println("got # cells: "+listBCs[iCluster].length);
 			}
 			System.out.println("------------------");
