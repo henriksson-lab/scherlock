@@ -46,12 +46,15 @@ public class CellPileFile {
 
 	
 	/////////////////////////////////////////////////////////////////////////////////////
-	///////////////////// Reading CellPiles /////////////////////////////////////////////
+	///////////////////// Write CellPiles   /////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////
 
 	/////////////////////
 	//For building: Current set of regions that we are collecting
-	private TreeMap<Integer, IntArrayList> mapCellRegions=new TreeMap<Integer, IntArrayList>();
+	private TreeMap<Integer, IntArrayList> mapCellAlignmentBlocks=new TreeMap<Integer, IntArrayList>();
+	private TreeMap<Integer, IntArrayList> mapCellInbetweens=new TreeMap<Integer, IntArrayList>();
+	private TreeMap<Integer, IntArrayList> mapOutsideChunkLeftovers=new TreeMap<Integer, IntArrayList>();
+
 	private String currentSeq;
 	private int currentChunk;
 
@@ -125,7 +128,6 @@ public class CellPileFile {
 	/**
 	 * Write the header to the file
 	 */
-	// How are the chunk pointers in the file known before writing the chunks?? //AB
 	private void writeHeader() throws IOException {
 		//Go to the beginning of the file
 		raf.seek(0);
@@ -162,9 +164,11 @@ public class CellPileFile {
 	 * Add a region for a given barcode/cell
 	 */
 	private void addRegion(int bcid, int from, int to) {
-		IntArrayList regs=mapCellRegions.get(bcid);
+
+		// TODO: Needs to handle inbetweens
+		IntArrayList regs=mapCellAlignmentBlocks.get(bcid);
 		if(regs==null) {
-			mapCellRegions.put(bcid, regs=new IntArrayList(1000));
+			mapCellAlignmentBlocks.put(bcid, regs=new IntArrayList(1000));
 		}
 		regs.add(from);
 		regs.add(to);
@@ -176,7 +180,7 @@ public class CellPileFile {
 	 */
 	private void saveCurrentChunk() throws IOException {
 		//Only store chunks with data. Pointer is default 0=missing
-		if(!mapCellRegions.isEmpty()) {
+		if(!mapCellAlignmentBlocks.isEmpty()) {
 			//Ensure that this chunk has been allocated in the table; otherwise ignore it
 			long[] ptrs=mapChunkStarts.get(currentSeq);
 			if(ptrs!=null) {
@@ -185,11 +189,11 @@ public class CellPileFile {
 					ptrs[currentChunk]=raf.getFilePointer();
 
 					//Store the chunk
-					int numCells=mapCellRegions.size();
+					int numCells=mapCellAlignmentBlocks.size();
 					raf.writeInt(numCells);
-					for(int cellBarcode:mapCellRegions.keySet()) {
+					for(int cellBarcode:mapCellAlignmentBlocks.keySet()) {
 						raf.writeInt(cellBarcode);
-						IntArrayList ia=mapCellRegions.get(cellBarcode);
+						IntArrayList ia=mapCellAlignmentBlocks.get(cellBarcode);
 						//Note, this is not a copy of the array, and it is the wrong size
 						int[] list=ia.elements(); 
 						int numRegion2=ia.size();
@@ -199,7 +203,7 @@ public class CellPileFile {
 						}
 					}
 					
-					//System.out.println("Stored chunk, "+currentChunk+ " #cells "+mapCellRegions.size());
+					//System.out.println("Stored chunk, "+currentChunk+ " #cells "+mapCellAlignmentBlocks.size());
 				} else {
 					System.out.println("Warning, chunk out of bounds and ignored: "+currentSeq+":"+currentChunk);
 				}
@@ -218,14 +222,15 @@ public class CellPileFile {
 		saveCurrentChunk();
 		
 		//Reset chunk store so we can fill with the next region
-		mapCellRegions.clear();
+		mapCellAlignmentBlocks.clear();
 		currentSeq=newSeq;
 		currentChunk=newChunkNum;
 		
 	}
 
 	/**
-	 * Perform the counting from a BAM file. Can be called multiple times
+	 * Perform the counting from a BAM file. 
+	 Can be called multiple times.  Why call several times though? //AB
 	 */
 	public void countReads(File fBAM, String bamType) throws IOException {
 		//Open BAM file
@@ -249,6 +254,8 @@ public class CellPileFile {
 
 		//This is to keep track of duplicates.
 		//Approximate, as the same cDNA can be fragmented multiple times in the library prep
+		//    Assumes that positions are identical of the duplicates so that they will
+		//    be directly after each other in the *position sorted* input BAM file
 		String bcCellPreviousUMI="";
 		String bcCellPreviousCB="";
 
@@ -303,63 +310,159 @@ public class CellPileFile {
 							//Which cell is this?
 							int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
 
-							
-							//A read may have been split into multiple blocks. 
-							//Count these separately. Naive assumption that these are split over introns... 
-							//is this correct?
+							//A read may have been split into multiple blocks.
 							List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
 							//System.out.println("#alignment blocks "+listBlocks.size());
-							for(int curAB=0;curAB<listBlocks.size();curAB++) {
-								AlignmentBlock ab=listBlocks.get(curAB);
-																
-								String blockSource=samRecord.getContig();
-								int blockFrom=ab.getReferenceStart();
-								int blockTo=ab.getReferenceStart()+ab.getLength();
-								
-								int shouldBeInChunk=blockFrom/chunkSize;
-								
+							String blockSource=samRecord.getContig();
+
+							// Add the alignment blocks
+							for(int ii=0;ii<listBlocks.size()-1;ii++) {
+								// AlignmentBlock ab=listBlocks.get(ii);
+
+								AlignmentBlock ab1=listBlocks.get(ii);
+								AlignmentBlock ab2=listBlocks.get(ii+1);
+
+								int blockFrom=ab1.getReferenceStart();
+								int blockTo=ab1.getReferenceStart()+ab1.getLength();
+								// CHECK; is this a good way to determine what chunk
+								// Coordinates start over from 0 on each contig, right?
+								// If so we keep overwriting previous chunks with same
+								// positions. Major problem.
+								int blockShouldBeInChunk=blockFrom/chunkSize;
+
+								int inbetweenFrom=blockTo + 1;  // Assuming inclusive koordinates
+								int inbetweenTo=ab2.getReferenceStart() - 1;  // Assuming inclusive koordinates
+								int inbetweenShouldBeInChunk=inbetweenFrom/chunkSize;
+
+								// // CHECK: This has been commented out since before changes.
+								// // 		 Do we need it for anything? 
 								//If this is the first read we see, start chunking from here
 								/*if(currentSeq.equals("")) {
 									currentSeq=blockSource;
 									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
 								} else*/ 
 
-
-								
-
-								// // Check if we are still within the same chunk. otherwise move on.
-								// !currentSeq.equals(blockSource) 
-								// --> currentSeq and blockSource are both contig name.
-								//     If the new sam record is on a new contig, blocksource has been set
-								//     to that contig at
-								//     String blockSource=samRecord.getContig();
-								//     above. 
-								//     So essentially if we changed contig
-								//
-								// curAB==0
-								// --> First block in read
-								//     I guess that means, don't change chunk every time one hits a
-								//     block in a read first on its chromosome.
-								//     However, currentSeq is updated by 
-								// 	   saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-								//     so that should not be a problem anyways.
-								//     Unnecessary check?
-								//
-								// currentChunk!=shouldBeInChunk
-								// --> currentChunk set by saveAndSetCurrentChunk.
-								//     shouldBeInChunk=blockFrom/chunkSize from above.
-								//     so if we reached a block in sam file that starts ("From")
-								//     outside the intended coordinates
-								// 
-								if(curAB==0 && (!currentSeq.equals(blockSource) || 
-									currentChunk!=shouldBeInChunk)) {
-									
-									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+								// Add alignment block if in correct chunk
+								if((!currentSeq.equals(blockSource) || 
+								   currentChunk!=blockShouldBeInChunk)) {
+									saveAndSetCurrentChunk(blockSource, blockShouldBeInChunk);
 								}
-								
 								addRegion(barcodeIndex, blockFrom, blockTo);
 								keptRecords++;
+
+								// Add inbetween if in correct chunk
+								if((!currentSeq.equals(blockSource) || 
+								   currentChunk!=inbetweenShouldBeInChunk)) {
+									saveAndSetCurrentChunk(blockSource, blockShouldBeInChunk);
+								}
+								addRegion(barcodeIndex, blockFrom, blockTo);
+								keptRecords++;
+
 							}
+							// Last alignment block outside loop to not since
+							// inbetween not exist here
+							ii = listBlocks.size()
+
+							AlignmentBlock ab1=listBlocks.get(ii);
+
+							int blockFrom=ab1.getReferenceStart();
+							int blockTo=ab1.getReferenceStart()+ab1.getLength();
+							// CHECK; is this a good way to determine what chunk
+							// Koordinates start over from 0 on each contig, right?
+							// If so we keep overwriting previous chunks with same
+							// positions. Major problem.
+							int blockShouldBeInChunk=blockFrom/chunkSize;
+
+							// // CHECK: This has been commented out since before changes.
+							// // 		 Do we need it for anything? 
+							//If this is the first read we see, start chunking from here
+							/*if(currentSeq.equals("")) {
+								currentSeq=blockSource;
+								saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+							} else*/ 
+
+							// Add alignment block if in correct chunk
+							if((!currentSeq.equals(blockSource) || 
+							   currentChunk!=blockShouldBeInChunk)) {
+								saveAndSetCurrentChunk(blockSource, blockShouldBeInChunk);
+							}
+							addRegion(barcodeIndex, blockFrom, blockTo);
+							keptRecords++;
+
+
+
+
+
+
+							// Old
+								
+							// 	//If this is the first read we see, start chunking from here
+							// 	/*if(currentSeq.equals("")) {
+							// 		currentSeq=blockSource;
+							// 		saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+							// 	} else*/ 
+
+							// 	// // Check if we are still within the same chunk. otherwise move on.
+							// 	// !currentSeq.equals(blockSource) 
+							// 	// --> currentSeq and blockSource are both contig name.
+							// 	//     If the new sam record is on a new contig, blocksource has been set
+							// 	//     to that contig at
+							// 	//     String blockSource=samRecord.getContig();
+							// 	//     above. 
+							// 	//     So essentially if we changed contig
+							// 	//
+							// 	// ii==0
+							// 	// --> First block in read
+							// 	//     I guess that means, don't change chunk every time one hits a
+							// 	//     block in a read first on its chromosome.
+							// 	//     However, currentSeq is updated by 
+							// 	// 	   saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+							// 	//     so that should not be a problem anyways.
+							// 	//     Unnecessary check?
+							// 	//
+							// 	// currentChunk!=shouldBeInChunk
+							// 	// --> currentChunk set by saveAndSetCurrentChunk.
+							// 	//     shouldBeInChunk=blockFrom/chunkSize from above.
+							// 	//     so if we reached a block in sam file that starts ("From")
+							// 	//     outside the intended coordinates
+							// 	// 
+							// 	if(ii==0 && (!currentSeq.equals(blockSource) || 
+							// 		currentChunk!=shouldBeInChunk)) {
+									
+							// 		saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+							// 	}
+								
+							// 	addRegion(barcodeIndex, blockFrom, blockTo);
+							// 	keptRecords++;
+							// }
+
+							// // Add the pieces inbetween the alignment blocks
+							// // Note n-1 inbetweens for n alignment blocks
+							// // TODO: this is not going to work in case we decide 
+							// // to chop reads between chunks. Which we should
+							// for(int ii=0;ii<listBlocks.size()-1;ii++) {  
+							// 	AlignmentBlock ab1=listBlocks.get(ii);
+							// 	AlignmentBlock ab2=listBlocks.get(ii+1);
+
+								// int inbetweenFrom=ab1.getReferenceStart()+ab1.getLength();
+								// int inbetweenTo=ab2.getReferenceStart();
+								
+								// addRegion(barcodeIndex, blockFrom, blockTo);
+							// 	keptRecords++;
+							// }
+
+
+
+
+
+
+
+
+
+
+
+
+
 						}
 					} else {
 						skippedBadUMI++;
@@ -492,7 +595,7 @@ public class CellPileFile {
 	
 	
 	/////////////////////////////////////////////////////////////////////////////////////
-	///////////////////// Writing CellPiles /////////////////////////////////////////////
+	///////////////////// Read CellPiles    /////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////
 
 
