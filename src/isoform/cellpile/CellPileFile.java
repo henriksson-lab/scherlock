@@ -7,6 +7,7 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -53,7 +54,8 @@ public class CellPileFile {
 	//For building: Current set of regions that we are collecting
 	private TreeMap<Integer, IntArrayList> mapCellAlignmentBlocks=new TreeMap<Integer, IntArrayList>();
 	private TreeMap<Integer, IntArrayList> mapCellInbetweens=new TreeMap<Integer, IntArrayList>();
-	private TreeMap<Integer, IntArrayList> mapOutsideChunkLeftovers=new TreeMap<Integer, IntArrayList>();
+	private TreeMap<Integer, IntArrayList> mapCellLeftoverAlignmentBlocks=new TreeMap<Integer, IntArrayList>();
+	private TreeMap<Integer, IntArrayList> mapCellLeftoverInbetweens=new TreeMap<Integer, IntArrayList>();
 
 	private String currentSeq;
 	private int currentChunk;
@@ -163,12 +165,12 @@ public class CellPileFile {
 	/**
 	 * Add a region for a given barcode/cell
 	 */
-	private void addRegion(int bcid, int from, int to) {
+	private void addRegion(TreeMap<Integer, IntArrayList> regionType, 
+							int bcid, int from, int to) {
 
-		// TODO: Needs to handle inbetweens
-		IntArrayList regs=mapCellAlignmentBlocks.get(bcid);
+		IntArrayList regs=regionType.get(bcid);
 		if(regs==null) {
-			mapCellAlignmentBlocks.put(bcid, regs=new IntArrayList(1000));
+			regionType.put(bcid, regs=new IntArrayList(1000));
 		}
 		regs.add(from);
 		regs.add(to);
@@ -179,7 +181,49 @@ public class CellPileFile {
 	 * Save current chunk
 	 */
 	private void saveCurrentChunk() throws IOException {
-		//Only store chunks with data. Pointer is default 0=missing
+
+		int currentChunkFrom = currentChunk * chunkSize;
+		int currentChunkTo = currentChunkFrom + chunkSize;
+
+		// Add reads from previous alignment blocks leftovers
+		Set<Integer> cellBarcodes = mapCellLeftoverAlignmentBlocks.keySet();
+        for(int bcid: cellBarcodes){
+        	// int bcid=mapBarcodeIndex.get(barcode);  // Already ints
+        	IntArrayList aa=mapCellLeftoverAlignmentBlocks.get(bcid);
+
+			for(int ii=0; ii<aa.size(); ii=ii+2) {
+				int from = aa.get(ii);
+				int to = aa.get(ii+1);
+				if ((currentChunkFrom <= from) && (from < currentChunkTo)) {
+					addRegion(mapCellInbetweens, bcid, from, to);
+					// Remove entries to avoid leftovers growing large
+					aa.remove(ii+1);
+					aa.remove(ii);
+				}
+			}
+        }
+
+		// Add reads from previous inbetweens leftovers
+		cellBarcodes = mapCellLeftoverInbetweens.keySet();
+        for(int bcid: cellBarcodes){
+        	// int bcid=mapBarcodeIndex.get(barcode);  // Already ints
+        	IntArrayList aa=mapCellLeftoverInbetweens.get(bcid);
+
+			for(int ii=0; ii<aa.size(); ii=ii+2) {
+				int from = aa.get(ii);
+				int to = aa.get(ii+1);
+				if ((currentChunkFrom <= from) && (from < currentChunkTo)) {
+					addRegion(mapCellInbetweens, bcid, from, to);
+					// Remove entries to avoid leftovers growing large
+					aa.remove(ii+1);
+					aa.remove(ii);
+				}
+			}
+        }
+
+
+        // Store chunk to file
+		// Only store chunks with data. Pointer is default 0=missing
 		if(!mapCellAlignmentBlocks.isEmpty()) {
 			//Ensure that this chunk has been allocated in the table; otherwise ignore it
 			long[] ptrs=mapChunkStarts.get(currentSeq);
@@ -215,22 +259,41 @@ public class CellPileFile {
 		}
 	}
 	
+
+
+
+
+
+
 	/**
 	 * Save current chunk and move to the next position
 	 */
 	private void saveAndSetCurrentChunk(String newSeq, int newChunkNum) throws IOException {
+		
 		saveCurrentChunk();
 		
 		//Reset chunk store so we can fill with the next region
 		mapCellAlignmentBlocks.clear();
+		
+		// Clear the lefover buckets when switching chromosome since
+		// mapCellAlignmentBlocks and mapCellInbetweens are not 
+		// chromosome aware, and leftover buckets are used to append them
+		// This introduces a minor loss of correctness when alignmentblocks
+		// from one read span several chromosomes.
+		// This should be very unusual though.
+		if (currentSeq != newSeq) {
+			mapCellLeftoverAlignmentBlocks.clear();
+			mapCellLeftoverInbetweens.clear();
+		}
+
 		currentSeq=newSeq;
 		currentChunk=newChunkNum;
-		
 	}
 
 	/**
 	 * Perform the counting from a BAM file. 
-	 Can be called multiple times.  Why call several times though? //AB
+	 Can be called multiple times.  
+	 Why call several times though? //AB
 	 */
 	public void countReads(File fBAM, String bamType) throws IOException {
 		//Open BAM file
@@ -251,6 +314,7 @@ public class CellPileFile {
 		int skippedWrongBC=0;
 		int skippedBadUMI=0;
 		int skippedDup=0;
+		int skippedNoAlignmentBlocks=0;
 
 		//This is to keep track of duplicates.
 		//Approximate, as the same cDNA can be fragmented multiple times in the library prep
@@ -284,7 +348,8 @@ public class CellPileFile {
 							"@sequence: "+currentSeq,
 							"WrongBC: "+skippedWrongBC,
 							"badUMI: "+skippedBadUMI,
-							"SkipDup: "+skippedDup);
+							"SkipDup: "+skippedDup,
+							"noAlignBlocks: "+skippedNoAlignmentBlocks);
 				}
 					
 				//Get UMI and BC for this read
@@ -312,8 +377,25 @@ public class CellPileFile {
 
 							//A read may have been split into multiple blocks.
 							List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
+							if (listBlocks.size() == 0) { 
+								skippedNoAlignmentBlocks++;
+								continue;
+							}
+
 							//System.out.println("#alignment blocks "+listBlocks.size());
 							String blockSource=samRecord.getContig();
+
+							// If read starts outside chunk, change chunk,
+							// since BAM is position sorted on start position
+							// of reads.
+							// "leftmost coordinates"
+							// http://www.htslib.org/doc/samtools-sort.html
+							int aa=listBlocks.get(0).getReferenceStart();
+							int shouldBeInChunk=aa/chunkSize;
+							if((!currentSeq.equals(blockSource) || 
+							   currentChunk!=shouldBeInChunk)) {
+								saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+							}
 
 							// Add the alignment blocks
 							for(int ii=0;ii<listBlocks.size()-1;ii++) {
@@ -328,6 +410,8 @@ public class CellPileFile {
 								// Coordinates start over from 0 on each contig, right?
 								// If so we keep overwriting previous chunks with same
 								// positions. Major problem.
+								// No we probably dont since chunks are aware
+								// of what chromosome they are on.
 								int blockShouldBeInChunk=blockFrom/chunkSize;
 
 								int inbetweenFrom=blockTo + 1;  // Assuming inclusive koordinates
@@ -342,27 +426,36 @@ public class CellPileFile {
 									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
 								} else*/ 
 
-								// Add alignment block if in correct chunk
+								// Add alignment block to leftovers if not in right
+								// chunk, else add to current chunk
 								if((!currentSeq.equals(blockSource) || 
 								   currentChunk!=blockShouldBeInChunk)) {
-									saveAndSetCurrentChunk(blockSource, blockShouldBeInChunk);
+									addRegion(mapCellLeftoverAlignmentBlocks, barcodeIndex, 
+												blockFrom, blockTo);
+								} else {
+									addRegion(mapCellAlignmentBlocks, barcodeIndex, 
+												blockFrom, blockTo);
+									keptRecords++;
 								}
-								addRegion(barcodeIndex, blockFrom, blockTo);
-								keptRecords++;
 
-								// Add inbetween if in correct chunk
+								// Add inbetween block to leftovers if not in right
+								// chunk, else add to current chunk
 								if((!currentSeq.equals(blockSource) || 
 								   currentChunk!=inbetweenShouldBeInChunk)) {
-									saveAndSetCurrentChunk(blockSource, blockShouldBeInChunk);
+									addRegion(mapCellLeftoverInbetweens, barcodeIndex, 
+												inbetweenFrom, inbetweenTo);
+								} else {
+									addRegion(mapCellInbetweens, barcodeIndex, 
+												inbetweenFrom, inbetweenTo);
+									keptRecords++;
 								}
-								addRegion(barcodeIndex, blockFrom, blockTo);
-								keptRecords++;
+
 
 							}
-							// Last alignment block outside loop to not since
-							// inbetween not exist here
-							ii = listBlocks.size()
-
+							// Last alignment block outside loop to not go out
+							// of bounds since inbetween does not exist here
+							int ii = listBlocks.size()-1; // 0-based indexing so 
+														  // last is size - 1 
 							AlignmentBlock ab1=listBlocks.get(ii);
 
 							int blockFrom=ab1.getReferenceStart();
@@ -384,12 +477,14 @@ public class CellPileFile {
 							// Add alignment block if in correct chunk
 							if((!currentSeq.equals(blockSource) || 
 							   currentChunk!=blockShouldBeInChunk)) {
-								saveAndSetCurrentChunk(blockSource, blockShouldBeInChunk);
+								addRegion(mapCellLeftoverAlignmentBlocks, barcodeIndex, 
+											blockFrom, blockTo);
+							} else {
+								addRegion(mapCellAlignmentBlocks, barcodeIndex, 
+											blockFrom, blockTo);
+								keptRecords++;
 							}
-							addRegion(barcodeIndex, blockFrom, blockTo);
-							keptRecords++;
-
-
+							
 
 
 
@@ -453,16 +548,6 @@ public class CellPileFile {
 
 
 
-
-
-
-
-
-
-
-
-
-
 						}
 					} else {
 						skippedBadUMI++;
@@ -475,6 +560,9 @@ public class CellPileFile {
 
 		// BAM file is bulk type
 		// (bamType.equals("--bulk")) must be, since only two options
+		// TODO: Update bulk section with new functionality.
+		//       Will do this when single_cell version is bugfree
+		//       since pretty similar.
 		} else {  
 
 			//Loop through all SAM records
@@ -552,7 +640,9 @@ public class CellPileFile {
 									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
 								}
 								
-								addRegion(barcodeIndex, blockFrom, blockTo);
+								// Commented out for now since method definition
+								// change gives compiler error FIX
+								// addRegion(barcodeIndex, blockFrom, blockTo);
 								keptRecords++;
 							}
 			// 			}
@@ -568,6 +658,9 @@ public class CellPileFile {
 
 
 		//Get out the last ones from memory. TODO remember to fix this in countBAM too
+		//
+		// Is this TODO still relevant? 
+		// Was here before I started changing the code. //AB
 		saveCurrentChunk();
 		reader.close();
 		
