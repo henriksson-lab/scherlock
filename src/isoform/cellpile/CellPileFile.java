@@ -135,7 +135,7 @@ public class CellPileFile {
 		raf.seek(0);
 		
 		//Write the magic string and version
-		byte version=1;
+		byte version=2;
 		raf.write(new byte[] {'C','E','L','L','P','I','L','E',version});
 		
 		raf.writeInt(chunkSize);
@@ -185,41 +185,52 @@ public class CellPileFile {
 		int currentChunkFrom = currentChunk * chunkSize;
 		int currentChunkTo = currentChunkFrom + chunkSize;
 
-		// Add reads from previous alignment blocks leftovers
-		Set<Integer> cellBarcodes = mapCellLeftoverAlignmentBlocks.keySet();
-        for(int bcid: cellBarcodes){
-        	// int bcid=mapBarcodeIndex.get(barcode);  // Already ints
-        	IntArrayList aa=mapCellLeftoverAlignmentBlocks.get(bcid);
+		addFromLeftovers(mapCellAlignmentBlocks, mapCellLeftoverAlignmentBlocks,
+						 currentChunkFrom, currentChunkTo);
+		addFromLeftovers(mapCellInbetweens, mapCellLeftoverInbetweens,
+						 currentChunkFrom, currentChunkTo);
 
-			for(int ii=0; ii<aa.size(); ii=ii+2) {
-				int from = aa.get(ii);
-				int to = aa.get(ii+1);
-				if ((currentChunkFrom <= from) && (from < currentChunkTo)) {
-					addRegion(mapCellInbetweens, bcid, from, to);
-					// Remove entries to avoid leftovers growing large
-					aa.remove(ii+1);
-					aa.remove(ii);
-				}
-			}
-        }
+		// REMOVE when above verified. 
+		// --------------------------------------------------------------------------
+		// Also note the bug with regards to the alignmentblocks vs inbetweens 
+		// in the two paragragraphs below.
+		//
+		// // Add reads from previous alignment blocks leftovers
+		// Set<Integer> cellBarcodes = mapCellLeftoverAlignmentBlocks.keySet();
+  //       for(int bcid: cellBarcodes){
+  //       	IntArrayList aa=mapCellLeftoverAlignmentBlocks.get(bcid);
 
-		// Add reads from previous inbetweens leftovers
-		cellBarcodes = mapCellLeftoverInbetweens.keySet();
-        for(int bcid: cellBarcodes){
-        	// int bcid=mapBarcodeIndex.get(barcode);  // Already ints
-        	IntArrayList aa=mapCellLeftoverInbetweens.get(bcid);
+		// 	for(int ii=0; ii<aa.size(); ii=ii+2) {
+		// 		int from = aa.get(ii);
+		// 		int to = aa.get(ii+1);
+		// 		if ((currentChunkFrom <= from) && (from < currentChunkTo)) {
+		// 			addRegion(mapCellInbetweens, bcid, from, to);
+		// 			// Remove entries to avoid leftovers growing large
+		// 			aa.remove(ii+1);
+		// 			aa.remove(ii);
+		// 		}
+		// 	}
+  //       }
 
-			for(int ii=0; ii<aa.size(); ii=ii+2) {
-				int from = aa.get(ii);
-				int to = aa.get(ii+1);
-				if ((currentChunkFrom <= from) && (from < currentChunkTo)) {
-					addRegion(mapCellInbetweens, bcid, from, to);
-					// Remove entries to avoid leftovers growing large
-					aa.remove(ii+1);
-					aa.remove(ii);
-				}
-			}
-        }
+		// // Add reads from previous inbetweens leftovers
+		// cellBarcodes = mapCellLeftoverInbetweens.keySet();
+  //       for(int bcid: cellBarcodes){
+  //       	IntArrayList aa=mapCellLeftoverInbetweens.get(bcid);
+
+		// 	for(int ii=0; ii<aa.size(); ii=ii+2) {
+		// 		int from = aa.get(ii);
+		// 		int to = aa.get(ii+1);
+		// 		if ((currentChunkFrom <= from) && (from < currentChunkTo)) {
+		// 			addRegion(mapCellInbetweens, bcid, from, to);
+		// 			// Remove entries to avoid leftovers growing large
+		// 			aa.remove(ii+1);
+		// 			aa.remove(ii);
+		// 		}
+		// 	}
+  //       }
+
+		// --------------------------------------------------------------------------
+
 
 
         // Store chunk to file
@@ -232,20 +243,31 @@ public class CellPileFile {
 					//Store pointer to where this chunk starts in the file
 					ptrs[currentChunk]=raf.getFilePointer();
 
-					//Store the chunk
-					int numCells=mapCellAlignmentBlocks.size();
-					raf.writeInt(numCells);
-					for(int cellBarcode:mapCellAlignmentBlocks.keySet()) {
-						raf.writeInt(cellBarcode);
-						IntArrayList ia=mapCellAlignmentBlocks.get(cellBarcode);
-						//Note, this is not a copy of the array, and it is the wrong size
-						int[] list=ia.elements(); 
-						int numRegion2=ia.size();
-						raf.writeShort(numRegion2/2);
-						for(int i=0;i<numRegion2;i++) {
-							raf.writeInt(list[i]);
-						}
-					}
+					// Store the chunk. This includes both the alignment blocks
+					// and the inbetweens. No need for separate pointers since
+					// they will typically be read together anyways.
+					int numCellsAlignmentBlocks=mapCellAlignmentBlocks.size();
+					int numCellsInbetweens=mapCellInbetweens.size();
+					raf.writeInt(numCellsAlignmentBlocks);
+					raf.writeInt(numCellsInbetweens);
+					saveRegionTypeToFile(mapCellAlignmentBlocks);
+					saveRegionTypeToFile(mapCellInbetweens);
+
+					// Old function body
+					// int numCells=mapCellAlignmentBlocks.size();
+					// raf.writeInt(numCells);
+					// for(int cellBarcode:mapCellAlignmentBlocks.keySet()) {
+					// 	raf.writeInt(cellBarcode);
+					// 	IntArrayList ia=mapCellAlignmentBlocks.get(cellBarcode);
+					// 	//Note, this is not a copy of the array, and it is the wrong size
+					// 	int[] list=ia.elements(); 
+					// 	int numRegion2=ia.size();
+					// 	raf.writeShort(numRegion2/2);
+					// 	for(int i=0;i<numRegion2;i++) {
+					// 		raf.writeInt(list[i]);
+					// 	}
+					// }
+					// REMOVE when you've seen it works
 					
 					//System.out.println("Stored chunk, "+currentChunk+ " #cells "+mapCellAlignmentBlocks.size());
 				} else {
@@ -258,7 +280,47 @@ public class CellPileFile {
 			System.out.println("No cells to write for chunk "+currentChunk);
 		}
 	}
-	
+
+
+	// Adds to current chunk from leftovers from previous chunks.
+	// Just to avoid code duplication for the two region types in saveCurrentChunk()
+	private void addFromLeftovers(TreeMap<Integer, IntArrayList> regionType,
+								  TreeMap<Integer, IntArrayList> leftoverType,
+								  int currentChunkFrom,
+								  int currentChunkTo) throws IOException {
+		Set<Integer> cellBarcodes = leftoverType.keySet();
+        for(int bcid: cellBarcodes){
+        	IntArrayList aa=leftoverType.get(bcid);
+			for(int ii=0; ii<aa.size(); ii=ii+2) {
+				int from = aa.get(ii);
+				int to = aa.get(ii+1);
+				if ((currentChunkFrom <= from) && (from < currentChunkTo)) {
+					addRegion(regionType, bcid, from, to);
+					// Remove entries to avoid leftovers growing large
+					aa.remove(ii+1);
+					aa.remove(ii);
+				}
+			}
+        }
+	}
+
+	// Saves one region type (stored in one TreeMap) to file.
+	// Just to avoid code duplication for the two region types in saveCurrentChunk()
+	private void saveRegionTypeToFile(TreeMap<Integer, IntArrayList> regionType) throws IOException {
+		for(int cellBarcode:regionType.keySet()) {
+			raf.writeInt(cellBarcode);
+			IntArrayList ia=regionType.get(cellBarcode);
+			//Note, this is not a copy of the array, and it is the wrong size
+			int[] list=ia.elements(); 
+			int numRegion2=ia.size();
+			raf.writeShort(numRegion2/2);
+			for(int i=0;i<numRegion2;i++) {
+				raf.writeInt(list[i]);
+			}
+		}
+	}
+
+
 
 
 
@@ -274,6 +336,7 @@ public class CellPileFile {
 		
 		//Reset chunk store so we can fill with the next region
 		mapCellAlignmentBlocks.clear();
+		mapCellInbetweens.clear();
 		
 		// Clear the lefover buckets when switching chromosome since
 		// mapCellAlignmentBlocks and mapCellInbetweens are not 
@@ -489,7 +552,7 @@ public class CellPileFile {
 
 
 
-							// Old
+							// Old. REMOVE when done
 								
 							// 	//If this is the first read we see, start chunking from here
 							// 	/*if(currentSeq.equals("")) {
@@ -735,7 +798,7 @@ public class CellPileFile {
 		//Read version
 		byte version=raf.readByte();
 		System.out.println("Version: "+version);
-		if(version!=1) {
+		if(version!=2) {
 			throw new RuntimeException("Unsupported version");
 		}
 		
