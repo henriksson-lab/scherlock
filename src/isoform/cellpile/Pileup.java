@@ -4,7 +4,7 @@ package isoform.cellpile;
  * 
  * One pileup, ready to be rendered
  * 
- * @author Johan Henriksson
+ * @author Johan Henriksson and Anton Björk
  *
  */
 public class Pileup {
@@ -17,11 +17,12 @@ public class Pileup {
 	
 	//The cluster info
 	public int[][] cellCluster;
-	public int[] clusterCellCount;
-	public String[] clusterNames;
-	
-	//Pileups for each cluster
-	public int[][] tracks;
+	public int[] clusterCellCount;  // This becomes slightly ambiguous since
+	public String[] clusterNames;   // different cells can be represented among
+									// the inbetweens and alignment blocks.
+	//Pileups for each cluster 		// Left as is for now, ie not aware of inbetweens //AB
+	public int[][] alignmentBlockTracks;
+	public int[][] inbetweenTracks;
 	
 	
 	
@@ -29,16 +30,21 @@ public class Pileup {
 	 * Add the counts from another pileup. Assumes exactly the same settings etc or a crash will occur
 	 */
 	public void addPileup(Pileup p) {
-		for(int i=0;i<tracks.length;i++) {
-			int[] t1=tracks[i];
-			int[] t2=p.tracks[i];
+		for(int i=0;i<alignmentBlockTracks.length;i++) {
+			int[] t1=alignmentBlockTracks[i];
+			int[] t2=p.alignmentBlockTracks[i];
 			for(int j=0;j<t1.length;j++) {
 				t1[j]+=t2[j];
 			}
 			clusterCellCount[i] += p.clusterCellCount[i];
 		}
+
+		for(int i=0;i<inbetweenTracks.length;i++) {
+			int[] t1=inbetweenTracks[i];
+			int[] t2=p.inbetweenTracks[i];
+			for(int j=0;j<t1.length;j++) {
+				t1[j]+=t2[j];
+			}
+		}
 	}
-
-
-
 }

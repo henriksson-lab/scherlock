@@ -25,7 +25,7 @@ import isoform.util.PileUtil;
  * 
  * Consider swapping to a buffered implementation for the read interface (need to verify if this improves speed)
  * 
- * @author Johan Henriksson
+ * @author Johan Henriksson and Anton Björk
  *
  */
 public class CellPileFile {
@@ -896,7 +896,8 @@ public class CellPileFile {
 				mapBarcodeTrack.put(bc,curTrack);
 		
 		//Allocate the pileup tracks
-		int[][] outTracks=new int[cellGroups.length][numdiv];
+		int[][] outTracksAlignmentBlocks=new int[cellGroups.length][numdiv];
+		int[][] outTracksInbetweens=new int[cellGroups.length][numdiv];
 
 		//Figure out chunks to read
 		int chunkFrom=windowFrom/chunkSize;
@@ -911,53 +912,64 @@ public class CellPileFile {
 			if(chunkPos!=0) {
 				raf.seek(chunkPos);
 				
-				//Loop through all cells represented in this chunk
-				int numCells=raf.readInt();
-				nextcell: for(int curCell=0;curCell<numCells;curCell++) {
-					//Filter cells, or select the right track
-					int cellID=raf.readInt();   
-					Integer toTrack=mapBarcodeTrack.get(cellID);
-					if(toTrack!=null) {
-						//Check how many regions
-						int[] thisTrack=outTracks[toTrack];
-						int numRegions=raf.readShort();
-						
-						//Read each region
-						for(int curRegion=0;curRegion<numRegions;curRegion++) {
-							int posLeft=raf.readInt();
-							int posRight=raf.readInt();
-
-
-							//We may be able to quit early if lucky
-							if(posLeft<=windowTo) {
-								//Transform to pileup coordinates
-								posLeft=(int)((posLeft-windowFrom)/dx);
-								posRight=(int)((posRight-windowFrom)/dx);
-								
-								//Restrict to only count within track limits
-								posLeft=Math.max(posLeft,0);
-								posRight=Math.min(posRight, numdiv-1);
-								
-								for(int j=posLeft;j<=posRight;j++) {
-									thisTrack[j]++;
-									counted++;
-								}
-							} else {
-								//Get this to work after basic edition working - dangerous!
-								//raf.skipBytes(4*(numRegions-1-i));
-								//continue nextcell;
-							}
-						}
-					}
-				}
+				readRegionType(outTracksAlignmentBlocks)
+				readRegionType(outTracksInbetweens)
 			}
 		}
 		System.out.println("Counted: "+counted);
 		
-		pileup.tracks=outTracks;
+		pileup.alignmentBlockTracks=outTracksAlignmentBlocks;
+		pileup.inbetweenTracks=outTracksInbetweens;
+
 		return pileup;
 	}
 	
+
+	// Reads one region type (alignment blocks or inbetweens) from cellpilefile.
+	// The region types are always stacked after each other in each chunk.
+	public void readRegionType(int[][] tracks) {
+		//Loop through all cells represented in this chunk
+		int numCells=raf.readInt();
+		nextcell: for(int curCell=0;curCell<numCells;curCell++) {
+			//Filter cells, or select the right track
+			int cellID=raf.readInt();   
+			Integer toTrack=mapBarcodeTrack.get(cellID);
+			if(toTrack!=null) {
+				//Check how many regions
+				int[] thisTrack=tracks[toTrack];
+				int numRegions=raf.readShort();
+				
+				//Read each region
+				for(int curRegion=0;curRegion<numRegions;curRegion++) {
+					int posLeft=raf.readInt();
+					int posRight=raf.readInt();
+
+
+					//We may be able to quit early if lucky
+					if(posLeft<=windowTo) {
+						//Transform to pileup coordinates
+						posLeft=(int)((posLeft-windowFrom)/dx);
+						posRight=(int)((posRight-windowFrom)/dx);
+						
+						//Restrict to only count within track limits
+						posLeft=Math.max(posLeft,0);
+						posRight=Math.min(posRight, numdiv-1);
+						
+						for(int j=posLeft;j<=posRight;j++) {
+							thisTrack[j]++;
+							counted++;
+						}
+					} else {
+						//Get this to work after basic edition working - dangerous!
+						//raf.skipBytes(4*(numRegions-1-i));
+						//continue nextcell;
+					}
+				}
+			}
+		}
+	}
+
+
 
 	/**
 	 * Get a list of sequences represented

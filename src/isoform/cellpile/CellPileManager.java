@@ -20,7 +20,7 @@ import isoform.util.Range;
 /**
  * High-level interface to work with several piles in parallel
  * 
- * @author Johan Henriksson
+ * @author Johan Henriksson and Anton Björk
  *
  */
 public class CellPileManager {
