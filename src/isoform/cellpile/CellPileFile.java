@@ -873,7 +873,7 @@ public class CellPileFile {
 			String windowSeq, int windowFrom, int windowTo, int numdiv,
 			int[][] cellGroups, String[] clusterNames) throws IOException {
 		
-		System.out.println("checkpoint 1.1, entered CellPileFile.buildPileup");
+		// System.out.println("checkpoint 1.1, entered CellPileFile.buildPileup");
 
 		//Create the basic return object
 		Pileup pileup=new Pileup();
@@ -916,19 +916,19 @@ public class CellPileFile {
 		chunkFrom = PileUtil.clamp(chunkFrom, 0, mapChunkStarts.get(windowSeq).length-1);
 		chunkTo = PileUtil.clamp(chunkTo, 0, mapChunkStarts.get(windowSeq).length-1);
 		
-		System.out.println("checkpoint 1.2, just before reading chunks");
+		// System.out.println("checkpoint 1.2, just before reading chunks");
 
 		//Iterate through all the chunks
 		int counted=0;
 		for(int curChunk=chunkFrom;curChunk<=chunkTo;curChunk++) {
 
-			System.out.println("checkpoint 1.3");
+			// System.out.println("checkpoint 1.3");
 
 			long chunkPos=mapChunkStarts.get(windowSeq)[curChunk];
 			if(chunkPos!=0) {
 
-				System.out.println("chunkPos:");
-				System.out.println(chunkPos);
+				// System.out.println("chunkPos:");
+				// System.out.println(chunkPos);
 
 				raf.seek(chunkPos);
 				
@@ -967,13 +967,13 @@ public class CellPileFile {
 								TreeMap<Integer, Integer> mapBarcodeTrack,
 								double dx) throws IOException {
 
-		System.out.println("checkpoint readRegionType 1");
+		// System.out.println("checkpoint readRegionType 1");
 
 		//Loop through all cells represented in this chunk
 		int numCells=raf.readInt();
 
-		System.out.println("numCells");
-		System.out.println(numCells);
+		// System.out.println("numCells");
+		// System.out.println(numCells);
 
 		nextcell: for(int curCell=0;curCell<numCells;curCell++) {
 			//Filter cells, or select the right track
