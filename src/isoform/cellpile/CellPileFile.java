@@ -1,4 +1,5 @@
 package isoform.cellpile;
+import java.lang.Integer;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -248,9 +249,11 @@ public class CellPileFile {
 					// they will typically be read together anyways.
 					int numCellsAlignmentBlocks=mapCellAlignmentBlocks.size();
 					int numCellsInbetweens=mapCellInbetweens.size();
+					
 					raf.writeInt(numCellsAlignmentBlocks);
-					raf.writeInt(numCellsInbetweens);
 					saveRegionTypeToFile(mapCellAlignmentBlocks);
+					
+					raf.writeInt(numCellsInbetweens);
 					saveRegionTypeToFile(mapCellInbetweens);
 
 					// Old function body
@@ -442,7 +445,12 @@ public class CellPileFile {
 							List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
 							if (listBlocks.size() == 0) { 
 								skippedNoAlignmentBlocks++;
-								continue;
+								continue;  	// Wouldn't it be a good idea to use
+										   	// more continue statements instead
+											// of all the current nested if else?
+											// if .. continue combo doesn't
+											// introduce deeper nesting.
+											// //AB
 							}
 
 							//System.out.println("#alignment blocks "+listBlocks.size());
@@ -498,7 +506,6 @@ public class CellPileFile {
 								} else {
 									addRegion(mapCellAlignmentBlocks, barcodeIndex, 
 												blockFrom, blockTo);
-									keptRecords++;
 								}
 
 								// Add inbetween block to leftovers if not in right
@@ -510,7 +517,6 @@ public class CellPileFile {
 								} else {
 									addRegion(mapCellInbetweens, barcodeIndex, 
 												inbetweenFrom, inbetweenTo);
-									keptRecords++;
 								}
 
 
@@ -545,7 +551,6 @@ public class CellPileFile {
 							} else {
 								addRegion(mapCellAlignmentBlocks, barcodeIndex, 
 											blockFrom, blockTo);
-								keptRecords++;
 							}
 							
 
@@ -610,6 +615,11 @@ public class CellPileFile {
 							// }
 
 
+							// Here is more appropriate than after each alignment
+							// block in read, since they are part of same
+							// SAM record, which is what the counter
+							// readRecords is keeping track of //AB
+							keptRecords++;
 
 						}
 					} else {
@@ -860,10 +870,11 @@ public class CellPileFile {
 	 * @param cellGroups    List of lists of barcodes (the clusters to pile-up for)
 	 */
 	public Pileup buildPileup(
-			String windowSeq, int windowFrom, int windowTo, 
-			int numdiv,
+			String windowSeq, int windowFrom, int windowTo, int numdiv,
 			int[][] cellGroups, String[] clusterNames) throws IOException {
 		
+		System.out.println("checkpoint 1.1, entered CellPileFile.buildPileup");
+
 		//Create the basic return object
 		Pileup pileup=new Pileup();
 		pileup.seq=windowSeq;
@@ -905,15 +916,38 @@ public class CellPileFile {
 		chunkFrom = PileUtil.clamp(chunkFrom, 0, mapChunkStarts.get(windowSeq).length-1);
 		chunkTo = PileUtil.clamp(chunkTo, 0, mapChunkStarts.get(windowSeq).length-1);
 		
+		System.out.println("checkpoint 1.2, just before reading chunks");
+
 		//Iterate through all the chunks
 		int counted=0;
 		for(int curChunk=chunkFrom;curChunk<=chunkTo;curChunk++) {
+
+			System.out.println("checkpoint 1.3");
+
 			long chunkPos=mapChunkStarts.get(windowSeq)[curChunk];
 			if(chunkPos!=0) {
+
+				System.out.println("chunkPos:");
+				System.out.println(chunkPos);
+
 				raf.seek(chunkPos);
 				
-				readRegionType(outTracksAlignmentBlocks)
-				readRegionType(outTracksInbetweens)
+				// System.out.println("checkpoint 1.5");
+
+
+				// System.out.println("checkpoint 1.4, raf:");
+				// System.out.println(raf.getFilePointer());
+
+				readRegionType(outTracksAlignmentBlocks, windowFrom, windowTo,
+								numdiv, counted, mapBarcodeTrack, dx);
+			
+				// System.out.println("checkpoint 1.5, raf:");
+				// System.out.println(raf.getFilePointer());
+				
+				readRegionType(outTracksInbetweens, windowFrom, windowTo,
+								numdiv, counted, mapBarcodeTrack, dx);
+			
+
 			}
 		}
 		System.out.println("Counted: "+counted);
@@ -926,18 +960,36 @@ public class CellPileFile {
 	
 
 	// Reads one region type (alignment blocks or inbetweens) from cellpilefile.
-	// The region types are always stacked after each other in each chunk.
-	public void readRegionType(int[][] tracks) {
+	// The region types are always stacked after each other in each chunk,
+	// so can call this twice in a row to get both.
+	public void readRegionType(int[][] tracks, int windowFrom, int windowTo,
+								int numdiv, int counted,
+								TreeMap<Integer, Integer> mapBarcodeTrack,
+								double dx) throws IOException {
+
+		System.out.println("checkpoint readRegionType 1");
+
 		//Loop through all cells represented in this chunk
 		int numCells=raf.readInt();
+
+		System.out.println("numCells");
+		System.out.println(numCells);
+
 		nextcell: for(int curCell=0;curCell<numCells;curCell++) {
 			//Filter cells, or select the right track
 			int cellID=raf.readInt();   
+
+			// System.out.println("cellID");
+			// System.out.println(cellID);
+
 			Integer toTrack=mapBarcodeTrack.get(cellID);
 			if(toTrack!=null) {
 				//Check how many regions
 				int[] thisTrack=tracks[toTrack];
 				int numRegions=raf.readShort();
+
+				// System.out.println("numRegions");
+				// System.out.println(numRegions);
 				
 				//Read each region
 				for(int curRegion=0;curRegion<numRegions;curRegion++) {

@@ -6,7 +6,7 @@ import isoform.util.PileUtil;
 /**
  * Renderer: Pileup track
  * 
- * @author Johan Henriksson
+ * @author Johan Henriksson and Anton Björk
  *
  */
 public class TrackPileup extends Track {
@@ -24,7 +24,7 @@ public class TrackPileup extends Track {
 
 	@Override
 	protected double getHeight(TrackRenderer renderer) {
-		int numPileTrack=pileup.tracks.length;
+		int numPileTrack=pileup.alignmentBlockTracks.length;
 		return (int)(renderer.trackHeight*numPileTrack);
 	}
 
@@ -32,11 +32,11 @@ public class TrackPileup extends Track {
 	protected void render(TrackRenderer renderer, StringBuilder sb, int offsetY) {
 		
 		//Rescale tracks
-		double[][] tracksScaled=new double[pileup.tracks.length][];
-		double[] maxHeight=new double[pileup.tracks.length];
-		for(int curTrack=0;curTrack<pileup.tracks.length;curTrack++) {
+		double[][] tracksScaled=new double[pileup.alignmentBlockTracks.length][];
+		double[] maxHeight=new double[pileup.alignmentBlockTracks.length];
+		for(int curTrack=0;curTrack<pileup.alignmentBlockTracks.length;curTrack++) {
 			//Rescale tracks vs #cells in track
-			int[] thisTrack=pileup.tracks[curTrack];
+			int[] thisTrack=pileup.alignmentBlockTracks[curTrack];
 			double[] thisTrackScaled=tracksScaled[curTrack]=new double[thisTrack.length];
 			double cnt=Math.max(1,pileup.clusterCellCount[curTrack]);
 			for(int i=0;i<thisTrack.length;i++) {
@@ -54,10 +54,14 @@ public class TrackPileup extends Track {
 		double maxMaxHeight=Math.max(0.0000001, PileUtil.maxForList(maxHeight));
 
 		//Write all pileup tracks
-		for(int curTrack=0;curTrack<pileup.tracks.length;curTrack++) {
+		for(int curTrack=0;curTrack<pileup.alignmentBlockTracks.length;curTrack++) {
 			double baseX=renderer.labelsWidth;
 			double baseY=(double)renderer.trackHeight*(curTrack+1);
-			double scaleY=-(double)renderer.trackHeight*0.9/maxMaxHeight;//scaleFactor[curTrack]/Math.max(1,cellGroupCellCount[curTrack]);///cellGroupCellCount[curTrack];//*maxForTrack[curTrack]);//*cellGroupCellCount[curTrack];
+			//scaleFactor[curTrack]/Math.max(1,cellGroupCellCount[curTrack]);
+			///cellGroupCellCount[curTrack];//*maxForTrack[curTrack]);
+			//*cellGroupCellCount[curTrack];
+			// ?? Here before changes. //AB
+			double scaleY=-(double)renderer.trackHeight*0.9/maxMaxHeight;
 			double scaleX=(double)renderer.trackWidth/pileup.numdiv;
 			renderOnePileup(renderer, sb, tracksScaled[curTrack], pileup.clusterNames[curTrack], baseX, baseY, scaleY, scaleX);
 		}

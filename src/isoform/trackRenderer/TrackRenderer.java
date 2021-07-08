@@ -6,7 +6,7 @@ import java.util.ArrayList;
  * 
  * Renderer of genomic tracks
  * 
- * @author Johan Henriksson
+ * @author Johan Henriksson and Anton Björk
  *
  */
 public class TrackRenderer {
