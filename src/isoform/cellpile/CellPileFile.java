@@ -430,8 +430,6 @@ public class CellPileFile {
 						if(bcCellCurrentUMI!=null && 
 							bcCellCurrentUMI.equals(bcCellPreviousUMI) && 
 							bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
-							//Do nothing, ignore read
-							//System.out.println("Got duplicate");
 							skippedDup++;
 						} else {
 							//Remember for later
@@ -453,7 +451,6 @@ public class CellPileFile {
 											// //AB
 							}
 
-							//System.out.println("#alignment blocks "+listBlocks.size());
 							String blockSource=samRecord.getContig();
 
 							// If read starts outside chunk, change chunk,
@@ -477,16 +474,10 @@ public class CellPileFile {
 
 								int blockFrom=ab1.getReferenceStart();
 								int blockTo=ab1.getReferenceStart()+ab1.getLength();
-								// CHECK; is this a good way to determine what chunk
-								// Coordinates start over from 0 on each contig, right?
-								// If so we keep overwriting previous chunks with same
-								// positions. Major problem.
-								// No we probably dont since chunks are aware
-								// of what chromosome they are on.
 								int blockShouldBeInChunk=blockFrom/chunkSize;
 
-								int inbetweenFrom=blockTo + 1;  // Assuming inclusive koordinates
-								int inbetweenTo=ab2.getReferenceStart() - 1;  // Assuming inclusive koordinates
+								int inbetweenFrom=blockTo + 1;  // + 1; Assuming inclusive coordinates
+								int inbetweenTo=ab2.getReferenceStart() - 1;  // -1; Assuming inclusive coordinates
 								int inbetweenShouldBeInChunk=inbetweenFrom/chunkSize;
 
 								// // CHECK: This has been commented out since before changes.
@@ -521,18 +512,14 @@ public class CellPileFile {
 
 
 							}
-							// Last alignment block outside loop to not go out
-							// of bounds since inbetween does not exist here
+							// Last alignment block outside loop to stay in
+							// bounds since inbetween does not exist here
 							int ii = listBlocks.size()-1; // 0-based indexing so 
 														  // last is size - 1 
 							AlignmentBlock ab1=listBlocks.get(ii);
 
 							int blockFrom=ab1.getReferenceStart();
 							int blockTo=ab1.getReferenceStart()+ab1.getLength();
-							// CHECK; is this a good way to determine what chunk
-							// Koordinates start over from 0 on each contig, right?
-							// If so we keep overwriting previous chunks with same
-							// positions. Major problem.
 							int blockShouldBeInChunk=blockFrom/chunkSize;
 
 							// // CHECK: This has been commented out since before changes.
@@ -552,84 +539,29 @@ public class CellPileFile {
 								addRegion(mapCellAlignmentBlocks, barcodeIndex, 
 											blockFrom, blockTo);
 							}
-							
-
-
-
-
-							// Old. REMOVE when done
-								
-							// 	//If this is the first read we see, start chunking from here
-							// 	/*if(currentSeq.equals("")) {
-							// 		currentSeq=blockSource;
-							// 		saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-							// 	} else*/ 
-
-							// 	// // Check if we are still within the same chunk. otherwise move on.
-							// 	// !currentSeq.equals(blockSource) 
-							// 	// --> currentSeq and blockSource are both contig name.
-							// 	//     If the new sam record is on a new contig, blocksource has been set
-							// 	//     to that contig at
-							// 	//     String blockSource=samRecord.getContig();
-							// 	//     above. 
-							// 	//     So essentially if we changed contig
-							// 	//
-							// 	// ii==0
-							// 	// --> First block in read
-							// 	//     I guess that means, don't change chunk every time one hits a
-							// 	//     block in a read first on its chromosome.
-							// 	//     However, currentSeq is updated by 
-							// 	// 	   saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-							// 	//     so that should not be a problem anyways.
-							// 	//     Unnecessary check?
-							// 	//
-							// 	// currentChunk!=shouldBeInChunk
-							// 	// --> currentChunk set by saveAndSetCurrentChunk.
-							// 	//     shouldBeInChunk=blockFrom/chunkSize from above.
-							// 	//     so if we reached a block in sam file that starts ("From")
-							// 	//     outside the intended coordinates
-							// 	// 
-							// 	if(ii==0 && (!currentSeq.equals(blockSource) || 
-							// 		currentChunk!=shouldBeInChunk)) {
-									
-							// 		saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-							// 	}
-								
-							// 	addRegion(barcodeIndex, blockFrom, blockTo);
-							// 	keptRecords++;
-							// }
-
-							// // Add the pieces inbetween the alignment blocks
-							// // Note n-1 inbetweens for n alignment blocks
-							// // TODO: this is not going to work in case we decide 
-							// // to chop reads between chunks. Which we should
-							// for(int ii=0;ii<listBlocks.size()-1;ii++) {  
-							// 	AlignmentBlock ab1=listBlocks.get(ii);
-							// 	AlignmentBlock ab2=listBlocks.get(ii+1);
-
-								// int inbetweenFrom=ab1.getReferenceStart()+ab1.getLength();
-								// int inbetweenTo=ab2.getReferenceStart();
-								
-								// addRegion(barcodeIndex, blockFrom, blockTo);
-							// 	keptRecords++;
-							// }
-
 
 							// Here is more appropriate than after each alignment
 							// block in read, since they are part of same
 							// SAM record, which is what the counter
 							// readRecords is keeping track of //AB
 							keptRecords++;
-
 						}
 					} else {
 						skippedBadUMI++;
-						//System.out.println("Incomplete BAM record");
 					}
 				} else {
 					skippedWrongBC++;
 				}
 			}
+
+
+
+
+
+
+
+
+
 
 		// BAM file is bulk type
 		// (bamType.equals("--bulk")) must be, since only two options
@@ -637,7 +569,7 @@ public class CellPileFile {
 		//       Will do this when single_cell version is bugfree
 		//       since pretty similar.
 		} else {  
-
+	
 			//Loop through all SAM records
 			for (final SAMRecord samRecord : reader) {
 				
@@ -660,74 +592,261 @@ public class CellPileFile {
 							"@sequence: "+currentSeq,
 							"WrongBC: "+skippedWrongBC,
 							"badUMI: "+skippedBadUMI,
-							"SkipDup: "+skippedDup);
+							"SkipDup: "+skippedDup,
+							"noAlignBlocks: "+skippedNoAlignmentBlocks);
 				}
 					
+				// Bulk verion; No check against BCs and UMIs
+
 				// //Get UMI and BC for this read
 				// String bcCellCurrentUMI=(String)samRecord.getAttribute("UB");
 				// String bcCellCurrentCellBarcode=(String)samRecord.getAttribute("CB");
 				
-				// Bulk verion; No check against BCs and UMIs
-				//
 				// //Check if this is a cell to count
 				// if(mapBarcodeIndex.keySet().contains(bcCellCurrentCellBarcode)) {
 				// 	//If the read has no UMI nor BC then ignore it
 				// 	if(bcCellCurrentCellBarcode!=null) {
 				// 		//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
-				// 		if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousUMI) && bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
-				// 			//Do nothing, ignore read
-				// 			//System.out.println("Got duplicate");
+				// 		if(bcCellCurrentUMI!=null && 
+				// 			bcCellCurrentUMI.equals(bcCellPreviousUMI) && 
+				// 			bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
 				// 			skippedDup++;
 				// 		} else {
 				// 			//Remember for later
 				// 			bcCellPreviousUMI=bcCellCurrentUMI;
 				// 			bcCellPreviousCB=bcCellCurrentCellBarcode;
 
+
+
 							// // Which cell is this?
 							// int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
 							//
 							// Bulk version; Only one barcode
 							int barcodeIndex=0;
-							
-							
-							//A read may have been split into multiple blocks. 
-							//Count these separately. Naive assumption that these are split over introns... is this correct?
+
+
+							//A read may have been split into multiple blocks.
 							List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
-							//System.out.println("#alignment blocks "+listBlocks.size());
-							for(int curAB=0;curAB<listBlocks.size();curAB++) {
-								AlignmentBlock ab=listBlocks.get(curAB);
-																
-								String blockSource=samRecord.getContig();
-								int blockFrom=ab.getReferenceStart();
-								int blockTo=ab.getReferenceStart()+ab.getLength();
-								
-								int shouldBeInChunk=blockFrom/chunkSize;
-								
+							if (listBlocks.size() == 0) { 
+								skippedNoAlignmentBlocks++;
+								continue;  	// Wouldn't it be a good idea to use
+										   	// more continue statements instead
+											// of all the current nested if else?
+											// if .. continue combo doesn't
+											// introduce deeper nesting.
+											// //AB
+							}
+
+							String blockSource=samRecord.getContig();
+
+							// If read starts outside chunk, change chunk,
+							// since BAM is position sorted on start position
+							// of reads.
+							// "leftmost coordinates"
+							// http://www.htslib.org/doc/samtools-sort.html
+							int aa=listBlocks.get(0).getReferenceStart();
+							int shouldBeInChunk=aa/chunkSize;
+							if((!currentSeq.equals(blockSource) || 
+							   currentChunk!=shouldBeInChunk)) {
+								saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+							}
+
+							// Add the alignment blocks
+							for(int ii=0;ii<listBlocks.size()-1;ii++) {
+								// AlignmentBlock ab=listBlocks.get(ii);
+
+								AlignmentBlock ab1=listBlocks.get(ii);
+								AlignmentBlock ab2=listBlocks.get(ii+1);
+
+								int blockFrom=ab1.getReferenceStart();
+								int blockTo=ab1.getReferenceStart()+ab1.getLength();
+								int blockShouldBeInChunk=blockFrom/chunkSize;
+
+								int inbetweenFrom=blockTo + 1;  // + 1; Assuming inclusive coordinates
+								int inbetweenTo=ab2.getReferenceStart() - 1;  // -1; Assuming inclusive coordinates
+								int inbetweenShouldBeInChunk=inbetweenFrom/chunkSize;
+
+								// // CHECK: This has been commented out since before changes.
+								// // 		 Do we need it for anything? 
 								//If this is the first read we see, start chunking from here
 								/*if(currentSeq.equals("")) {
 									currentSeq=blockSource;
 									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
 								} else*/ 
-								if(curAB==0 && (!currentSeq.equals(blockSource) || currentChunk!=shouldBeInChunk)) {
-									//Check if we are still within the same chunk. otherwise move on.
-									saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+
+								// Add alignment block to leftovers if not in right
+								// chunk, else add to current chunk
+								if((!currentSeq.equals(blockSource) || 
+								   currentChunk!=blockShouldBeInChunk)) {
+									addRegion(mapCellLeftoverAlignmentBlocks, barcodeIndex, 
+												blockFrom, blockTo);
+								} else {
+									addRegion(mapCellAlignmentBlocks, barcodeIndex, 
+												blockFrom, blockTo);
 								}
-								
-								// Commented out for now since method definition
-								// change gives compiler error FIX
-								// addRegion(barcodeIndex, blockFrom, blockTo);
-								keptRecords++;
+
+								// Add inbetween block to leftovers if not in right
+								// chunk, else add to current chunk
+								if((!currentSeq.equals(blockSource) || 
+								   currentChunk!=inbetweenShouldBeInChunk)) {
+									addRegion(mapCellLeftoverInbetweens, barcodeIndex, 
+												inbetweenFrom, inbetweenTo);
+								} else {
+									addRegion(mapCellInbetweens, barcodeIndex, 
+												inbetweenFrom, inbetweenTo);
+								}
+
+
 							}
-			// 			}
-			// 		} else {
-			// 			skippedBadUMI++;
-			// 			//System.out.println("Incomplete BAM record");
-			// 		}
-			// 	} else {
-			// 		skippedWrongBC++;
-			// 	}
+							// Last alignment block outside loop to stay in 
+							// bounds since inbetween does not exist here
+							int ii = listBlocks.size()-1; // 0-based indexing so 
+														  // last is size - 1 
+							AlignmentBlock ab1=listBlocks.get(ii);
+
+							int blockFrom=ab1.getReferenceStart();
+							int blockTo=ab1.getReferenceStart()+ab1.getLength();
+							int blockShouldBeInChunk=blockFrom/chunkSize;
+
+							// // CHECK: This has been commented out since before changes.
+							// // 		 Do we need it for anything? 
+							//If this is the first read we see, start chunking from here
+							/*if(currentSeq.equals("")) {
+								currentSeq=blockSource;
+								saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+							} else*/ 
+
+							// Add alignment block if in correct chunk
+							if((!currentSeq.equals(blockSource) || 
+							   currentChunk!=blockShouldBeInChunk)) {
+								addRegion(mapCellLeftoverAlignmentBlocks, barcodeIndex, 
+											blockFrom, blockTo);
+							} else {
+								addRegion(mapCellAlignmentBlocks, barcodeIndex, 
+											blockFrom, blockTo);
+							}
+
+							// Here is more appropriate than after each alignment
+							// block in read, since they are part of same
+							// SAM record, which is what the counter
+							// readRecords is keeping track of //AB
+							keptRecords++;
+				//	    }
+				// 	} else {
+				// 		skippedBadUMI++;
+				// 	}
+				// } else {
+				// 	skippedWrongBC++;
+				// }
 			}
+
 		}
+
+
+
+
+
+
+
+
+		// // // Old Bulk BAM code for reference
+		// // BAM file is bulk type
+		// // (bamType.equals("--bulk")) must be, since only two options
+		// // TODO: Update bulk section with new functionality.
+		// //       Will do this when single_cell version is bugfree
+		// //       since pretty similar.
+		// } else {  
+
+		// 	//Loop through all SAM records
+		// 	for (final SAMRecord samRecord : reader) {
+				
+		// 		//Update user about progress
+		// 		readRecords++;
+		// 		if(readRecords%1000000 == 0){
+		// 			//Calculate progress
+		// 			int passedChunks=0;
+		// 			for(String seq:mapChunkStarts.keySet()) {
+		// 				if(seq.equals(currentSeq))
+		// 					break;
+		// 				passedChunks+=mapChunkStarts.get(seq).length;
+		// 			}
+		// 			passedChunks+=currentChunk;
+		// 			int prc=100*passedChunks/totalChunks;
+					
+		// 			LogUtil.formatColumns(System.out, 25,
+		// 					prc+"%",
+		// 					"Kept/Read: "+keptRecords+"/"+readRecords,
+		// 					"@sequence: "+currentSeq,
+		// 					"WrongBC: "+skippedWrongBC,
+		// 					"badUMI: "+skippedBadUMI,
+		// 					"SkipDup: "+skippedDup);
+		// 		}
+					
+		// 		// //Get UMI and BC for this read
+		// 		// String bcCellCurrentUMI=(String)samRecord.getAttribute("UB");
+		// 		// String bcCellCurrentCellBarcode=(String)samRecord.getAttribute("CB");
+				
+		// 		// Bulk verion; No check against BCs and UMIs
+		// 		//
+		// 		// //Check if this is a cell to count
+		// 		// if(mapBarcodeIndex.keySet().contains(bcCellCurrentCellBarcode)) {
+		// 		// 	//If the read has no UMI nor BC then ignore it
+		// 		// 	if(bcCellCurrentCellBarcode!=null) {
+		// 		// 		//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
+		// 		// 		if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousUMI) && bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
+		// 		// 			//Do nothing, ignore read
+		// 		// 			//System.out.println("Got duplicate");
+		// 		// 			skippedDup++;
+		// 		// 		} else {
+		// 		// 			//Remember for later
+		// 		// 			bcCellPreviousUMI=bcCellCurrentUMI;
+		// 		// 			bcCellPreviousCB=bcCellCurrentCellBarcode;
+
+		// 					// // Which cell is this?
+		// 					// int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
+		// 					//
+		// 					// Bulk version; Only one barcode
+		// 					int barcodeIndex=0;
+							
+							
+		// 					//A read may have been split into multiple blocks. 
+		// 					//Count these separately. Naive assumption that these are split over introns... is this correct?
+		// 					List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
+		// 					//System.out.println("#alignment blocks "+listBlocks.size());
+		// 					for(int curAB=0;curAB<listBlocks.size();curAB++) {
+		// 						AlignmentBlock ab=listBlocks.get(curAB);
+																
+		// 						String blockSource=samRecord.getContig();
+		// 						int blockFrom=ab.getReferenceStart();
+		// 						int blockTo=ab.getReferenceStart()+ab.getLength();
+								
+		// 						int shouldBeInChunk=blockFrom/chunkSize;
+								
+		// 						//If this is the first read we see, start chunking from here
+		// 						/*if(currentSeq.equals("")) {
+		// 							currentSeq=blockSource;
+		// 							saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+		// 						} else*/ 
+		// 						if(curAB==0 && (!currentSeq.equals(blockSource) || currentChunk!=shouldBeInChunk)) {
+		// 							//Check if we are still within the same chunk. otherwise move on.
+		// 							saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
+		// 						}
+								
+		// 						// Commented out for now since method definition
+		// 						// change gives compiler error FIX
+		// 						// addRegion(barcodeIndex, blockFrom, blockTo);
+		// 						keptRecords++;
+		// 					}
+		// 	// 			}
+		// 	// 		} else {
+		// 	// 			skippedBadUMI++;
+		// 	// 			//System.out.println("Incomplete BAM record");
+		// 	// 		}
+		// 	// 	} else {
+		// 	// 		skippedWrongBC++;
+		// 	// 	}
+		// 	}
+		// }
 
 
 		//Get out the last ones from memory. TODO remember to fix this in countBAM too
@@ -915,7 +1034,15 @@ public class CellPileFile {
 		int chunkTo=windowTo/chunkSize+1;
 		chunkFrom = PileUtil.clamp(chunkFrom, 0, mapChunkStarts.get(windowSeq).length-1);
 		chunkTo = PileUtil.clamp(chunkTo, 0, mapChunkStarts.get(windowSeq).length-1);
-		
+		// Always read one more chunk upstream of range user asks for.
+		// This guarantees that alignmentblocks starting in upstream chunk
+		// and ending in current chunk are included.
+		// Exception is if chunkFrom is 0, then there is no upstream chunk.
+		if (chunkFrom != 0) {
+			chunkFrom = chunkFrom - 1;
+		}
+
+
 		// System.out.println("checkpoint 1.2, just before reading chunks");
 
 		//Iterate through all the chunks
@@ -950,7 +1077,7 @@ public class CellPileFile {
 
 			}
 		}
-		System.out.println("Counted: "+counted);
+		// System.out.println("Counted: "+counted);
 		
 		pileup.alignmentBlockTracks=outTracksAlignmentBlocks;
 		pileup.inbetweenTracks=outTracksInbetweens;
