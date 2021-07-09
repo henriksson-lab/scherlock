@@ -258,11 +258,15 @@ public class CellPileManager {
 	/**
 	 * Create a renderer. Pileup can be null
 	 */
-	public TrackRenderer render(String windowSeq, int windowFrom, int windowTo, Pileup pileup) {
-		TrackRenderer renderer=new TrackRenderer(windowSeq, windowFrom, windowTo);
-		
+	public TrackRenderer render(String windowSeq, int windowFrom, int windowTo, 
+				Pileup pileup, 
+				boolean showInbetweens, boolean individualTrackScaling) {
+
+		TrackRenderer renderer=new TrackRenderer(windowSeq, windowFrom, windowTo,
+			individualTrackScaling);
+
 		if(pileup!=null)
-			renderer.addTrack(new TrackPileup(pileup, false));
+			renderer.addTrack(new TrackPileup(pileup, false, showInbetweens));
 		for(Track t:listTracks)
 			renderer.addTrack(t);
 		

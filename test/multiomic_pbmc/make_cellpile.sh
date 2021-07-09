@@ -14,12 +14,12 @@ java -jar ../../build/cellpile.jar build \
 	reduced/barcodes.tsv.gz
 
 
-java -jar ../../build/cellpile.jar build \
-	'--single_cell' \
-	reduced/10x_gex.cellpile \
-	sizes.chromosome \
-	reduced/gex_possorted_genome_bam.bam \
-	reduced/barcodes.tsv.gz
+# java -jar ../../build/cellpile.jar build \
+# 	'--single_cell' \
+# 	reduced/10x_gex.cellpile \
+# 	sizes.chromosome \
+# 	reduced/gex_possorted_genome_bam.bam \
+# 	reduced/barcodes.tsv.gz
 
 # ######################## original ###########################################
 # java -jar ../../build/cellpile.jar build \

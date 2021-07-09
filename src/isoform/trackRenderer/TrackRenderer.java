@@ -23,6 +23,7 @@ public class TrackRenderer {
 	public double textHeight=20;
 	public double featureHeight=15;
 	public double labelsWidth=200;
+	public boolean individualTrackScaling=false;
 	
 	public int numVertGuides=16;
 	
@@ -37,15 +38,18 @@ public class TrackRenderer {
 		this.seq=track.pileup.seq;
 		this.from=track.pileup.from;
 		this.to=track.pileup.to;
+		this.individualTrackScaling = individualTrackScaling;
 	}
 
 	/**
 	 * Create a renderer, without a pileup track
 	 */
-	public TrackRenderer(String seq, int from, int to) {
+	public TrackRenderer(String seq, int from, int to, 
+		boolean individualTrackScaling) {
 		this.seq=seq;
 		this.from=from;
 		this.to=to;
+		this.individualTrackScaling = individualTrackScaling;
 	}
 	
 	/**

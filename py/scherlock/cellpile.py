@@ -98,7 +98,10 @@ class cellpile:
 
 
 
-	def pileup(self, viewrange, barcodes=None, track_labels=None, cellpile_names=None, numdiv=1000):
+	def pileup(self, viewrange, 
+				barcodes=None, track_labels=None, cellpile_names=None, 
+				numdiv=1000, 
+				show_inbetweens=False, individual_track_scaling=False):
 		"""Build a pileup"""
 
 		#Split up the viewrange. [sequence, from, to]  where sequence is a string
@@ -134,7 +137,8 @@ class cellpile:
 			self._toStringArray(cellpile_names), 
 			self._toStringArray(track_labels))
 
-		renderer=self.cp.render(seq, sfrom, sto, pileup)
+		renderer=self.cp.render(seq, sfrom, sto, pileup, 
+			show_inbetweens, individual_track_scaling)
 
 		return Pileup(renderer)
 
