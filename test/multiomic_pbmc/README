@@ -1,11 +1,19 @@
 
 Use the makefile to download test data from the public part of our
-in lab server. The fullsize test data is too big for github.
+in lab server. It also generates sizes.chromosome
 
-The .sh scripts in here shows how the reduced test data was produced.
+make_cellpile.sh makes cellpiles from the test data.
+
+The other .sh and .py scripts in here tests different parts of scherlock.
+The .ipynbs are Jupyter notebooks doing things similar to the .py scripts.
+
+The only parts of the test suite that are recently tested and updated are the
+cellpile parts. Updated 2021-07-09
 
 ToDo: - The fullsize test data cannot be reproduced using this scripts here
-      - Reproducing the reduced test data from fullsize test data not tested properly
+      - Better solution would be to provide download links and scripts to
+        reproduce also the fullsize test data, so that users can know its
+        origins.
 
+//AB
 
-The .py scripts tests different parts of the scherlock suite.
