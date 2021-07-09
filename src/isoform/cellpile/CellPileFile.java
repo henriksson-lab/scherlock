@@ -191,49 +191,6 @@ public class CellPileFile {
 		addFromLeftovers(mapCellInbetweens, mapCellLeftoverInbetweens,
 						 currentChunkFrom, currentChunkTo);
 
-		// REMOVE when above verified. 
-		// --------------------------------------------------------------------------
-		// Also note the bug with regards to the alignmentblocks vs inbetweens 
-		// in the two paragragraphs below.
-		//
-		// // Add reads from previous alignment blocks leftovers
-		// Set<Integer> cellBarcodes = mapCellLeftoverAlignmentBlocks.keySet();
-  //       for(int bcid: cellBarcodes){
-  //       	IntArrayList aa=mapCellLeftoverAlignmentBlocks.get(bcid);
-
-		// 	for(int ii=0; ii<aa.size(); ii=ii+2) {
-		// 		int from = aa.get(ii);
-		// 		int to = aa.get(ii+1);
-		// 		if ((currentChunkFrom <= from) && (from < currentChunkTo)) {
-		// 			addRegion(mapCellInbetweens, bcid, from, to);
-		// 			// Remove entries to avoid leftovers growing large
-		// 			aa.remove(ii+1);
-		// 			aa.remove(ii);
-		// 		}
-		// 	}
-  //       }
-
-		// // Add reads from previous inbetweens leftovers
-		// cellBarcodes = mapCellLeftoverInbetweens.keySet();
-  //       for(int bcid: cellBarcodes){
-  //       	IntArrayList aa=mapCellLeftoverInbetweens.get(bcid);
-
-		// 	for(int ii=0; ii<aa.size(); ii=ii+2) {
-		// 		int from = aa.get(ii);
-		// 		int to = aa.get(ii+1);
-		// 		if ((currentChunkFrom <= from) && (from < currentChunkTo)) {
-		// 			addRegion(mapCellInbetweens, bcid, from, to);
-		// 			// Remove entries to avoid leftovers growing large
-		// 			aa.remove(ii+1);
-		// 			aa.remove(ii);
-		// 		}
-		// 	}
-  //       }
-
-		// --------------------------------------------------------------------------
-
-
-
         // Store chunk to file
 		// Only store chunks with data. Pointer is default 0=missing
 		if(!mapCellAlignmentBlocks.isEmpty()) {
@@ -255,22 +212,6 @@ public class CellPileFile {
 					
 					raf.writeInt(numCellsInbetweens);
 					saveRegionTypeToFile(mapCellInbetweens);
-
-					// Old function body
-					// int numCells=mapCellAlignmentBlocks.size();
-					// raf.writeInt(numCells);
-					// for(int cellBarcode:mapCellAlignmentBlocks.keySet()) {
-					// 	raf.writeInt(cellBarcode);
-					// 	IntArrayList ia=mapCellAlignmentBlocks.get(cellBarcode);
-					// 	//Note, this is not a copy of the array, and it is the wrong size
-					// 	int[] list=ia.elements(); 
-					// 	int numRegion2=ia.size();
-					// 	raf.writeShort(numRegion2/2);
-					// 	for(int i=0;i<numRegion2;i++) {
-					// 		raf.writeInt(list[i]);
-					// 	}
-					// }
-					// REMOVE when you've seen it works
 					
 					//System.out.println("Stored chunk, "+currentChunk+ " #cells "+mapCellAlignmentBlocks.size());
 				} else {
@@ -322,9 +263,6 @@ public class CellPileFile {
 			}
 		}
 	}
-
-
-
 
 
 
@@ -481,7 +419,7 @@ public class CellPileFile {
 								int inbetweenShouldBeInChunk=inbetweenFrom/chunkSize;
 
 								// // CHECK: This has been commented out since before changes.
-								// // 		 Do we need it for anything? 
+								// // 		 Do we need it for anything? //AB
 								//If this is the first read we see, start chunking from here
 								/*if(currentSeq.equals("")) {
 									currentSeq=blockSource;
@@ -523,7 +461,7 @@ public class CellPileFile {
 							int blockShouldBeInChunk=blockFrom/chunkSize;
 
 							// // CHECK: This has been commented out since before changes.
-							// // 		 Do we need it for anything? 
+							// // 		 Do we need it for anything? //AB
 							//If this is the first read we see, start chunking from here
 							/*if(currentSeq.equals("")) {
 								currentSeq=blockSource;
@@ -555,19 +493,8 @@ public class CellPileFile {
 			}
 
 
-
-
-
-
-
-
-
-
 		// BAM file is bulk type
 		// (bamType.equals("--bulk")) must be, since only two options
-		// TODO: Update bulk section with new functionality.
-		//       Will do this when single_cell version is bugfree
-		//       since pretty similar.
 		} else {  
 	
 			//Loop through all SAM records
@@ -740,113 +667,8 @@ public class CellPileFile {
 				// }
 			}
 
-		}
+		}  // End of bulk file else
 
-
-
-
-
-
-
-
-		// // // Old Bulk BAM code for reference
-		// // BAM file is bulk type
-		// // (bamType.equals("--bulk")) must be, since only two options
-		// // TODO: Update bulk section with new functionality.
-		// //       Will do this when single_cell version is bugfree
-		// //       since pretty similar.
-		// } else {  
-
-		// 	//Loop through all SAM records
-		// 	for (final SAMRecord samRecord : reader) {
-				
-		// 		//Update user about progress
-		// 		readRecords++;
-		// 		if(readRecords%1000000 == 0){
-		// 			//Calculate progress
-		// 			int passedChunks=0;
-		// 			for(String seq:mapChunkStarts.keySet()) {
-		// 				if(seq.equals(currentSeq))
-		// 					break;
-		// 				passedChunks+=mapChunkStarts.get(seq).length;
-		// 			}
-		// 			passedChunks+=currentChunk;
-		// 			int prc=100*passedChunks/totalChunks;
-					
-		// 			LogUtil.formatColumns(System.out, 25,
-		// 					prc+"%",
-		// 					"Kept/Read: "+keptRecords+"/"+readRecords,
-		// 					"@sequence: "+currentSeq,
-		// 					"WrongBC: "+skippedWrongBC,
-		// 					"badUMI: "+skippedBadUMI,
-		// 					"SkipDup: "+skippedDup);
-		// 		}
-					
-		// 		// //Get UMI and BC for this read
-		// 		// String bcCellCurrentUMI=(String)samRecord.getAttribute("UB");
-		// 		// String bcCellCurrentCellBarcode=(String)samRecord.getAttribute("CB");
-				
-		// 		// Bulk verion; No check against BCs and UMIs
-		// 		//
-		// 		// //Check if this is a cell to count
-		// 		// if(mapBarcodeIndex.keySet().contains(bcCellCurrentCellBarcode)) {
-		// 		// 	//If the read has no UMI nor BC then ignore it
-		// 		// 	if(bcCellCurrentCellBarcode!=null) {
-		// 		// 		//Check if duplicate read, if UMI present; ATAC, dedup by coordinate?
-		// 		// 		if(bcCellCurrentUMI!=null && bcCellCurrentUMI.equals(bcCellPreviousUMI) && bcCellCurrentCellBarcode.equals(bcCellPreviousCB)) {
-		// 		// 			//Do nothing, ignore read
-		// 		// 			//System.out.println("Got duplicate");
-		// 		// 			skippedDup++;
-		// 		// 		} else {
-		// 		// 			//Remember for later
-		// 		// 			bcCellPreviousUMI=bcCellCurrentUMI;
-		// 		// 			bcCellPreviousCB=bcCellCurrentCellBarcode;
-
-		// 					// // Which cell is this?
-		// 					// int barcodeIndex=mapBarcodeIndex.get(bcCellCurrentCellBarcode);
-		// 					//
-		// 					// Bulk version; Only one barcode
-		// 					int barcodeIndex=0;
-							
-							
-		// 					//A read may have been split into multiple blocks. 
-		// 					//Count these separately. Naive assumption that these are split over introns... is this correct?
-		// 					List<AlignmentBlock> listBlocks=samRecord.getAlignmentBlocks();
-		// 					//System.out.println("#alignment blocks "+listBlocks.size());
-		// 					for(int curAB=0;curAB<listBlocks.size();curAB++) {
-		// 						AlignmentBlock ab=listBlocks.get(curAB);
-																
-		// 						String blockSource=samRecord.getContig();
-		// 						int blockFrom=ab.getReferenceStart();
-		// 						int blockTo=ab.getReferenceStart()+ab.getLength();
-								
-		// 						int shouldBeInChunk=blockFrom/chunkSize;
-								
-		// 						//If this is the first read we see, start chunking from here
-		// 						/*if(currentSeq.equals("")) {
-		// 							currentSeq=blockSource;
-		// 							saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-		// 						} else*/ 
-		// 						if(curAB==0 && (!currentSeq.equals(blockSource) || currentChunk!=shouldBeInChunk)) {
-		// 							//Check if we are still within the same chunk. otherwise move on.
-		// 							saveAndSetCurrentChunk(blockSource, shouldBeInChunk);
-		// 						}
-								
-		// 						// Commented out for now since method definition
-		// 						// change gives compiler error FIX
-		// 						// addRegion(barcodeIndex, blockFrom, blockTo);
-		// 						keptRecords++;
-		// 					}
-		// 	// 			}
-		// 	// 		} else {
-		// 	// 			skippedBadUMI++;
-		// 	// 			//System.out.println("Incomplete BAM record");
-		// 	// 		}
-		// 	// 	} else {
-		// 	// 		skippedWrongBC++;
-		// 	// 	}
-		// 	}
-		// }
 
 
 		//Get out the last ones from memory. TODO remember to fix this in countBAM too
@@ -991,8 +813,6 @@ public class CellPileFile {
 	public Pileup buildPileup(
 			String windowSeq, int windowFrom, int windowTo, int numdiv,
 			int[][] cellGroups, String[] clusterNames) throws IOException {
-		
-		// System.out.println("checkpoint 1.1, entered CellPileFile.buildPileup");
 
 		//Create the basic return object
 		Pileup pileup=new Pileup();
@@ -1042,42 +862,22 @@ public class CellPileFile {
 			chunkFrom = chunkFrom - 1;
 		}
 
-
-		// System.out.println("checkpoint 1.2, just before reading chunks");
-
 		//Iterate through all the chunks
 		int counted=0;
 		for(int curChunk=chunkFrom;curChunk<=chunkTo;curChunk++) {
 
-			// System.out.println("checkpoint 1.3");
-
 			long chunkPos=mapChunkStarts.get(windowSeq)[curChunk];
 			if(chunkPos!=0) {
 
-				// System.out.println("chunkPos:");
-				// System.out.println(chunkPos);
-
 				raf.seek(chunkPos);
-				
-				// System.out.println("checkpoint 1.5");
-
-
-				// System.out.println("checkpoint 1.4, raf:");
-				// System.out.println(raf.getFilePointer());
 
 				readRegionType(outTracksAlignmentBlocks, windowFrom, windowTo,
 								numdiv, counted, mapBarcodeTrack, dx);
-			
-				// System.out.println("checkpoint 1.5, raf:");
-				// System.out.println(raf.getFilePointer());
 				
 				readRegionType(outTracksInbetweens, windowFrom, windowTo,
 								numdiv, counted, mapBarcodeTrack, dx);
-			
-
 			}
 		}
-		// System.out.println("Counted: "+counted);
 		
 		pileup.alignmentBlockTracks=outTracksAlignmentBlocks;
 		pileup.inbetweenTracks=outTracksInbetweens;
@@ -1094,35 +894,23 @@ public class CellPileFile {
 								TreeMap<Integer, Integer> mapBarcodeTrack,
 								double dx) throws IOException {
 
-		// System.out.println("checkpoint readRegionType 1");
-
 		//Loop through all cells represented in this chunk
 		int numCells=raf.readInt();
-
-		// System.out.println("numCells");
-		// System.out.println(numCells);
 
 		nextcell: for(int curCell=0;curCell<numCells;curCell++) {
 			//Filter cells, or select the right track
 			int cellID=raf.readInt();   
-
-			// System.out.println("cellID");
-			// System.out.println(cellID);
 
 			Integer toTrack=mapBarcodeTrack.get(cellID);
 			if(toTrack!=null) {
 				//Check how many regions
 				int[] thisTrack=tracks[toTrack];
 				int numRegions=raf.readShort();
-
-				// System.out.println("numRegions");
-				// System.out.println(numRegions);
 				
 				//Read each region
 				for(int curRegion=0;curRegion<numRegions;curRegion++) {
 					int posLeft=raf.readInt();
 					int posRight=raf.readInt();
-
 
 					//We may be able to quit early if lucky
 					if(posLeft<=windowTo) {

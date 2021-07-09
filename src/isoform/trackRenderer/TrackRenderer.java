@@ -84,9 +84,6 @@ public class TrackRenderer {
 		return totalHeightAll;
 	}
 	
-
-	
-	//public boolean doLog;
 	
 	/**
 	 * Render all of the pileup
@@ -103,18 +100,8 @@ public class TrackRenderer {
 		double width=getWidth();
 		StringBuilder sb=new StringBuilder();
 		
-		// Old line on master git branch
-//		sb.append("<svg height=\""+height+"\" width=\""+width+"\" "
-//				+ "style=\"background-color:none\">");  //seems to ignore bg
-		// Merged
 		sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\""+height+"\" width=\""+width+"\" "
-				+ "style=\"background-color:none\">");  //seems to ignore bg
-		// From fixed_svg_header git branch
-//        sb.append("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" height=\""
-//                + totalHeightAll+"\" width=\""+(totalTrackWidth)+"\" "
-//                + "style=\"background-color:none\">");  //seems to ignore bg
-
-		
+				+ "style=\"background-color:none\">");  //seems to ignore bg	
 		
 		//Mask for the track viewport
 		sb.append(

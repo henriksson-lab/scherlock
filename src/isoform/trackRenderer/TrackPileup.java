@@ -57,7 +57,6 @@ public class TrackPileup extends Track {
 		}
 
 		//Rescale tracks
-		// for(int curTrack=0;curTrack<pileup.alignmentBlockTracks.length;curTrack++) {  // Old version
 		for(int curTrack=0;curTrack<nTracks;curTrack++) {
 			//Rescale tracks vs #cells in track
 			int[] thisTrack=tracks[curTrack];

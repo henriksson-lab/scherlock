@@ -81,9 +81,6 @@ public class CellPileManager {
 	public GtfParser dumpTrackGTF(String name, File fname) throws IOException {
 		GtfParser gtf=new GtfParser(fname);
 		return gtf;
-		// TrackGTF t=new TrackGTF(gtf);
-		// t.trackName=name;
-		// listTracks.add(t);
 	}
 
 	
@@ -97,7 +94,6 @@ public class CellPileManager {
 		listTracks.add(t);
 	}
 
-	
 	
 	
 	/**

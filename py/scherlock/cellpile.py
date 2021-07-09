@@ -8,7 +8,7 @@ import os
 import os
 jardir = os.path.join(os.path.dirname(__file__),'data')
 jarfile = os.path.join(jardir,'pycellpile.jar')
-#jarfile = '/home/mahogny/javaproj/isoform/py/scherlock/pycellpile.jar'
+
 
 ########### Need to set these things before importing jnius
 import jnius_config
@@ -64,8 +64,6 @@ class cellpile:
 	def add_bed(self, fname, trackName="bed"):
 		"""Load a Bed file to display features"""
 		jFile = autoclass("java.io.File")
-		# fname = os.path.abspath(fname)
-		# fname = jFile(fname)
 		self.cp.addTrackBed(trackName, fname)
 
 
@@ -186,7 +184,6 @@ class cellpile:
 
 		return(pileup)
 
-
 		# renderer=self.cp.render(seq, sfrom, sto, pileup)
 
 		# return Pileup(renderer)	
@@ -195,19 +192,7 @@ class cellpile:
 
 
 
-
-############################################################################################
-############################################################################################
-############################################################################################
-############################################################################################
-############################################################################################
-############################################################################################
-
-
-
-
-########################################
-## Wrapper around a pileup
+# Wrapper around a pileup
 class Pileup:
 	def __init__(self,renderer):
 		self.renderer=renderer

@@ -27,7 +27,8 @@ public class Pileup {
 	
 	
 	/**
-	 * Add the counts from another pileup. Assumes exactly the same settings etc or a crash will occur
+	 * Add the counts from another pileup. 
+	 * Assumes exactly the same settings etc or a crash will occur
 	 */
 	public void addPileup(Pileup p) {
 		for(int i=0;i<alignmentBlockTracks.length;i++) {

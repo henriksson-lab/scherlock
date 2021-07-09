@@ -68,8 +68,6 @@ public class TrackGTF extends Track {
 					minFrom=Math.min(minFrom,r.from);
 					maxTo=Math.max(maxTo,r.to);
 				}
-//				double minTransFrom=transformPos(minFrom);
-	//			double maxTransTo=transformPos(maxTo);
 				double minTransFrom=Math.max(pileup.labelsWidth,pileup.transformPosX(minFrom));
 				double maxTransTo=Math.min(pileup.getWidth(),pileup.transformPosX(maxTo));
 
