@@ -748,7 +748,7 @@ public class CellPileFile {
 		
 		//Read version
 		byte version=raf.readByte();
-		System.out.println("Version: "+version);
+		System.out.println("Cellpile version: "+version);
 		if(version!=2) {
 			throw new RuntimeException("Unsupported version");
 		}
@@ -957,8 +957,27 @@ public class CellPileFile {
 	public String[] getListBarcodesAsArray(){
 		return listBarcodes.toArray(new String[0]);
 	}
-	
-	
-	
-	
+
+	public static void printInfo(File fCellpile) throws IOException {
+
+		RandomAccessFile raf=new RandomAccessFile(fCellpile, "r");
+
+		//Go to the beginning of the file
+		raf.seek(0);
+
+		//Check that this is the correct type of file
+		char[] compTo="CELLPILE".toCharArray();
+		byte[] magicString=new byte["CELLPILE".length()]; //CELLPILE
+		raf.readFully(magicString);
+		for(int i=0;i<compTo.length;i++) {
+			if(compTo[i]!=magicString[i]) {
+				throw new RuntimeException("This is not a cellpile file");
+			}
+		}
+
+		//Read version
+		byte version=raf.readByte();
+		System.out.println("Cellpile version: "+version);
+
+	}
 }

@@ -36,11 +36,14 @@ class cellpile:
 	def add_cellpile(self,fname,cellpile_name=""):
 		"""Load one pile and add to the list"""
 		jFile = autoclass("java.io.File")
+		jCellPileFile = autoclass('isoform.cellpile.CellPileFile')
+		print(jCellPileFile)
+
 		fname = os.path.abspath(fname)
 		if cellpile_name=="" and self.cp.getNumCellPiles()>1:
 			print("WARNING: No pile name given. You most likely want to use this if you work with multiple piles")
 		f = jFile(fname)
-		onepile = autoclass('isoform.cellpile.CellPileFile').open(f)
+		onepile = jCellPileFile.open(f)
 		self.cp.addCellPile(onepile,cellpile_name)
 
 

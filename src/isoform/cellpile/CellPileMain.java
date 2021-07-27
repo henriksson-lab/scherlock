@@ -72,13 +72,19 @@ public class CellPileMain {
 			File fOutBam=new File(args[3]);
 			double pKeepBC=Double.parseDouble(args[4]);
 			double pKeepNonBC=Double.parseDouble(args[5]);
-			
+
 			System.out.println("Reading barcodes: "+fBarcodes);
 			ArrayList<String> listBarcodes=PileUtil.readBarcodeZipList(fBarcodes);
-			
+
 			System.out.println("Subsetting");
 			RandomSubset.subset(fInBam, fOutBam, new HashSet<String>(listBarcodes), pKeepBC, pKeepNonBC);
-		
+
+		} else if(cmd.equals("pileinfo") && args.length==2) {
+
+			File fInPile=new File(args[1]);
+
+                        CellPileFile.printInfo(fInPile);
+
 		} else {
 			
 			System.out.println("Usages: ");
